@@ -1,0 +1,136 @@
+// Set env vars BEFORE any modules are required by tests
+process.env.MONGODB_URI = 'mongodb://localhost:27017/test'; // Placeholder, will be overwritten by memory server
+process.env.JWT_SECRET = 'test_secret';
+process.env.NODE_ENV = 'test';
+
+import mongoose from 'mongoose';
+import { jest } from '@jest/globals';
+
+// Pre-register Admin model for backward compatibility in mocked tests
+if (!mongoose.models.Admin) {
+  const adminSchema = new mongoose.Schema({}, { strict: false });
+  mongoose.model('Admin', adminSchema);
+}
+
+// Increase timeout for global hooks (especially for slow teardowns on CI/large runs)
+jest.setTimeout(300000);
+
+beforeAll(async () => {
+  const uri = process.env.GLOBAL_MONGO_URI;
+
+  if (!uri) {
+      console.warn('GLOBAL_MONGO_URI is not set. Ensure globalSetup is configured.');
+      return;
+  }
+
+  // Ensure we are not using the real DB
+  process.env.MONGODB_URI = uri;
+
+  if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(uri);
+  }
+});
+
+afterAll(async () => {
+  try {
+    await mongoose.disconnect();
+  } catch (err) {
+    // ignore
+  }
+  if (typeof global.gc === 'function') {
+    global.gc();
+  }
+});
+
+afterEach(async () => {
+  if (mongoose.connection.readyState === 1) {
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+      const collection = collections[key];
+      await collection.deleteMany();
+    }
+  }
+});
+
+// Suppress surgical noisy logs to keep test output clean
+const originalError = console.error;
+const originalLog = console.log;
+const originalWarn = console.warn;
+
+console.error = (...args) => {
+  // Suppress only known expected noise from tests
+  const noise = [
+    'SMTP credentials or host missing',
+    'Different login method',
+    'error:',
+    'Error:',
+    'ERROR:',
+    'Account uses a different login method',
+    'Internal Error',
+    'Seeding failed:',
+    'Error seeding locations:',
+    'Drop Failed',
+    'Crashed'
+  ];
+  const combinedMsg = args.map(arg => String(arg)).join(' ');
+  if (noise.some(n => combinedMsg.includes(n))) return;
+  originalError(...args);
+};
+
+console.log = (...args) => {
+  const noise = [
+    'successfully',
+    'Successfully',
+    '[NotificationService]',
+    'Location Seeder Completed'
+  ];
+  const combinedMsg = args.map(arg => String(arg)).join(' ');
+  if (noise.some(n => combinedMsg.includes(n))) return;
+  originalLog(...args);
+};
+
+console.warn = (...args) => {
+  const noise = [
+    '[CACHE] Upstash Redis credentials not found'
+  ];
+  const combinedMsg = args.map(arg => String(arg)).join(' ');
+  if (noise.some(n => combinedMsg.includes(n))) return;
+  originalWarn(...args);
+};
+
+// Suppress known expected Pino logger noise from printing large stack traces during tests
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
+const suppressedLogPatterns = [
+  '[SOSController]',
+  '[ChatController]',
+  '[QueueService]',
+  '[AuthEvents] OTP email sending failed',
+  '[CACHE] Redis credentials not found',
+  '[ENV VALIDATION ERROR]',
+  '[ENV VALIDATION FAILED]'
+];
+
+const shouldSuppress = (chunk) => {
+  const str = typeof chunk === 'string' ? chunk : chunk?.toString() || '';
+  return suppressedLogPatterns.some((pattern) => str.includes(pattern));
+};
+
+process.stdout.write = function (chunk, encoding, callback) {
+  if (shouldSuppress(chunk)) {
+    if (typeof encoding === 'function') encoding();
+    else if (typeof callback === 'function') callback();
+    return true;
+  }
+  return originalStdoutWrite(chunk, encoding, callback);
+};
+
+process.stderr.write = function (chunk, encoding, callback) {
+  if (shouldSuppress(chunk)) {
+    if (typeof encoding === 'function') encoding();
+    else if (typeof callback === 'function') callback();
+    return true;
+  }
+  return originalStderrWrite(chunk, encoding, callback);
+};

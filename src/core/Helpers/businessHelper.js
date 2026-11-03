@@ -1,0 +1,135 @@
+import { userPayload } from './userProfileHelper.js';
+import { addressPayload, getLocationPoint } from './addressHelper.js';
+import { VENDOR_STATUS } from '@/core/Constants/index.js';
+import { dateFormat } from './dateUtils.js';
+import VendorClosure from '../Models/VendorClosure.js';
+import { getBusinessById } from './queryHelpers.js';
+
+/**
+ * Formats a raw VendorClosure document into standard response payload structure.
+ * @param {Object} closure - The VendorClosure object (lean or document)
+ * @returns {Object|null} Formatted closure payload object or null
+ */
+export function closurePayload(closure) {
+    if (!closure) return null;
+    if (Array.isArray(closure)) {
+        return closure.map(c => closurePayload(c)).filter(Boolean);
+    }
+    const closureId = closure._id || closure.id;
+    if (!closureId) return null;
+    return {
+        id: closureId?.toString(),
+        vendor: closure.vendor,
+        startDate: dateFormat(closure.startDate),
+        endDate: dateFormat(closure.endDate),
+        reason: closure.reason || null,
+        isActive: closure.isActive !== undefined ? Boolean(closure.isActive) : true
+    };
+}
+
+/**
+ * Formats a raw vendor document into clean business details object without nested personalProfile.
+ * @param {Object} vendor - The Vendor object (lean)
+ * @returns {Object|null} Business details object or null
+ */
+export function businessDetailsFormat(vendor) {
+    if (!vendor) return null;
+    const vendorId = vendor._id ? vendor._id.toString() : (vendor.id ? String(vendor.id) : null);
+    return {
+        id: vendorId,
+        ownerName: vendor.ownerName,
+        businessName: vendor.businessName,
+        businessNumber: vendor.businessNumber,
+        businessRegistration: vendor.businessRegistration,
+        gstNumber: vendor.gstNumber,
+        address: addressPayload(vendor.address),
+        location: getLocationPoint(vendor.address),
+        profileImage: vendor.profileImage,
+        profileType: vendor.profileType,
+        businessAbout: vendor.businessAbout,
+        trustBadge: vendor.trustBadge,
+        isOperating: vendor.isOperating,
+        closurePeriods: closurePayload(vendor.closurePeriods),
+        status: vendor.status,
+        createdAt: vendor.createdAt,
+        deletedAt: vendor.deletedAt || null,
+        deletedBy: vendor.deletedBy || null
+    };
+}
+
+/**
+ * Formats a vendor model (with populated user) into standard business API response structure.
+ * @param {Object} vendor - The vendor object (lean, with populated user)
+ * @returns {Object|null} Formatted business object or null
+ */
+export function businessPayload(vendor) {
+    if (!vendor) return null;
+    const u = typeof vendor.user === 'object' && vendor.user !== null ? vendor.user : null;
+    const b = businessDetailsFormat(vendor);
+    if (!b) return null;
+    return { ...b, personalProfile: userPayload(u) };
+}
+
+export function itemBusinessPayload(vendor) {
+    if (!vendor) return null;
+    return {
+        id: vendor._id.toString(),
+        ownerName: vendor.ownerName,
+        businessName: vendor.businessName,
+        businessNumber: vendor.businessNumber,
+        address: addressPayload(vendor.address),
+        location: getLocationPoint(vendor.address),
+        trustBadge: vendor.trustBadge,
+        isOperating: vendor.isOperating,
+        profileImage: vendor.profileImage
+    };
+}
+
+/**
+ * Formats a vendor document into authentication response payload.
+ * @param {Object} vendor - The vendor object
+ * @returns {Object|null} Formatted business auth response object or null
+ */
+export function businessAuthResponse(vendor) {
+    const base = businessDetailsFormat(vendor);
+    if (!base) return null;
+
+    let profileStatus = VENDOR_STATUS.UPLOAD_DOCUMENTS;
+    if (vendor.documents?.aadharCard?.length > 0 && vendor.documents?.panCard?.url) profileStatus = VENDOR_STATUS.COMPLETED;
+    return {
+        ...base,
+        isApproved: vendor.isApproved,
+        isOperating: vendor.isOperating,
+        status: vendor.status,
+        profileStatus
+    };
+}
+
+export function getBusinessDetailsForBooking(vendor) {
+    if (!vendor) return null;
+    return {
+        id: vendor._id.toString(),
+        ownerName: vendor.ownerName,
+        businessName: vendor.businessName,
+        businessNumber: vendor.businessNumber,
+        address: addressPayload(vendor.address),
+        location: getLocationPoint(vendor.address),
+        profileImage: vendor.profileImage,
+        trustBadge: vendor.trustBadge,
+        isOperating: vendor.isOperating,
+    };
+}
+
+export async function businessPayloadMini(businessId) {
+    if (!businessId) return null;
+    const b = await getBusinessById(businessId);
+    if (!b) return null;
+    return {
+        id: b._id.toString(),
+        ownerName: b.ownerName,
+        businessName: b.businessName,
+        profileImage: b.profileImage
+    };
+}
+
+export default { addressPayload, getLocationPoint, closurePayload, businessDetailsFormat, businessPayload, businessAuthResponse, itemBusinessPayload, businessPayloadMini };

@@ -1,0 +1,517 @@
+import { randomBytes, randomInt } from 'node:crypto';
+import mongoose from 'mongoose';
+import Booking from '@/core/Models/Booking.js';
+import Package from '@/core/Models/Package.js';
+import User from '@/core/Models/User.js';
+import Dispute from '@/core/Models/Dispute.js';
+import Coupon from '@/core/Models/Coupon.js';
+
+import NotificationService from '@/core/Services/General/NotificationService.js';
+import RazorpayService from '@/core/Services/General/RazorpayService.js';
+import PackageService from '@/core/Services/Traveller/PackageService.js';
+import InventoryService from '@/core/Services/Traveller/InventoryService.js';
+import CacheService from '@/core/Services/CacheService.js';
+import { AppError } from '@/core/Errors/AppError.js';
+import { getAppConfig } from '@/core/Lib/appConfig.js';
+import { RESPONSE_MESSAGES, BOOKING_STATUS, PAYMENT_STATUS, REFUND_STATUS } from '@/core/Constants/index.js';
+import BusinessService from '@/core/Services/Vendor/BusinessService.js';
+import { getPackageItemById, getUserById, getBusinessById, getBookingBy, getBookingById } from '@/core/Helpers/queryHelpers.js';
+import { bookingPayload, calculateCancellationRefund } from '@/core/Helpers/bookingHelper.js';
+
+const generateNumericOTP = () => randomInt(100000, 1000000).toString();
+const generateBookingCode = () => `PH-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomBytes(4).toString('hex').toUpperCase()}`;
+
+/**
+ * BookingService (Traveller Role)
+ * Specialized for customer reservations and post-booking operations.
+ */
+class BookingService {
+    async initiateBooking({ userId, body, itemId }) {
+        const session = await mongoose.startSession();
+        let finalResponse;
+
+        try {
+            await session.withTransaction(async () => {
+                const config = await getAppConfig();
+                const checkInDate = new Date(body.startDate);
+                const checkOutDate = new Date(body.endDate);
+                if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) throw AppError.badRequest("Invalid startDate or endDate format. Use YYYY-MM-DD.");
+
+                const packageItem = await PackageService.getAvailablePackageItem(itemId);
+                if (!packageItem) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
+
+                const travellerProfile = await getUserById(userId);
+                if (!travellerProfile) throw AppError.notFound(RESPONSE_MESSAGES.USER.NOT_FOUND);
+
+                const { catalogId, category, business } = packageItem;
+                if (!business?.id) throw AppError.notFound(RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+                const businessId = business.id;
+                const businessAccountDetails = await getBusinessById(businessId, 'bankDetails businessName ownerName');
+
+
+                const pricingRules = packageItem.pricing || {};
+
+                // Price logic
+                let itemBaseprice = pricingRules.basePrice || 0;
+
+                let itemGST = 0;
+                if (pricingRules.gst) {
+                    itemGST = parseFloat(pricingRules.gst);
+                } else if (pricingRules.gst !== undefined && pricingRules.gst !== null && pricingRules.gst !== '') {
+                    const taxKey = `tax_${category.replace(/-/g, '_')}`;
+                    itemGST = parseFloat(config.tax[taxKey]);
+                }
+
+                let itemServiceTax = 0;
+                if (pricingRules.serviceTax) {
+                    itemServiceTax = parseFloat(pricingRules.serviceTax);
+                } else if (pricingRules.serviceTax !== undefined && pricingRules.serviceTax !== null && pricingRules.serviceTax !== '') {
+                    itemServiceTax = parseFloat(config.tax.service_tax);
+                }
+
+
+                const adultsCount = parseInt(body.adults) || 1;
+                const childrenCount = parseInt(body.children) || 0;
+                const isSelfIncluded = body.includeMe === 'true' || body.includeMe === true;
+                const guestDetails = body.guestDetails || [];
+
+                const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+                const totalNights = Math.max(1, Math.round(timeDiff / (1000 * 60 * 60 * 24)));
+                const requestedUnits = parseInt(body.units) > 0 ? parseInt(body.units) : 1;
+
+                let calculatedSubTotal = 0;
+                let requiredUnits = requestedUnits;
+
+                const STAY_CATEGORIES = ['homestay', 'hotel', 'camping'];
+                const ACTIVITY_CATEGORIES = ['trekking', 'rafting', 'bungeeJumping'];
+                const RENTAL_CATEGORIES = ['bike-scooter-rental', 'chardham-tour', 'vehicleRental', 'chardhamTour'];
+
+                if (STAY_CATEGORIES.includes(category)) {
+                    if (category === 'homestay') {
+                        requiredUnits = 1;
+                    } else {
+                        const maxCapacityPerUnit = parseInt(pricingRules.maxAdults) > 0 ? parseInt(pricingRules.maxAdults) : 2;
+                        requiredUnits = Math.max(requestedUnits, Math.ceil(adultsCount / maxCapacityPerUnit));
+                    }
+                    calculatedSubTotal = itemBaseprice * totalNights * requiredUnits;
+                } else if (ACTIVITY_CATEGORIES.includes(category)) {
+                    const maxFreeChildren = parseInt(pricingRules.maxChildren) || 0;
+                    const childRate = pricingRules.childPrice || 0;
+                    const chargeableChildren = childrenCount > maxFreeChildren ? childrenCount - maxFreeChildren : 0;
+                    calculatedSubTotal = (itemBaseprice * adultsCount) + (childRate * chargeableChildren);
+                    requiredUnits = adultsCount + childrenCount;
+                } else {
+                    const isRentalOrTour = RENTAL_CATEGORIES.includes(category);
+                    const durationMultiplier = isRentalOrTour ? totalNights : 1;
+                    calculatedSubTotal = itemBaseprice * requiredUnits * durationMultiplier;
+                }
+
+                const toCent = (num) => Math.round((Number(num) + Number.EPSILON) * 100) / 100;
+
+                calculatedSubTotal = toCent(calculatedSubTotal);
+                let d = pricingRules.discountType;
+                let discountAmount = 0;
+                if (d === "percentage") {
+                    discountAmount = calculatedSubTotal * ((pricingRules.discount || 0) / 100);
+                } else if (d === "flat") {
+                    discountAmount = pricingRules.discount || 0;
+                }
+
+                const appliedDiscount = toCent(discountAmount);
+                const taxableAmount = Math.max(0, toCent(calculatedSubTotal - appliedDiscount));
+
+                let tax = 0;
+                if (itemGST) tax = taxableAmount * (itemGST / 100);
+                const calculatedTax = toCent(tax);
+
+                let serviceFee = 0;
+                if (itemServiceTax) {
+                    const baseServiceFee = taxableAmount * (itemServiceTax / 100);
+                    const gstOnServiceFee = baseServiceFee * ((config?.tax?.gst || 18) / 100);
+                    serviceFee = baseServiceFee + gstOnServiceFee;
+                }
+                const appliedServiceFee = toCent(serviceFee);
+
+                const baseAmount = itemBaseprice || 0;
+                const appliedCouponCode = null;
+                const appliedCouponAmount = 0;
+                const appliedTaxRate = itemGST || 0;
+                const grandTotal = Math.max(0, toCent(calculatedSubTotal + calculatedTax + appliedServiceFee - appliedDiscount - appliedCouponAmount));
+
+                const availabilityStatus = await InventoryService.checkAvailabilityRange(businessId, itemId, category, checkInDate, checkOutDate, requiredUnits);
+                if (!availabilityStatus.available) throw AppError.badRequest(RESPONSE_MESSAGES.BOOKING.SLOTS_NOT_AVAILABLE);
+
+
+                let itemUrl = '';
+                if (Array.isArray(packageItem.photos) && packageItem.photos.length > 0) itemUrl = packageItem.photos[0].url || packageItem.photos[0] || '';
+                if (typeof itemUrl !== 'string') itemUrl = '';
+
+                let newBooking;
+                let attempts = 0;
+                const maxAttempts = 3;
+
+                while (attempts < maxAttempts) {
+                    try {
+                        const bookingCode = generateBookingCode();
+                        const [createdBooking] = await Booking.create([{
+                            bookingCode,
+                            user: userId,
+                            vendor: business.id,
+                            package: catalogId,
+                            item: {
+                                itemId: packageItem._id,
+                                itemType: category,
+                                title: packageItem.title,
+                                url: itemUrl
+                            },
+                            traveller: {
+                                name: travellerProfile.name,
+                                phone: travellerProfile.phone,
+                                email: travellerProfile.email
+                            },
+                            startDate: checkInDate,
+                            endDate: checkOutDate,
+                            occupancy: {
+                                adults: adultsCount,
+                                children: childrenCount,
+                                includeMe: isSelfIncluded,
+                                guestDetails,
+                                units: requiredUnits
+                            },
+                            pricing: {
+                                basePrice: baseAmount,
+                                subTotal: calculatedSubTotal,
+                                discount: appliedDiscount,
+                                coupon: appliedCouponCode,
+                                couponAmount: Math.round(appliedCouponAmount),
+                                taxRate: appliedTaxRate,
+                                serviceFee: appliedServiceFee,
+                                tax: calculatedTax,
+                                total: grandTotal
+                            },
+                            payout: {
+                                amount: 0,
+                                bankDetails: {
+                                    accountHolderName: businessAccountDetails?.bankDetails?.accountHolderName || null,
+                                    accountNumber: businessAccountDetails?.bankDetails?.accountNumber || null,
+                                    ifscCode: businessAccountDetails?.bankDetails?.ifscCode || null,
+                                    bankName: businessAccountDetails?.bankDetails?.bankName || null,
+                                    razorpayContactId: businessAccountDetails?.bankDetails?.razorpayContactId || null,
+                                    razorpayFundAccountId: businessAccountDetails?.bankDetails?.razorpayFundAccountId || null
+                                },
+                                businessName: business.businessName,
+                                ownerName: business.ownerName
+                            },
+                            status: BOOKING_STATUS.PENDING,
+                            paymentStatus: PAYMENT_STATUS.UNPAID,
+                            timeline: [{
+                                status: 'Booking Initiated',
+                                remarks: `Booking record ${bookingCode} created for ${requiredUnits} units. Awaiting payment.`,
+                                actor: userId
+                            }]
+                        }], { session });
+
+                        newBooking = createdBooking;
+                        break;
+                    } catch (err) {
+                        if (err.code === 11000 && err.message.includes('bookingCode')) {
+                            attempts++;
+                            if (attempts >= maxAttempts) {
+                                throw AppError.internal('Unable to generate a unique booking code. Please try again.');
+                            }
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
+
+                const finalCheck = await InventoryService.checkAvailabilityRange(businessId, itemId, category, checkInDate, checkOutDate, requiredUnits, session, newBooking._id);
+                if (!finalCheck.available) throw AppError.conflict(`Inventory Conflict: Slots became unavailable.`);
+
+                NotificationService.notifyBookingStatus(newBooking._id, 'created');
+
+                // Format response with populated user & vendor details
+                const bookingObj = newBooking.toObject ? newBooking.toObject() : newBooking;
+                bookingObj.user = travellerProfile;
+                bookingObj.vendor = business;
+                finalResponse = bookingPayload(bookingObj);
+            });
+            return finalResponse;
+        } catch (error) {
+            throw (error instanceof AppError ? error : AppError.badRequest(error.message || 'Booking failed'));
+        } finally {
+            session.endSession();
+        }
+    }
+
+    /**
+     * Separate API to get payment details for a booking
+     */
+    async initializePayment(bookingId, userId) {
+        const booking = await getBookingBy({ _id: bookingId, user: userId }, '', null, { lean: false });
+        if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND_OR_UNAUTHORIZED);
+        if (booking.status !== BOOKING_STATUS.PENDING) throw AppError.badRequest(`Payment not allowed. Booking status is ${booking.status}.`);
+        if (booking.paymentStatus === PAYMENT_STATUS.PAID) throw AppError.badRequest("This booking is already paid.");
+        if (booking.payment?.orderId && !booking.payment?.paymentId) return { orderId: booking.payment.orderId, amount: booking.pricing.total, currency: 'INR', bookingCode: booking.bookingCode };
+        const config = await getAppConfig();
+        let razorpayOrder;
+
+        try {
+            razorpayOrder = await RazorpayService.createOrder(booking.pricing.total, booking.bookingCode, config.razorpay);
+        } catch (error) {
+            throw AppError.internal(error.message || 'Unable to initialize payment gateway order.');
+        }
+
+        if (!razorpayOrder?.id) throw AppError.internal('Payment gateway did not return an order id.');
+        booking.payment.gateway = 'razorpay';
+        booking.payment.orderId = razorpayOrder.id;
+        booking.timeline.push({ status: 'Payment Attempted', remarks: `Razorpay Order ${razorpayOrder.id} generated.`, actor: userId });
+        await booking.save();
+        return { orderId: razorpayOrder.id, amount: booking.pricing.total, currency: 'INR', bookingCode: booking.bookingCode };
+    }
+
+    /**
+     * Verify payment and generate Start/End OTPs
+     */
+    async verifyBookingPayment(bookingId, userId, paymentData) {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData || {};
+
+        const booking = await getBookingBy({ _id: bookingId, user: userId }, '', ['user', { path: 'vendor', populate: { path: 'user' } }], { lean: false });
+        if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND_OR_UNAUTHORIZED);
+
+        if (!booking.payment?.orderId) throw AppError.badRequest('Payment order has not been initialized for this booking.');
+        if (booking.payment.orderId !== razorpay_order_id) throw AppError.badRequest('Payment order does not match this booking.');
+
+        if (booking.paymentStatus === PAYMENT_STATUS.PAID || booking.status === BOOKING_STATUS.CONFIRMED) {
+            const samePayment = !booking.payment.paymentId || booking.payment.paymentId === razorpay_payment_id;
+            if (samePayment) return bookingPayload(booking);
+            throw AppError.badRequest('This booking is already paid with a different payment id.');
+        }
+
+        if (booking.payment.paymentId && booking.payment.paymentId !== razorpay_payment_id) throw AppError.badRequest('A different payment attempt is already recorded for this booking.');
+
+        const config = await getAppConfig();
+        const isValid = RazorpayService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature, config.razorpay);
+        if (!isValid) throw AppError.badRequest(RESPONSE_MESSAGES.ERROR.INVALID_SIGNATURE);
+
+        booking.verification.startOTP = generateNumericOTP();
+        booking.verification.endOTP = generateNumericOTP();
+
+        booking.status = BOOKING_STATUS.CONFIRMED;
+        booking.paymentStatus = PAYMENT_STATUS.PAID;
+
+        // Increment Coupon Usage Count
+        if (booking.pricing.coupon) {
+            await Coupon.findOneAndUpdate(
+                { code: booking.pricing.coupon.toUpperCase() },
+                { $inc: { usedCount: 1 } },
+                { returnDocument: 'after' }
+            );
+        }
+
+        booking.payment.paymentId = razorpay_payment_id;
+        booking.payment.signature = razorpay_signature;
+        booking.payment.paidAt = new Date();
+
+        booking.timeline.push({
+            status: 'Payment Verified',
+            remarks: `Payment ₹${booking.pricing.total} verified successfully. Access OTPs generated.`,
+            actor: userId
+        });
+
+        await booking.save();
+
+        // Invalidate booking caches
+        try {
+            await CacheService.del('admin:bookings:all');
+            await CacheService.deletePattern('admin:bookings:*');
+            await CacheService.del(`admin:bookings:${bookingId}`);
+            await CacheService.del('admin:dashboard:stats');
+            await CacheService.del('admin:dashboard:revenue');
+        } catch (cacheErr) {
+            // Non-blocking cache flush
+        }
+
+        // Reserve inventory slots upon booking confirmation
+        if (booking.vendor && booking.item?.itemId && booking.startDate && booking.endDate) {
+            try {
+                const vendorId = booking.vendor._id ? booking.vendor._id.toString() : String(booking.vendor);
+                await InventoryService.reserveSlotsRange(
+                    vendorId,
+                    booking.item.itemId,
+                    booking.item.itemType,
+                    booking.startDate,
+                    booking.endDate,
+                    booking.occupancy?.units || 1
+                );
+            } catch (invErr) {
+                // Ignore if inventory doc not yet initialized
+            }
+        }
+
+        // 3. Notify Traveller & Vendor
+        NotificationService.notifyBookingStatus(booking._id, 'confirmed');
+
+        return bookingPayload(booking);
+    }
+
+    /**
+     * Reveal appropriate OTP (Start or End) based on booking status
+     */
+    async getBookingOTP(bookingId, userId) {
+        const booking = await getBookingBy({ _id: bookingId, user: userId });
+        if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND_OR_UNAUTHORIZED);
+
+        if (booking.status === BOOKING_STATUS.COMPLETED) {
+            throw AppError.badRequest("Trip is already completed. No OTPs available.");
+        }
+
+        if (booking.status === BOOKING_STATUS.CANCELLED) {
+            throw AppError.badRequest("This booking has been cancelled.");
+        }
+        let otpType = '';
+        let otpValue = '';
+        if (booking.status === BOOKING_STATUS.CONFIRMED) {
+            otpType = 'Start OTP';
+            otpValue = booking.verification.startOTP;
+
+            const today = new Date().setHours(0, 0, 0, 0);
+            const startDate = new Date(booking.startDate).setHours(0, 0, 0, 0);
+            if (today < startDate) {
+                throw AppError.badRequest(`Start OTP will be available on ${new Date(booking.startDate).toDateString()}`);
+            }
+        } else if (booking.status === BOOKING_STATUS.ONGOING) {
+            otpType = 'End OTP';
+            otpValue = booking.verification.endOTP;
+        } else {
+            throw AppError.badRequest(`OTP not available for current status: ${booking.status}`);
+        }
+        NotificationService.notifyBookingStatus(booking._id, 'otp_sent');
+        return { type: otpType, otp: otpValue };
+    }
+
+    /**
+     * Process cancellation with tiered refund policy (100% > 7d, 50% 3-7d, 0% < 48h) and cancel booking
+     */
+    async refundBooking(bookingId, req = null) {
+        const bookingToCancel = await getBookingById(bookingId);
+        if (!bookingToCancel) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+
+        if (bookingToCancel.status === BOOKING_STATUS.CANCELLED) {
+            throw AppError.badRequest("This booking is already cancelled.");
+        }
+
+        // Calculate real-time refund amount using centralized helper
+        const refundAmount = calculateCancellationRefund(bookingToCancel);
+        const totalPaid = bookingToCancel.pricing?.total || 0;
+        const refundPercentage = totalPaid > 0 ? (refundAmount / totalPaid) : 0;
+        let refundGatewayResponse = null;
+
+        const isPaid = bookingToCancel.paymentStatus === PAYMENT_STATUS.PAID || bookingToCancel.paymentStatus === 'paid';
+        if (isPaid && refundAmount > 0 && bookingToCancel.payment?.paymentId) {
+            try {
+                const config = await getAppConfig();
+                refundGatewayResponse = await RazorpayService.createRefund(bookingToCancel.payment.paymentId, refundAmount, config?.razorpay);
+            } catch (gatewayErr) {
+                // Gateway refund failed, fallback to marking refund pending
+            }
+        }
+
+        const session = await mongoose.startSession();
+        let finalBooking;
+        try {
+            await session.withTransaction(async () => {
+                const booking = await getBookingById(bookingId, '', null, { session, lean: false });
+                if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+
+                booking.status = BOOKING_STATUS.CANCELLED;
+                if (!isPaid) {
+                    booking.paymentStatus = PAYMENT_STATUS.CANCELLED;
+                } else if (refundGatewayResponse?.id) {
+                    booking.paymentStatus = PAYMENT_STATUS.REFUNDED;
+                } else if (refundAmount > 0) {
+                    booking.paymentStatus = PAYMENT_STATUS.REFUND_PENDING;
+                } else {
+                    booking.paymentStatus = PAYMENT_STATUS.CANCELLED;
+                }
+
+                if (!booking.pricing) booking.pricing = {};
+                booking.pricing.refundAmount = refundAmount;
+                booking.pricing.refundStatus = refundGatewayResponse?.id ? REFUND_STATUS.REFUNDED : (refundAmount > 0 ? REFUND_STATUS.PENDING : REFUND_STATUS.NONE);
+                if (refundGatewayResponse?.id) {
+                    booking.pricing.refundId = refundGatewayResponse.id;
+                    booking.pricing.refundDate = new Date();
+                }
+
+                booking.cancellation = {
+                    reason: req?.body?.reason || 'Cancelled by User',
+                    date: new Date(),
+                    actor: req?.user?.id || 'USER'
+                };
+
+                booking.timeline.push({
+                    status: 'Booking Cancelled',
+                    remarks: `Cancelled by user. Eligible refund: ₹${refundAmount} (${Math.round(refundPercentage * 100)}%). ${refundGatewayResponse?.id ? `Gateway Refund ID: ${refundGatewayResponse.id}` : ''}`,
+                    actor: req?.user?.id || 'USER'
+                });
+                await booking.save({ session });
+
+                NotificationService.notifyBookingStatus(bookingId, 'cancelled');
+                finalBooking = booking;
+            });
+
+            try {
+                await CacheService.del('admin:bookings:all');
+                await CacheService.deletePattern('admin:bookings:*');
+                await CacheService.del(`admin:bookings:${bookingId}`);
+                await CacheService.del('admin:dashboard:stats');
+                await CacheService.del('admin:dashboard:revenue');
+            } catch (cacheErr) {
+                // Non-blocking cache flush
+            }
+
+            return finalBooking;
+        } catch (error) {
+            throw error;
+        } finally {
+            session.endSession();
+        }
+    }
+
+    async reportDispute(bookingId, userId, payload) {
+        let { reason, description, evidenceUrls } = payload;
+
+        const booking = await getBookingBy({ _id: bookingId, user: userId }, '', null, { lean: false });
+        if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+
+        // Map reason to allowed enum if strictly necessary, or ensure user sends correct ones
+        const validReasons = ['vendor_no_show', 'quality_issue', 'safety_concern', 'wrong_information', 'other'];
+        if (!validReasons.includes(reason)) {
+            // Map common phrases
+            if (reason.toLowerCase().includes('not clean') || reason.toLowerCase().includes('quality')) reason = 'quality_issue';
+            else if (reason.toLowerCase().includes('different') || reason.toLowerCase().includes('wrong')) reason = 'wrong_information';
+            else reason = 'other';
+        }
+
+        const dispute = await Dispute.create({
+            bookingId,
+            user: userId,
+            traveller: userId, // Required by model
+            vendor: booking.vendor,
+            reason,
+            description,
+            evidenceUrls: (evidenceUrls || []).map(url => (typeof url === 'string' ? { url } : url))
+        });
+
+        booking.timeline.push({
+            status: 'Dispute Raised',
+            remarks: `Reason: ${reason}.`,
+            actor: userId
+        });
+        await booking.save();
+        return dispute;
+    }
+}
+
+export default new BookingService();
+

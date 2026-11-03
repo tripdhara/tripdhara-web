@@ -1,0 +1,100 @@
+import { jest } from '@jest/globals';
+import { createMockQueryHelpers } from '../../utils/mockHelpers.js';
+
+const mockQuery = {
+    _resolvedValue: null,
+    lean: jest.fn(function() {
+        return Promise.resolve(mockQuery._resolvedValue);
+    }),
+    then: jest.fn(function(resolve, reject) {
+        return Promise.resolve(mockQuery._resolvedValue).then(resolve, reject);
+    })
+};
+
+const mockQueryHelpers = createMockQueryHelpers();
+jest.unstable_mockModule('@/core/Helpers/queryHelpers.js', () => mockQueryHelpers);
+
+jest.unstable_mockModule('@/models/Setting.js', () => {
+    const mockSettingInstance = (data) => ({
+        ...data,
+        save: jest.fn().mockResolvedValue(true),
+        set: jest.fn(function(d) { Object.assign(this, d); }),
+        toObject: jest.fn(function() { return this; })
+    });
+    
+    const MockSetting = jest.fn().mockImplementation(mockSettingInstance);
+    
+    MockSetting.findOne = jest.fn(() => mockQuery);
+    MockSetting.create = jest.fn((data) => Promise.resolve({
+        ...data,
+        toObject: () => ({ ...data })
+    }));
+    MockSetting._mockQuery = mockQuery;
+    
+    return { default: MockSetting };
+});
+
+jest.unstable_mockModule('@/core/Lib/appConfig.js', () => ({
+    clearAppConfigCache: jest.fn()
+}));
+
+const { default: SettingsService } = await import('@/services/Admin/SettingsService.js');
+const { default: Setting } = await import('@/models/Setting.js');
+const { clearAppConfigCache } = await import('@/core/Lib/appConfig.js');
+
+describe('Industry Standard: SettingsService Business Logic Service', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockQuery._resolvedValue = null;
+        mockQueryHelpers.getSettingBy.mockResolvedValue(null);
+    });
+
+    describe('[getSettings]', () => {
+        it('[Success] should return existing settings', async () => {
+            const mockSetting = { _id: 's1', maintenanceMode: false };
+            mockQueryHelpers.getSettingBy.mockResolvedValue(mockSetting);
+
+            const result = await SettingsService.getSettings();
+
+            expect(result).toEqual(mockSetting);
+        });
+
+        it('[Success] should create new settings if none exist', async () => {
+            mockQueryHelpers.getSettingBy.mockResolvedValue(null);
+            const mockNewSetting = { _id: 'snew', toObject: jest.fn().mockReturnThis() };
+            Setting.create.mockResolvedValue(mockNewSetting);
+
+            const result = await SettingsService.getSettings();
+
+            expect(Setting.create).toHaveBeenCalledWith({});
+            expect(result).toEqual(mockNewSetting);
+        });
+    });
+
+    describe('[updateSettings]', () => {
+        it('[Success] should update existing settings and clear cache', async () => {
+            const mockSetting = { 
+                save: jest.fn().mockResolvedValue(true),
+                set: jest.fn(function(data) { Object.assign(this, data); }),
+                toObject: jest.fn(function() { return this; })
+            };
+            mockQuery._resolvedValue = mockSetting;
+
+            await SettingsService.updateSettings({ maintenanceMode: true });
+
+            expect(mockSetting.maintenanceMode).toBe(true);
+            expect(mockSetting.save).toHaveBeenCalled();
+            expect(clearAppConfigCache).toHaveBeenCalled();
+        });
+
+        it('[Success] should create new settings if none exist', async () => {
+            mockQuery._resolvedValue = null;
+            
+            const result = await SettingsService.updateSettings({ maintenanceMode: true });
+
+            expect(Setting).toHaveBeenCalledWith({ maintenanceMode: true });
+            expect(result.maintenanceMode).toBe(true);
+            expect(clearAppConfigCache).toHaveBeenCalled();
+        });
+    });
+});

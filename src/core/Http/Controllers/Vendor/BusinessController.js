@@ -1,0 +1,115 @@
+import BusinessService from '@/core/Services/Vendor/BusinessService.js';
+import { getBusinessById, getBusinessByUserId, getBusinessByIdAndUserId } from '@/core/Helpers/queryHelpers.js';
+import { HTTP_STATUS, RESPONSE_MESSAGES, STATUS } from '@/core/Constants/index.js';
+import { handleFormDataImageUpload } from '@/core/Helpers/cloudinary.js';
+import { businessAuthResponse, businessDetailsFormat } from '@/core/Helpers/businessHelper.js';
+import { userBusinessProfileById } from '@/core/Helpers/userProfileHelper.js';
+import Controller from '@/core/Controllers/Controller.js';
+import VendorEvents from '@/core/Events/VendorEvents.js';
+import { NOTIFICATION } from '@/core/Constants/notification.js';
+
+/**
+ * BusinessController (Vendor Role) - Specialized management of
+ * Core Business Identity and Platform Availability status.
+ */
+class BusinessController extends Controller {
+
+    /**
+     * Private Helper: Prepare request payload & process optional profile image upload (DRY)
+     */
+    async _prepareProfileBody(req) {
+        const body = req.payload || {};
+        const profileImage = await handleFormDataImageUpload(req.formDataBody, 'profile_image', `vendor_profiles/${req.user.id}`);
+        if (profileImage) body.profileImage = profileImage;
+        return body;
+    }
+
+    // GET /vendor/business/profile
+    async getProfile(req) {
+        try {
+            const userId = req.user.id;
+            const user = await userBusinessProfileById(userId);
+            if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.USER.NOT_FOUND);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.FETCHED, user);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // POST /vendor/business/profile/create
+    async createProfile(req) {
+        try {
+            const userId = req.user.id;
+            const existingProfile = await getBusinessByUserId(userId);
+            if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
+
+            const body = await this._prepareProfileBody(req);
+            const result = await BusinessService.syncBusinessProfile(userId, body);
+            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
+            return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // PATCH /vendor/business/profile/update/:id
+    async updateProfile(req) {
+        try {
+            const body = await this._prepareProfileBody(req);
+            const result = await BusinessService.syncBusinessProfile(req.user.id, body);
+            if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_UPDATED, result);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // PATCH /vendor/business/profile/deactivate/:id
+    // PATCH /vendor/business/profile/activate/:id
+
+    async updateBusinessProfileStatus(req, { params }) {
+        try {
+            const { status } = req.payload;
+            if (![STATUS.ACTIVE, STATUS.INACTIVE].includes(status)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VENDOR.INVALID_STATUS);
+            const result = await BusinessService.updateBusinessStatus(req.user.id, params.id, status);
+            const statusType = result?.businessProfile?.status === STATUS.ACTIVE ? NOTIFICATION.KEY.BUSINESS.PROFILE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PROFILE_DEACTIVATED;
+            if (statusType) {
+                VendorEvents.emitAsync(statusType, { identifier: result.email, details: result });
+            }
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.STATUS_UPDATED);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+
+    // DELETE /vendor/business/profile/delete/:id
+    async deleteProfile(req, { params }) {
+        try {
+            const result = await BusinessService.removeBusinessProfile(req.user.id, params?.id);
+            if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_DELETED);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // PATCH /vendor/business/profile/status/:id
+    async updateOperatingStatus(req, { params }) {
+        try {
+            const isOperating = req.payload?.isOperating === true || req.payload?.isOperating === 'true';
+            const user = await BusinessService.toggleOperatingStatus(req.user.id, isOperating, params?.id);
+            if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+
+            if (user.email) VendorEvents.emit(NOTIFICATION.KEY.VENDOR.OPERATING_STATUS_UPDATED, { identifier: user.email, businessName: user.businessDetails?.businessName, isOperating });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED, user);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+}
+
+const businessController = new BusinessController();
+export default businessController;

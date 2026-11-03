@@ -1,0 +1,26 @@
+{
+    "functions": {
+        "src/app/api/**/*": {
+            "maxDuration": 60,
+            "memory": 1024
+        }
+    },
+    "crons": [
+        {
+            "path": "/api/cron?job=dailyBookings",
+            "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron?job=expireBookings",
+            "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron?job=resolveDisputes",
+            "schedule": "0 1 * * *"
+        },
+        {
+            "path": "/api/cron?job=cleanupLogs",
+            "schedule": "0 2 * * 0"
+        }
+    ]
+}

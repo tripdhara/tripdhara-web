@@ -83,7 +83,7 @@
         "@react-pdf/renderer": "^4.9.0",
         "@upstash/qstash": "^2.12.1",
         "@upstash/ratelimit": "^2.2.0",
-        "@upstash/redis": "^1.40.0",
+        "@upstash/redis": "^1.41.0",
         "bcryptjs": "^3.0.3",
         "cloudinary": "^2.11.0",
         "country-state-city": "^3.2.1",
@@ -93,9 +93,9 @@
         "google-auth-library": "^11.3.2",
         "js-cookie": "^3.0.8",
         "jsonwebtoken": "^9.0.3",
-        "lucide-react": "^1.66.0",
+        "lucide-react": "^1.67.0",
         "mongoose": "^9.11.4",
-        "next": "^16.4.3",
+        "next": "^16.4.4",
         "nodemailer": "^10.3.1",
         "pino": "^10.4.0",
         "pino-pretty": "^13.2.0",
@@ -112,20 +112,20 @@
     "devDependencies": {
         "@faker-js/faker": "^10.6.0",
         "@jest/globals": "^30.5.2",
-        "@tailwindcss/postcss": "^4.3.3",
+        "@tailwindcss/postcss": "^4.3.4",
         "@types/jest": "^30.0.0",
         "@types/node": "^26.6.6",
         "chalk": "^6.0.1",
         "eslint": "^10.14.0",
-        "eslint-config-next": "^16.4.3",
+        "eslint-config-next": "^16.4.4",
         "jest": "^30.5.2",
         "mongodb-memory-server": "^11.3.0",
         "postcss": "^8.5.32",
-        "tailwindcss": "^4.3.3"
+        "tailwindcss": "^4.3.4"
     },
     "engines": {
-        "node": ">=18.17.0",
-        "npm": ">=9.0.0"
+        "node": "27.x",
+        "npm": ">=12.0.0"
     },
     "overrides": {
         "sprintf-js": "^1.1.3",

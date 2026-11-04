@@ -384,7 +384,7 @@ export default function SettingsClientWrapper({ initialSettings }) {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
                 {/* Column 1: Communications & Cloud */}
                 <div className="space-y-6">
-                    {sections.filter(s => ['SMTP', 'Notifications', 'Cloud', 'Tokens', 'Secrets'].includes(s.id)).map(section => (
+                    {sections.filter(s => ['SMTP', 'Notifications', 'Cloud', 'Tokens', 'Secrets', 'Infrastructure'].includes(s.id)).map(section => (
                         <Card key={section.id} title={section.title} icon={section.icon}>
                             <form onSubmit={handleSubmit(section.id, section.keys)} className="flex flex-col">
                                 {section.fields.map(field => renderField(field))}
@@ -405,7 +405,7 @@ export default function SettingsClientWrapper({ initialSettings }) {
                         </form>
                     </Card>
 
-                    {sections.filter(s => ['Pricing', 'Razorpay', 'Infrastructure', 'VercelRedis', 'MSG91'].includes(s.id)).map(section => (
+                    {sections.filter(s => ['VercelRedis', 'MSG91', 'ApplicationMeta', 'UpstashRedis', 'Razorpay'].includes(s.id)).map(section => (
                         <Card key={section.id} title={section.title} icon={section.icon}>
                             <form onSubmit={handleSubmit(section.id, section.keys)} className="flex flex-col">
                                 {section.fields.map(field => renderField(field))}
@@ -417,7 +417,7 @@ export default function SettingsClientWrapper({ initialSettings }) {
 
                 {/* Column 3: Social & Integrations */}
                 <div className="space-y-6">
-                    {sections.filter(s => ['ApplicationMeta', 'AppleAuth', 'GoogleAuth', 'MetaAuth', 'UpstashRedis',].includes(s.id)).map(section => (
+                    {sections.filter(s => ['Pricing', 'AppleAuth', 'GoogleAuth', 'MetaAuth'].includes(s.id)).map(section => (
                         <Card key={section.id} title={section.title} icon={section.icon}>
                             <form onSubmit={handleSubmit(section.id, section.keys)} className="flex flex-col">
                                 {section.fields.map(field => renderField(field))}

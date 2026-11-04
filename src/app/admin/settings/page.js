@@ -8,13 +8,13 @@ export const metadata = {
 
 export default async function SettingsPage() {
     let rawSettings = {};
-    
+
     try {
         rawSettings = await SettingsService.getSettings();
-    } catch(e) {
-        // Handle gracefully
+    } catch (e) {
+        console.log("rawSettings error", e);
     }
-    
+
     const initialSettings = JSON.parse(JSON.stringify(rawSettings || {}));
 
     return <SettingsClientWrapper initialSettings={initialSettings} />;

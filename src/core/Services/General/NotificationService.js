@@ -42,7 +42,7 @@ class NotificationService {
             const notif = await Notification.create(payload);
             try {
                 await CacheService.del(`user:notifications:unread:${payload.recipient}`);
-            } catch {}
+            } catch { }
 
             // Broadcast real-time event to connected SSE clients
             try {
@@ -50,7 +50,7 @@ class NotificationService {
                     recipientId: payload.recipient.toString(),
                     notification: notif
                 });
-            } catch {}
+            } catch { }
 
             return notif;
         } catch (error) {
@@ -107,16 +107,14 @@ class NotificationService {
         const config = await getAppConfig();
         const transporter = await this._getTransporter(config);
 
-        const isGmail = Boolean(config.smtp?.host && config.smtp.host.toLowerCase().includes('gmail'));
-        const configuredFrom = config.smtp?.from_address || config.smtp?.from_email;
-        // For Gmail SMTP, sending address must match authenticated user to avoid 550 relay/auth rejection.
-        // Custom domain is retained in replyTo so user replies reach the official inbox.
-        const fromAddress = (isGmail && config.smtp?.user) ? config.smtp.user : (configuredFrom || config.smtp?.user);
-        const fromName = config.smtp?.from_name || 'Tripdhara';
-        const replyToAddress = configuredFrom || fromAddress;
+        //  configuration from .envSMTP
+        const fromAddress = config.smtp?.from_address || config.smtp?.user;
+        const fromName = config.smtp?.from_name;
+        const replyToAddress = config.smtp?.from_address;
 
-        const toRecipient = toName && typeof to === 'string' ? { name: toName, address: to } : to;
+        const toRecipient = toName ? { name: toName, address: to } : to;
         const fromRecipient = fromAddress ? { name: fromName, address: fromAddress } : fromName;
+        const replyRecipient = replyToAddress ? { name: fromName, address: replyToAddress } : fromName;
 
         const plainText = text || (html ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : undefined);
 
@@ -124,7 +122,7 @@ class NotificationService {
             return await transporter.sendMail({
                 from: fromRecipient,
                 to: toRecipient,
-                replyTo: replyToAddress ? { name: fromName, address: replyToAddress } : undefined,
+                replyTo: replyRecipient,
                 subject,
                 html,
                 ...(plainText && { text: plainText }),
@@ -1020,12 +1018,12 @@ class NotificationService {
         try {
             const cached = await CacheService.get(cacheKey);
             if (cached !== null && cached !== undefined) return Number(cached);
-        } catch {}
+        } catch { }
 
         const count = await Notification.getUnreadCount(userId);
         try {
             await CacheService.set(cacheKey, count, 120);
-        } catch {}
+        } catch { }
         return count;
     }
 
@@ -1039,7 +1037,7 @@ class NotificationService {
         await notification.markAsRead();
         try {
             await CacheService.del(`user:notifications:unread:${userId}`);
-        } catch {}
+        } catch { }
         const unreadCount = await this.getUnreadCount(userId);
         return { notification, unreadCount };
     }
@@ -1051,7 +1049,7 @@ class NotificationService {
         await Notification.markAllAsRead(userId);
         try {
             await CacheService.del(`user:notifications:unread:${userId}`);
-        } catch {}
+        } catch { }
         return true;
     }
 
@@ -1065,7 +1063,7 @@ class NotificationService {
         await notification.dismiss();
         try {
             await CacheService.del(`user:notifications:unread:${userId}`);
-        } catch {}
+        } catch { }
         const unreadCount = await this.getUnreadCount(userId);
         return { unreadCount };
     }
@@ -1077,7 +1075,7 @@ class NotificationService {
         await Notification.clearAll(userId);
         try {
             await CacheService.del(`user:notifications:unread:${userId}`);
-        } catch {}
+        } catch { }
         return true;
     }
 

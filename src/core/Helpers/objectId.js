@@ -7,9 +7,11 @@ import mongoose from 'mongoose';
  * @param {string|mongoose.Types.ObjectId} id
  * @returns {mongoose.Types.ObjectId|null}
  */
-const toObjectId = (id) => {
+export const toObjectId = (id) => {
     if (id && mongoose.Types.ObjectId.isValid(id)) return new mongoose.Types.ObjectId(id);
     return null;
 };
 
-export default { toObjectId };
+toObjectId.toObjectId = toObjectId;
+
+export default toObjectId;

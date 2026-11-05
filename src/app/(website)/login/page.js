@@ -106,7 +106,7 @@ export default function LoginPage() {
                             <Shield className="w-8 h-8 text-indigo-400" />
                         </div>
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tighter mb-2">PahadiGo<span className="text-indigo-500">.</span></h1>
+                    <h1 className="text-4xl font-bold text-white tracking-tighter mb-2">Tripdhara<span className="text-indigo-500">.</span></h1>
                     <div className="flex items-center gap-2">
                         <div className="h-[1px] w-8 bg-white/10"></div>
                         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">Governance Gateway</p>
@@ -135,7 +135,7 @@ export default function LoginPage() {
                                         <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">Uplink Address</label>
                                         <div className="relative group">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" /></div>
-                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@pahadigo.co.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
+                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@tripdhara.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
                                         </div>
                                     </div>
 
@@ -189,7 +189,7 @@ export default function LoginPage() {
                                         <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">Target Address</label>
                                         <div className="relative group">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" /></div>
-                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@pahadigo.co.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
+                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@tripdhara.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
                                         </div>
                                     </div>
 

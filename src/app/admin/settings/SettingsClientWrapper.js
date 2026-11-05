@@ -291,7 +291,7 @@ export default function SettingsClientWrapper({ initialSettings }) {
             icon: AppWindow,
             keys: ['app_name', 'terms_conditions', 'privacy_policy', 'rate_on_apple_store', 'rate_on_google_store'],
             fields: [
-                { name: 'app_name', label: 'Platform Display Name', placeholder: 'PahadiGo' },
+                { name: 'app_name', label: 'Platform Display Name', placeholder: 'Tripdhara' },
                 { name: 'terms_conditions', label: 'Terms & Conditions URL', placeholder: 'https://domain.com/terms' },
                 { name: 'privacy_policy', label: 'Privacy Policy URL', placeholder: 'https://domain.com/privacy' },
                 { name: 'rate_on_apple_store', label: 'Apple App Store URL', placeholder: 'https://apps.apple.com/...' },

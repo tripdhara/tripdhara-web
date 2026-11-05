@@ -30,7 +30,7 @@ describe('Industry Standard: IndexNow Helper', () => {
             status: 200
         });
 
-        const testUrls = ['https://pahadigo.co.in/packages/trek-1'];
+        const testUrls = ['https://tripdhara.in/packages/trek-1'];
         const res = await notifyIndexNow(testUrls);
 
         expect(global.fetch).toHaveBeenCalledWith(
@@ -38,7 +38,7 @@ describe('Industry Standard: IndexNow Helper', () => {
             expect.objectContaining({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: expect.stringContaining('pahadigo.co.in')
+                body: expect.stringContaining('tripdhara.in')
             })
         );
         expect(res.success).toBe(true);
@@ -51,7 +51,7 @@ describe('Industry Standard: IndexNow Helper', () => {
             status: 202
         });
 
-        const singleUrl = 'https://pahadigo.co.in/homestays/homestay-1';
+        const singleUrl = 'https://tripdhara.in/homestays/homestay-1';
         const res = await notifyIndexNow(singleUrl);
 
         expect(res.success).toBe(true);
@@ -62,7 +62,7 @@ describe('Industry Standard: IndexNow Helper', () => {
     it('[Failure] should return error object if fetch throws an exception', async () => {
         global.fetch = jest.fn().mockRejectedValue(new Error('Network offline'));
 
-        const res = await notifyIndexNow(['https://pahadigo.co.in/packages/trek-1']);
+        const res = await notifyIndexNow(['https://tripdhara.in/packages/trek-1']);
         expect(res.success).toBe(false);
         expect(res.error).toBe('Network offline');
     });

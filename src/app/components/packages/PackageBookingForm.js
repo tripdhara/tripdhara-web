@@ -21,7 +21,7 @@ export default function PackageBookingForm({ service, price }) {
 
         const title = service.title || service.roomType || service.campingType || service.trekkingName || service.tourName || 'Package';
         const category = service.serviceType || service.category || 'Package';
-        const message = `*PahadiGo Booking Inquiry*\n` +
+        const message = `*Tripdhara Booking Inquiry*\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n` +
             `*Package:* ${title}\n` +
             `*Category:* ${category}\n` +
@@ -33,7 +33,7 @@ export default function PackageBookingForm({ service, price }) {
             `📅 *Date:* ${formData.date}\n` +
             `👥 *Guests:* ${formData.adults} Adults, ${formData.children} Children\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `_Inquiry sent securely via PahadiGo.com_`;
+            `_Inquiry sent securely via Tripdhara.com_`;
 
         const encodedText = encodeURIComponent(message);
         const waUrl = `https://wa.me/919536489063?text=${encodedText}`;

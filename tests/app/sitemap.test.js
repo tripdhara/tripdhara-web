@@ -70,15 +70,15 @@ describe('Next.js App: sitemap.js', () => {
         const urls = entries.map((e) => e.url);
 
         // Verify static routes
-        expect(urls).toContain('https://pahadigo.co.in');
-        expect(urls).toContain('https://pahadigo.co.in/packages');
-        expect(urls).toContain('https://pahadigo.co.in/about');
+        expect(urls).toContain('https://tripdhara.in');
+        expect(urls).toContain('https://tripdhara.in/packages');
+        expect(urls).toContain('https://tripdhara.in/about');
 
         // Verify dynamic routes
-        expect(urls).toContain('https://pahadigo.co.in/packages/hs_1');
-        expect(urls).not.toContain('https://pahadigo.co.in/packages/trk_1');
-        expect(urls).toContain('https://pahadigo.co.in/categories/homestay');
-        expect(urls).toContain('https://pahadigo.co.in/blog/best-places-in-manali');
+        expect(urls).toContain('https://tripdhara.in/packages/hs_1');
+        expect(urls).not.toContain('https://tripdhara.in/packages/trk_1');
+        expect(urls).toContain('https://tripdhara.in/categories/homestay');
+        expect(urls).toContain('https://tripdhara.in/blog/best-places-in-manali');
     });
 
     it('should fallback gracefully to static routes when database query throws', async () => {

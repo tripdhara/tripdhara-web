@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    ArrowLeft, Save, Loader2, Image as ImageIcon, FileText, 
+import {
+    ArrowLeft, Save, Loader2, Image as ImageIcon, FileText,
     Settings, Tag, Eye, Type, AlignLeft, CalendarClock, Globe
 } from 'lucide-react';
 import api from '@/core/Api/index.js';
@@ -112,12 +112,12 @@ export default function BlogForm({ initialData = null }) {
                         </div>
                         <div className="p-6 space-y-6">
                             <div>
-                                <input 
-                                    type="text" 
-                                    name="title" 
-                                    required 
-                                    value={formData.title} 
-                                    onChange={handleChange} 
+                                <input
+                                    type="text"
+                                    name="title"
+                                    required
+                                    value={formData.title}
+                                    onChange={handleChange}
                                     className="w-full px-0 py-2 bg-transparent border-0 border-b-2 border-white/10 focus:border-indigo-500 text-3xl font-bold text-white placeholder-slate-600 focus:ring-0 transition-colors"
                                     placeholder="Enter a compelling title..."
                                 />
@@ -127,11 +127,11 @@ export default function BlogForm({ initialData = null }) {
                                 <label className="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-widest mb-3">
                                     <AlignLeft className="w-3 h-3" /> Excerpt Summary
                                 </label>
-                                <textarea 
-                                    name="excerpt" 
+                                <textarea
+                                    name="excerpt"
                                     rows="2"
-                                    value={formData.excerpt} 
-                                    onChange={handleChange} 
+                                    value={formData.excerpt}
+                                    onChange={handleChange}
                                     className="w-full px-4 py-3 bg-[#0a0a0c] border border-white/10 rounded-xl text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none text-sm"
                                     placeholder="Briefly summarize what this post is about (used in SEO and cards)..."
                                 ></textarea>
@@ -152,16 +152,16 @@ export default function BlogForm({ initialData = null }) {
                                 <button type="button" onClick={() => setActiveTab('preview')} className={`px-4 py-1.5 text-xs font-mono tracking-widest uppercase rounded-md transition-all flex items-center gap-2 ${activeTab === 'preview' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm border border-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}><Eye className="w-3 h-3" /> Preview</button>
                             </div>
                         </div>
-                        
+
                         <div className="flex-1 p-0 relative">
                             {activeTab === 'write' ? (
-                                <textarea 
-                                    name="content" 
-                                    required 
-                                    value={formData.content} 
-                                    onChange={handleChange} 
+                                <textarea
+                                    name="content"
+                                    required
+                                    value={formData.content}
+                                    onChange={handleChange}
                                     className="absolute inset-0 w-full h-full p-6 bg-[#0a0a0c] border-0 text-slate-300 outline-none resize-none font-mono text-[13px] leading-loose custom-scrollbar focus:ring-inset focus:ring-1 focus:ring-indigo-500/50"
-                                    placeholder="# Welcome to your new post...&#10;&#10;Write your content in Markdown or HTML here.&#10;&#10;## Features&#10;- Bullet points&#10;- **Bold text**&#10;- [Links](https://pahadigo.com)"
+                                    placeholder="# Welcome to your new post...&#10;&#10;Write your content in Markdown or HTML here.&#10;&#10;## Features&#10;- Bullet points&#10;- **Bold text**&#10;- [Links](https://Tripdhara.com)"
                                 ></textarea>
                             ) : (
                                 <div className="absolute inset-0 w-full h-full p-8 bg-white overflow-y-auto custom-scrollbar">
@@ -188,7 +188,7 @@ export default function BlogForm({ initialData = null }) {
                                 <div className="relative w-full h-40 rounded-xl overflow-hidden border border-white/10 group/img">
                                     <img src={formData.coverImage} alt="Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                        <Button type="button" size="sm" variant="danger" onClick={() => setFormData(p => ({...p, coverImage: ''}))}>Remove</Button>
+                                        <Button type="button" size="sm" variant="danger" onClick={() => setFormData(p => ({ ...p, coverImage: '' }))}>Remove</Button>
                                     </div>
                                 </div>
                             ) : (
@@ -199,11 +199,11 @@ export default function BlogForm({ initialData = null }) {
                             )}
                             <div>
                                 <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Image URL</label>
-                                <input 
-                                    type="url" 
-                                    name="coverImage" 
-                                    value={formData.coverImage} 
-                                    onChange={handleChange} 
+                                <input
+                                    type="url"
+                                    name="coverImage"
+                                    value={formData.coverImage}
+                                    onChange={handleChange}
                                     className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-white/10 rounded-lg text-slate-300 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all text-xs"
                                     placeholder="https://images.unsplash.com/..."
                                 />
@@ -223,10 +223,10 @@ export default function BlogForm({ initialData = null }) {
                                 <label className="flex items-center gap-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">
                                     <Globe className="w-3 h-3" /> Visibility Status
                                 </label>
-                                <select 
-                                    name="status" 
-                                    value={formData.status} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
                                     className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-white/10 rounded-lg text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none text-sm cursor-pointer"
                                 >
                                     <option value="draft">Draft - Hidden from public</option>
@@ -238,11 +238,11 @@ export default function BlogForm({ initialData = null }) {
                                 <label className="flex items-center gap-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">
                                     <Tag className="w-3 h-3" /> Categorization Tags
                                 </label>
-                                <input 
-                                    type="text" 
-                                    name="tags" 
-                                    value={formData.tags} 
-                                    onChange={handleChange} 
+                                <input
+                                    type="text"
+                                    name="tags"
+                                    value={formData.tags}
+                                    onChange={handleChange}
                                     className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-white/10 rounded-lg text-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
                                     placeholder="Adventure, Travel, Tips"
                                 />

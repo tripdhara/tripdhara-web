@@ -31,7 +31,7 @@ describe('queryHelpers Data Access Layer (DAL) Tests', () => {
             sort: jest.fn().mockReturnThis(),
             session: jest.fn().mockReturnThis(),
             lean: jest.fn().mockReturnThis(),
-            exec: jest.fn().mockResolvedValue({ _id: 'doc_123', name: 'PahadiGo Himalayan Trek' })
+            exec: jest.fn().mockResolvedValue({ _id: 'doc_123', name: 'Tripdhara Himalayan Trek' })
         };
 
         MockModel = {
@@ -60,7 +60,7 @@ describe('queryHelpers Data Access Layer (DAL) Tests', () => {
             expect(mockQuery.select).toHaveBeenCalled();
             expect(mockQuery.lean).toHaveBeenCalled();
             expect(mockQuery.exec).toHaveBeenCalled();
-            expect(res).toEqual({ _id: 'doc_123', name: 'PahadiGo Himalayan Trek' });
+            expect(res).toEqual({ _id: 'doc_123', name: 'Tripdhara Himalayan Trek' });
         });
 
         it('should omit lean when options.lean is false', async () => {
@@ -84,11 +84,11 @@ describe('queryHelpers Data Access Layer (DAL) Tests', () => {
         });
 
         it('should execute findOne with criteria and chaining', async () => {
-            const res = await getBy(MockModel, { email: 'traveller@pahadigo.co.in' }, 'name role', 'vendor');
-            expect(MockModel.findOne).toHaveBeenCalledWith({ email: 'traveller@pahadigo.co.in' });
+            const res = await getBy(MockModel, { email: 'traveller@tripdhara.in' }, 'name role', 'vendor');
+            expect(MockModel.findOne).toHaveBeenCalledWith({ email: 'traveller@tripdhara.in' });
             expect(mockQuery.populate).toHaveBeenCalledWith('vendor');
             expect(mockQuery.lean).toHaveBeenCalled();
-            expect(res).toEqual({ _id: 'doc_123', name: 'PahadiGo Himalayan Trek' });
+            expect(res).toEqual({ _id: 'doc_123', name: 'Tripdhara Himalayan Trek' });
         });
     });
 

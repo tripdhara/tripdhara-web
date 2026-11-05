@@ -34,7 +34,7 @@ export default function Sidebar() {
                     <span className="text-indigo-400 text-lg">P</span>
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-white text-base leading-tight">PahadiGO</span>
+                    <span className="text-white text-base leading-tight">Tripdhara</span>
                     <span className="text-[9px] font-mono text-emerald-500 tracking-widest uppercase">Admin Telemetry</span>
                 </div>
             </div>
@@ -61,7 +61,7 @@ export default function Sidebar() {
                     </span>
                     <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">System Online</span>
                 </div>
-                <span className="text-[9px] font-mono text-gray-600 tracking-widest uppercase">&copy; 2024 PahadiGO V2.0</span>
+                <span className="text-[9px] font-mono text-gray-600 tracking-widest uppercase">&copy; 2024 Tripdhara V2.0</span>
             </div>
         </aside>
     );

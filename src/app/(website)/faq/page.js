@@ -23,7 +23,7 @@ const faqCategories = [
             },
             {
                 question: "Do I need to create an account to book?",
-                answer: "While you can browse packages as a guest, creating a PahadiGo account is required to send enquiries, communicate with vendors, and manage your bookings securely."
+                answer: "While you can browse packages as a guest, creating a Tripdhara account is required to send enquiries, communicate with vendors, and manage your bookings securely."
             }
         ]
     },
@@ -42,11 +42,11 @@ const faqCategories = [
             },
             {
                 question: "Are reviews authentic?",
-                answer: "All reviews on PahadiGo are from verified users who have completed their bookings. We do not allow anonymous reviews to maintain the highest level of authenticity and transparency."
+                answer: "All reviews on Tripdhara are from verified users who have completed their bookings. We do not allow anonymous reviews to maintain the highest level of authenticity and transparency."
             },
             {
                 question: "Who do I contact in case of an emergency during my trip?",
-                answer: "Your primary point of contact is your local vendor/guide. However, PahadiGo also provides a 24/7 support line for critical emergencies to ensure you are never stranded."
+                answer: "Your primary point of contact is your local vendor/guide. However, Tripdhara also provides a 24/7 support line for critical emergencies to ensure you are never stranded."
             }
         ]
     },
@@ -65,7 +65,7 @@ const faqCategories = [
             },
             {
                 question: "Are there any hidden fees?",
-                answer: "No, PahadiGo believes in complete transparency. The price you see includes base fare, GST, and service taxes. Any extra charges (like permits or camera fees) will be explicitly mentioned by the vendor."
+                answer: "No, Tripdhara believes in complete transparency. The price you see includes base fare, GST, and service taxes. Any extra charges (like permits or camera fees) will be explicitly mentioned by the vendor."
             },
             {
                 question: "When do I need to pay for my booking?",
@@ -79,12 +79,12 @@ const faqCategories = [
         icon: HelpCircle,
         faqs: [
             {
-                question: "How do I become a vendor on PahadiGo?",
+                question: "How do I become a vendor on Tripdhara?",
                 answer: "If you are a local guide, homestay owner, or transport provider in the Himalayas, we'd love to partner with you. Please visit our 'Partner with Us' page and fill out the application form. Our team will get back to you for verification."
             },
             {
                 question: "Is there a registration fee for vendors?",
-                answer: "Creating a vendor profile and listing your initial packages is absolutely free. We only charge a small platform commission on successful bookings generated through PahadiGo."
+                answer: "Creating a vendor profile and listing your initial packages is absolutely free. We only charge a small platform commission on successful bookings generated through Tripdhara."
             },
             {
                 question: "How do I get paid?",
@@ -106,17 +106,17 @@ export default function FAQPage() {
 
     return (
         <div className="bg-gray-50/50 min-h-screen pb-24 font-sans selection:bg-primary-500 selection:text-white">
-            <PageHero 
-                image="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop" 
-                badge="Help Center" 
-                title={<>Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-indigo-500">Questions</span></>} 
-                subtitle="Everything you need to know about booking your Himalayan adventure with us." 
-                heightClass="h-[45vh] min-h-[400px]" 
+            <PageHero
+                image="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
+                badge="Help Center"
+                title={<>Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-indigo-500">Questions</span></>}
+                subtitle="Everything you need to know about booking your Himalayan adventure with us."
+                heightClass="h-[45vh] min-h-[400px]"
             />
-            
+
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
                 <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-white p-6 md:p-12">
-                    
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                         {/* Sidebar Categories */}
                         <div className="lg:col-span-4 space-y-3">
@@ -131,22 +131,20 @@ export default function FAQPage() {
                                             setActiveCategory(cat.id);
                                             setOpenIndex(0);
                                         }}
-                                        className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 text-left group ${
-                                            isActive 
-                                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 translate-x-2' 
+                                        className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 text-left group ${isActive
+                                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 translate-x-2'
                                             : 'bg-transparent text-gray-600 hover:bg-gray-100/80 hover:text-gray-900'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`p-2 rounded-xl mr-4 transition-colors ${
-                                            isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm'
-                                        }`}>
+                                        <div className={`p-2 rounded-xl mr-4 transition-colors ${isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm'
+                                            }`}>
                                             <Icon className="w-5 h-5" />
                                         </div>
                                         <span className="font-bold">{cat.title}</span>
                                     </button>
                                 );
                             })}
-                            
+
                             {/* Support Card */}
                             <div className="mt-8 p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl border border-indigo-100/50 relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
@@ -174,36 +172,32 @@ export default function FAQPage() {
 
                             <div className="space-y-4">
                                 {activeFaqs.map((faq, index) => (
-                                    <div 
-                                        key={index} 
-                                        className={`group rounded-2xl overflow-hidden transition-all duration-500 border-2 ${
-                                            openIndex === index 
-                                            ? 'border-primary-100 bg-primary-50/30' 
+                                    <div
+                                        key={index}
+                                        className={`group rounded-2xl overflow-hidden transition-all duration-500 border-2 ${openIndex === index
+                                            ? 'border-primary-100 bg-primary-50/30'
                                             : 'border-transparent bg-gray-50 hover:bg-gray-100'
-                                        }`}
+                                            }`}
                                     >
-                                        <button 
+                                        <button
                                             className="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none"
                                             onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
                                         >
-                                            <span className={`font-bold text-lg pr-8 transition-colors ${
-                                                openIndex === index ? 'text-primary-700' : 'text-gray-800 group-hover:text-primary-600'
-                                            }`}>
+                                            <span className={`font-bold text-lg pr-8 transition-colors ${openIndex === index ? 'text-primary-700' : 'text-gray-800 group-hover:text-primary-600'
+                                                }`}>
                                                 {faq.question}
                                             </span>
-                                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                                openIndex === index 
-                                                ? 'bg-primary-500 text-white shadow-md shadow-primary-500/30 rotate-180' 
+                                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${openIndex === index
+                                                ? 'bg-primary-500 text-white shadow-md shadow-primary-500/30 rotate-180'
                                                 : 'bg-white text-gray-400 border border-gray-200'
-                                            }`}>
+                                                }`}>
                                                 <ChevronDown className="w-5 h-5" />
                                             </div>
                                         </button>
-                                        
-                                        <div 
-                                            className={`grid transition-all duration-500 ease-in-out ${
-                                                openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                                            }`}
+
+                                        <div
+                                            className={`grid transition-all duration-500 ease-in-out ${openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                                                }`}
                                         >
                                             <div className="overflow-hidden">
                                                 <div className="px-6 pb-6 text-gray-600 leading-relaxed text-base pt-2">

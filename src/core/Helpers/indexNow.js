@@ -5,7 +5,7 @@
 export async function notifyIndexNow(urls = []) {
     if (!urls || urls.length === 0) return { success: false, message: 'No URLs provided' };
 
-    const host = 'pahadigo.co.in';
+    const host = 'tripdhara.in';
     const key = process.env.INDEXNOW_KEY || 'pahadigo-indexnow-key-2026';
     const keyLocation = `https://${host}/${key}.txt`;
 

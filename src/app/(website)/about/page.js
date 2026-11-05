@@ -2,20 +2,20 @@ import ClientAbout from './ClientAbout.js';
 
 export const metadata = {
     title: 'About Us - Empowering Himalayan Travel & Local Tourism',
-    description: 'Learn about PahadiGo, our mission to empower local Himalayan communities, host verified homestays, licensed cab drivers, and authentic trekking experiences across Himachal Pradesh.',
+    description: 'Learn about Tripdhara, our mission to empower local Himalayan communities, host verified homestays, licensed cab drivers, and authentic trekking experiences across Himachal Pradesh.',
     keywords: [
-        'About PahadiGo',
+        'About Tripdhara',
         'Himachal Travel Platform',
         'Himalayan Tourism Marketplace',
         'Er. Mradul Sharma',
-        'PahadiGo Mission',
+        'Tripdhara Mission',
         'Local Himachal Vendors'
     ],
     openGraph: {
-        title: 'About Us | PahadiGo - Empowering Himalayan Travel',
+        title: 'About Us | Tripdhara - Empowering Himalayan Travel',
         description: 'Empowering local Himalayan hosts, verified cab drivers, and outdoor guides with technology.',
-        url: 'https://pahadigo.co.in/about',
-        siteName: 'PahadiGo',
+        url: 'https://tripdhara.in/about',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {

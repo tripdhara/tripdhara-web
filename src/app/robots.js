@@ -1,5 +1,5 @@
 export default function robots() {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pahadigo.co.in';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tripdhara.in';
 
     return {
         rules: [

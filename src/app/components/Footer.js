@@ -21,7 +21,7 @@ export default function Footer() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
             });
-            
+
             if (res.ok) {
                 toast('Successfully subscribed to the newsletter!', 'success');
                 setEmail('');
@@ -116,7 +116,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-gray-800 py-4 text-center text-gray-500 text-sm">
-                    <p className='text-sm text-end'>&copy; {new Date().getFullYear()} PahadiGo. All rights reserved.</p>
+                    <p className='text-sm text-end'>&copy; {new Date().getFullYear()} Tripdhara. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -343,7 +343,7 @@ class ProfileController extends Controller {
     /**
      * Trigger a critical emergency SOS alert for the authenticated user.
      * Captures real-time GPS coordinates, notifies registered emergency contacts,
-     * and alerts the PahadiGo safety response team.
+     * and alerts the Tripdhara safety response team.
      * 
      * @route POST /api/traveller/sos
      * @route POST /api/vendor/sos

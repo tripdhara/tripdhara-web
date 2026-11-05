@@ -7,7 +7,7 @@ export const getAppConfig = jest.fn(() => Promise.resolve({
         user: process.env.SMTP_EMAIL || '',
         pass: process.env.SMTP_PASSWORD || '',
         from_address: process.env.SMTP_FROM_ADDRESS || '',
-        from_name: process.env.SMTP_FROM_NAME || 'PahadiGo'
+        from_name: process.env.SMTP_FROM_NAME || 'Tripdhara'
     },
     msg91: {
         auth_key: process.env.MSG91_AUTH_KEY || '',
@@ -22,26 +22,26 @@ export const getAppConfig = jest.fn(() => Promise.resolve({
     },
     jwt_secret: process.env.JWT_SECRET || 'test_secret',
     mongodb_uri: process.env.MONGODB_URI,
-    api_url: process.env.NEXT_PUBLIC_API_URL || 'http://pahadigo.co.in',
+    api_url: process.env.NEXT_PUBLIC_API_URL || 'http://tripdhara.in',
     debug_mode: process.env.DEBUG === 'true',
-    google: { 
-        client_id: process.env.GOOGLE_CLIENT_ID, 
-        client_secret: process.env.GOOGLE_CLIENT_SECRET 
+    google: {
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET
     },
-    facebook: { 
-        app_id: process.env.FACEBOOK_APP_ID, 
-        app_secret: process.env.FACEBOOK_APP_SECRET 
+    facebook: {
+        app_id: process.env.FACEBOOK_APP_ID,
+        app_secret: process.env.FACEBOOK_APP_SECRET
     },
-    apple: { 
-        client_id: process.env.APPLE_CLIENT_ID, 
-        team_id: process.env.APPLE_TEAM_ID, 
-        key_id: process.env.APPLE_KEY_ID, 
-        private_key: process.env.APPLE_PRIVATE_KEY 
+    apple: {
+        client_id: process.env.APPLE_CLIENT_ID,
+        team_id: process.env.APPLE_TEAM_ID,
+        key_id: process.env.APPLE_KEY_ID,
+        private_key: process.env.APPLE_PRIVATE_KEY
     },
-    app: { 
-        name: process.env.APP_NAME || 'PahadiGo', 
-        terms_conditions: process.env.TERMS_CONDITIONS || '', 
-        privacy_policy: process.env.PRIVACY_POLICY || '' 
+    app: {
+        name: process.env.APP_NAME || 'Tripdhara',
+        terms_conditions: process.env.TERMS_CONDITIONS || '',
+        privacy_policy: process.env.PRIVACY_POLICY || ''
     },
     cloudinary: { url: process.env.CLOUDINARY_URL || '' },
     secrets: {

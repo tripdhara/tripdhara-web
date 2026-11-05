@@ -1,9 +1,9 @@
 ---
 name: db-seeder-runner
-description: Standard operational procedure for running PahadiGo MongoDB seeders, resetting test collections, and populating dummy vendor packages, homestays, cab routes, and admin accounts safely.
+description: Standard operational procedure for running Tripdhara MongoDB seeders, resetting test collections, and populating dummy vendor packages, homestays, cab routes, and admin accounts safely.
 ---
 
-# PahadiGo Database Seeder & Data Management Workflow
+# Tripdhara Database Seeder & Data Management Workflow
 
 ## Overview
 This skill guides the execution of MongoDB seed scripts (`ResetAndSeed.js` and `MassSeeder.js`) for staging and local development environments without risking production data loss.

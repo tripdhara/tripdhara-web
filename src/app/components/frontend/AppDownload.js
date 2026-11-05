@@ -21,7 +21,7 @@ export default function AppDownload() {
                             <span className="text-xs font-bold uppercase tracking-widest text-primary-400">App Coming Soon</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight tracking-tight">The Mountains, <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-400">In Your Pocket.</span></h2>
-                        <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-lg leading-relaxed font-medium">Access exclusive app-only deals, offline trekking maps, and 24/7 on-ground support with the all-new PahadiGo app.</p>
+                        <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-lg leading-relaxed font-medium">Access exclusive app-only deals, offline trekking maps, and 24/7 on-ground support with the all-new Tripdhara app.</p>
                         <ul className="space-y-4 mb-10">
                             {['Offline Trail Maps', 'Instant Booking Confirmations', 'Priority Local Support'].map((feature, i) => (
                                 <li key={i} className="flex items-center text-gray-200 font-medium text-lg">

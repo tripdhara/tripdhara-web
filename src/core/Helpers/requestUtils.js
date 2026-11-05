@@ -11,7 +11,7 @@ export const parseUserAgent = (uaString, customDevice = '') => {
         const cleanName = customDevice.trim();
         return {
             os: /iPhone|iPad|iOS/i.test(cleanName) ? 'iOS' : (/Android/i.test(cleanName) ? 'Android' : 'Mobile/Desktop'),
-            browser: /PahadiGo/i.test(uaString) ? 'PahadiGo App' : 'Mobile App',
+            browser: /Tripdhara/i.test(uaString) ? 'Tripdhara App' : 'Mobile App',
             deviceType: /iPad|Tablet/i.test(cleanName) ? 'Tablet' : 'Mobile',
             deviceName: cleanName,
             summary: cleanName
@@ -83,8 +83,8 @@ export const parseUserAgent = (uaString, customDevice = '') => {
     }
 
     // Browser & App Detection
-    if (/PahadiGo/i.test(uaString)) {
-        browser = 'PahadiGo App';
+    if (/Tripdhara/i.test(uaString)) {
+        browser = 'Tripdhara App';
     } else if (/PostmanRuntime/i.test(uaString)) {
         browser = 'Postman';
     } else if (/Edg/i.test(uaString)) {

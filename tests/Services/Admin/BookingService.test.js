@@ -36,7 +36,7 @@ describe('Industry Standard: BookingService Payout Logic', () => {
             user: testUser._id,
             ownerName: "Rajesh PayoutTest",
             businessName: "Pahadi Go Adventures",
-            businessEmail: "test@pahadigo.co.in",
+            businessEmail: "test@tripdhara.in",
             phone: "9999999999",
             bankDetails: {
                 accountHolderName: "Rajesh PayoutTest",
@@ -91,20 +91,20 @@ describe('Industry Standard: BookingService Payout Logic', () => {
         expect(result.payout.bankDetails.accountNumber).toBe("1234567890");
         expect(result.payout.bankDetails.ifscCode).toBe("IFSC0001234");
         expect(result.payout.bankDetails.bankName).toBe("Test Bank of India");
-        
+
         // Verify cross-reference consistency
         const freshRecord = await Booking.findById(testBooking._id);
         expect(freshRecord.payout.status).toBe('paid');
     });
 
     it('[Automation] should fallback to basePrice if explicit amount is missing', async () => {
-        const result = await BookingService.payoutBooking({ 
-            bookingId: testBooking._id 
+        const result = await BookingService.payoutBooking({
+            bookingId: testBooking._id
         });
-        
+
         expect(result.payout.amount).toBe(5000); // Matches pricing.basePrice
     });
-    
+
     it('[Legacy] should handle missing vendor relation gracefully', async () => {
         const orphanBooking = await Booking.create({
             bookingCode: "ORPHAN-001",
@@ -116,17 +116,17 @@ describe('Industry Standard: BookingService Payout Logic', () => {
                 itemType: 'package',
                 title: "Orphan Service"
             },
-            pricing: { 
-                basePrice: 1000, 
+            pricing: {
+                basePrice: 1000,
                 subTotal: 1000,
-                total: 1100 
+                total: 1100
             },
             status: 'confirmed',
             paymentStatus: 'paid',
             startDate: new Date(),
             endDate: new Date()
         });
-        
+
         const result = await BookingService.payoutBooking({ bookingId: orphanBooking._id });
         expect(result.payout.status).toBe('paid');
         expect(result.payout.businessName).toBeFalsy(); // No vendor to snapshot (null/undefined)
@@ -175,9 +175,9 @@ describe('Industry Standard: BookingService Payout Logic', () => {
             });
 
             const result = await BookingService.resolveDispute(
-                new mongoose.Types.ObjectId(), 
-                testDispute._id, 
-                'resolved_refunded', 
+                new mongoose.Types.ObjectId(),
+                testDispute._id,
+                'resolved_refunded',
                 "Refund issued to customer"
             );
 
@@ -192,7 +192,7 @@ describe('Industry Standard: BookingService Payout Logic', () => {
             await BookingService.generateAndSendInvoice(testBooking._id);
 
             expect(mockNotification.sendInvoice).toHaveBeenCalled();
-            
+
             const updatedBooking = await Booking.findById(testBooking._id);
             const invoiceEntry = updatedBooking.timeline.find(t => t.status === 'Invoice Dispatched');
             expect(invoiceEntry).toBeDefined();

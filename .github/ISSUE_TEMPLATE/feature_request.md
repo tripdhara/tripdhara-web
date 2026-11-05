@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an architectural or product idea for PahadiGo
+about: Suggest an architectural or product idea for Tripdhara
 title: "[FEAT] "
 labels: enhancement
 assignees: ''

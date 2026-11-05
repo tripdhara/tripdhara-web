@@ -6,17 +6,17 @@ import { Shield, Eye, Database, Lock, Mail, ChevronRight } from 'lucide-react';
 
 export const metadata = {
     title: 'Privacy Policy - Data Protection & Security',
-    description: 'Learn how PahadiGo collects, processes, and protects your personal data, payment information, and booking privacy in accordance with data protection laws.',
+    description: 'Learn how Tripdhara collects, processes, and protects your personal data, payment information, and booking privacy in accordance with data protection laws.',
     keywords: [
-        'PahadiGo Privacy Policy',
-        'Data Protection PahadiGo',
+        'Tripdhara Privacy Policy',
+        'Data Protection Tripdhara',
         'User Data Security Travel'
     ],
     openGraph: {
-        title: 'Privacy Policy | PahadiGo',
-        description: 'Learn how PahadiGo protects your personal data and booking privacy.',
-        url: 'https://pahadigo.co.in/privacy',
-        siteName: 'PahadiGo',
+        title: 'Privacy Policy | Tripdhara',
+        description: 'Learn how Tripdhara protects your personal data and booking privacy.',
+        url: 'https://tripdhara.in/privacy',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {
@@ -36,7 +36,7 @@ export default async function PrivacyPolicy() {
 
     return (
         <div className="bg-[#fcfcfc] min-h-screen pb-24 font-sans text-gray-800 selection:bg-primary-500 selection:text-white">
-            
+
             {/* Premium Header */}
             <header className="relative bg-gray-900 overflow-hidden pt-32 pb-20">
                 <div className="absolute inset-0">
@@ -59,7 +59,7 @@ export default async function PrivacyPolicy() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                    
+
                     {/* Premium Sidebar Navigation */}
                     <div className="hidden lg:block lg:col-span-3">
                         <div className="sticky top-28 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-6 shadow-xl shadow-gray-200/20">
@@ -96,14 +96,14 @@ export default async function PrivacyPolicy() {
                     {/* Premium Main Content */}
                     <div className="lg:col-span-9">
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-gray-200/30 prose prose-lg prose-gray max-w-none prose-headings:font-display prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary-600 prose-p:leading-relaxed prose-p:text-gray-600">
-                            
+
                             {policy?.content ? (
                                 <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(policy.content) }} />
                             ) : (
                                 <>
                                     <section id="introduction" className="mb-14 scroll-mt-32">
                                         <p className="lead text-xl text-gray-800 font-medium border-l-4 border-primary-500 pl-6 m-0">
-                                            At PahadiGo, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our platform to book travel experiences in the Himalayas.
+                                            At Tripdhara, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our platform to book travel experiences in the Himalayas.
                                         </p>
                                     </section>
 
@@ -115,10 +115,10 @@ export default async function PrivacyPolicy() {
                                             1. Information We Collect
                                         </h2>
                                         <p>We may collect information about you in a variety of ways. The information we may collect on the Site includes:</p>
-                                        
+
                                         <h3 className="text-xl text-gray-800 mt-8">Personal Data</h3>
                                         <p>Personally identifiable information, such as your name, shipping address, email address, and telephone number, and demographic information, such as your age, gender, hometown, and interests, that you voluntarily give to us when you register with the Site or when you choose to participate in various activities related to the Site.</p>
-                                        
+
                                         <h3 className="text-xl text-gray-800 mt-8">Financial Data</h3>
                                         <p>Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, expiration date) that we may collect when you purchase, order, return, exchange, or request information about our services from the Site. We store only very limited, if any, financial information that we collect. Otherwise, all financial information is stored by our payment processor, Razorpay.</p>
                                     </section>
@@ -200,10 +200,10 @@ export default async function PrivacyPolicy() {
                                         <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
                                         <div className="bg-gray-900 text-white rounded-3xl p-8 mt-8 not-prose relative overflow-hidden shadow-2xl shadow-gray-900/20">
                                             <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-bl-[4rem]"></div>
-                                            <h4 className="font-bold text-xl mb-2 text-white">PahadiGo Support</h4>
+                                            <h4 className="font-bold text-xl mb-2 text-white">Tripdhara Support</h4>
                                             <p className="text-gray-400 mb-6 max-w-sm">123 Himalayan Way, Dehradun, Uttarakhand, India</p>
-                                            <a href="mailto:support@pahadigo.co.in" className="inline-flex items-center px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-sm">
-                                                support@pahadigo.co.in
+                                            <a href="mailto:support@tripdhara.in" className="inline-flex items-center px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-sm">
+                                                support@tripdhara.in
                                             </a>
                                         </div>
                                     </section>

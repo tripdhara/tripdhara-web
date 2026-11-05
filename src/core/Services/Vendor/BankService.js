@@ -34,7 +34,7 @@ class BankService {
         if (updatePayload.accountHolderName && updatePayload.accountNumber && updatePayload.ifscCode) {
             const contactName = updatePayload.accountHolderName || vendor.ownerName || vendor.businessName;
             const contactPhone = vendor.businessNumber || vendor.personalNumber || vendor.user?.phone;
-            const contactEmail = vendor.businessEmail || vendor.user?.email || `vendor_${vendor._id}@pahadigo.co.in`;
+            const contactEmail = vendor.businessEmail || vendor.user?.email || `vendor_${vendor._id}@tripdhara.in`;
 
             if (!contactName || !contactPhone) {
                 throw new AppError("Vendor owner name and contact number are required to register bank details.", HTTP_STATUS.UNPROCESSABLE_ENTITY);

@@ -1,4 +1,4 @@
-## 🏔️ PahadiGo PR Outline
+## 🏔️ Tripdhara PR Outline
 
 ## 🎯 Proposed Implementation
 
@@ -16,7 +16,7 @@ Closes #<insert_issue_number_here>
 
 ## 📝 Enterprise Contributor Checklist:
 
-- [ ] My logic strictly aligns with the PahadiGo SOA (Service-Oriented Architecture) paradigm.
+- [ ] My logic strictly aligns with the Tripdhara SOA (Service-Oriented Architecture) paradigm.
 - [ ] I have executed a deep self-review of my unified PR diff before submitting.
 - [ ] I have strictly avoided using `console.log` for production telemetry, ensuring logs are pristine.
 - [ ] I have enriched root `.md` documentation files (`API.md`, `ARCHITECTURE.md`) if this payload mutates external dependencies.

@@ -3,7 +3,7 @@ import PackageService from '@/core/Services/Admin/PackageService.js';
 import DashboardClientWrapper from './DashboardClientWrapper.js';
 
 export const metadata = {
-    title: 'Admin Dashboard | PahadiGo',
+    title: 'Admin Dashboard | Tripdhara',
     description: 'System telemetry and analytics.'
 };
 

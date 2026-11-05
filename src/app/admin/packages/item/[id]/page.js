@@ -2,7 +2,7 @@ import PackageService from '@/core/Services/Admin/PackageService.js';
 import PackageItemClientWrapper from './PackageItemClientWrapper.js';
 
 export const metadata = {
-    title: 'Package Node Configuration | PahadiGo Admin',
+    title: 'Package Node Configuration | Tripdhara Admin',
     description: 'Inspect and mutate inventory package node payload.'
 };
 

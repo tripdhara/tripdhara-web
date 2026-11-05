@@ -52,6 +52,7 @@ describe('Industry Standard: SettingsService Business Logic Service', () => {
     describe('[getSettings]', () => {
         it('[Success] should return existing settings', async () => {
             const mockSetting = { _id: 's1', maintenanceMode: false };
+            mockQuery._resolvedValue = mockSetting;
             mockQueryHelpers.getSettingBy.mockResolvedValue(mockSetting);
 
             const result = await SettingsService.getSettings();

@@ -22,7 +22,7 @@ export default function Features() {
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }} className="max-w-3xl mb-20">
-                    <span className="text-primary-400 font-bold tracking-widest uppercase text-sm mb-4 block drop-shadow-md">Why PahadiGo</span>
+                    <span className="text-primary-400 font-bold tracking-widest uppercase text-sm mb-4 block drop-shadow-md">Why Tripdhara</span>
                     <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">Don't Just Travel. <br /> <span className="text-primary-400">Experience the Himalayas.</span></h2>
                     <p className="text-gray-300 text-lg md:text-xl font-medium leading-relaxed drop-shadow-sm">Ditch the tourist traps. We connect you directly with passionate local experts to unlock authentic adventures, hidden trails, and unforgettable memories.</p>
                 </motion.div>

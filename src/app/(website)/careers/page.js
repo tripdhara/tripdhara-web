@@ -3,18 +3,18 @@ import PageHero from '@/components/PageHero.js';
 
 export const metadata = {
     title: 'Careers - Build the Future of Himalayan Travel',
-    description: 'Join PahadiGo team and help build authentic, sustainable travel experiences across the Himalayas. Remote-first opportunities in engineering, marketing, operations, and product.',
+    description: 'Join Tripdhara team and help build authentic, sustainable travel experiences across the Himalayas. Remote-first opportunities in engineering, marketing, operations, and product.',
     keywords: [
-        'PahadiGo Careers',
+        'Tripdhara Careers',
         'Travel Tech Jobs India',
         'Remote Jobs Himachal',
-        'PahadiGo Hiring'
+        'Tripdhara Hiring'
     ],
     openGraph: {
-        title: 'Careers | PahadiGo',
-        description: 'Build the future of authentic Himalayan travel with PahadiGo.',
-        url: 'https://pahadigo.co.in/careers',
-        siteName: 'PahadiGo',
+        title: 'Careers | Tripdhara',
+        description: 'Build the future of authentic Himalayan travel with Tripdhara.',
+        url: 'https://tripdhara.in/careers',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {
@@ -28,14 +28,14 @@ export default function Careers() {
             {/* Custom Animated Hero */}
             <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
                 <div className="absolute inset-0 z-0">
-                    <img 
-                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop" 
-                        alt="PahadiGo Team" 
+                    <img
+                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop"
+                        alt="Tripdhara Team"
                         className="w-full h-full object-cover opacity-50"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-gray-50"></div>
                 </div>
-                
+
                 {/* Animated Gradient Orbs */}
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary-100 rounded-full blur-[100px] opacity-60 animate-pulse"></div>
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-secondary-500/20 rounded-full blur-[100px] opacity-60"></div>
@@ -58,7 +58,7 @@ export default function Careers() {
             <div className="py-24 bg-gray-50">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why PahadiGo?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Tripdhara?</h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">More than just a workplace, we are a community of adventurers and builders.</p>
                     </div>
 
@@ -123,9 +123,9 @@ export default function Careers() {
                         <p className="text-white/90 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
                             While our team is currently full, we're always on the lookout for exceptional talent. If you believe you belong here, don't wait for an opening.
                         </p>
-                        
-                        <a 
-                            href="mailto:careers@pahadigo.co.in" 
+
+                        <a
+                            href="mailto:careers@tripdhara.in"
                             className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-primary-600 bg-white rounded-full hover:bg-gray-50 hover:scale-105 transition-all duration-300 shadow-xl shadow-black/10 group"
                         >
                             Send Spontaneous Application
@@ -138,8 +138,8 @@ export default function Careers() {
                             <p className="font-semibold text-white/90 mb-6 text-sm uppercase tracking-widest">Departments We Typically Hire For</p>
                             <div className="flex flex-wrap gap-3 justify-center">
                                 {['Engineering', 'Product', 'Marketing', 'Customer Success', 'Operations'].map(dept => (
-                                    <span 
-                                        key={dept} 
+                                    <span
+                                        key={dept}
                                         className="px-5 py-2.5 bg-white/10 backdrop-blur-md text-white rounded-full text-sm font-medium border border-white/20 hover:bg-white/20 transition-colors cursor-default"
                                     >
                                         {dept}

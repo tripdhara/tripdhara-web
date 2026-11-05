@@ -10,7 +10,7 @@ import socialRoutes from './social.routes.js';
 import notificationRoutes from './notification.routes.js';
 
 /**
- * Traveller Routes - Consumer Experience Hub for PahadiGo.
+ * Traveller Routes - Consumer Experience Hub for Tripdhara.
  * Modularized Granular Domain Routes.
  */
 const travellerRoutes = [

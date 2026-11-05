@@ -6,17 +6,17 @@ import { Shield, ChevronRight, FileText, CreditCard, AlertTriangle, Scale } from
 
 export const metadata = {
     title: 'Terms of Service - Booking Terms & Conditions',
-    description: 'Read PahadiGo terms of service, vendor booking agreements, cancellation terms, and user guidelines for Himalayan travel services.',
+    description: 'Read Tripdhara terms of service, vendor booking agreements, cancellation terms, and user guidelines for Himalayan travel services.',
     keywords: [
-        'PahadiGo Terms of Service',
-        'PahadiGo Terms and Conditions',
+        'Tripdhara Terms of Service',
+        'Tripdhara Terms and Conditions',
         'Himachal Travel Booking Terms'
     ],
     openGraph: {
-        title: 'Terms of Service | PahadiGo',
-        description: 'Read PahadiGo terms of service and booking guidelines.',
-        url: 'https://pahadigo.co.in/terms',
-        siteName: 'PahadiGo',
+        title: 'Terms of Service | Tripdhara',
+        description: 'Read Tripdhara terms of service and booking guidelines.',
+        url: 'https://tripdhara.in/terms',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {
@@ -36,7 +36,7 @@ export default async function TermsOfService() {
 
     return (
         <div className="bg-[#fcfcfc] min-h-screen pb-24 font-sans text-gray-800 selection:bg-primary-500 selection:text-white">
-            
+
             {/* Premium Header */}
             <header className="relative bg-gray-900 overflow-hidden pt-32 pb-20">
                 <div className="absolute inset-0">
@@ -59,7 +59,7 @@ export default async function TermsOfService() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                    
+
                     {/* Premium Sidebar Navigation */}
                     <div className="hidden lg:block lg:col-span-3">
                         <div className="sticky top-28 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-6 shadow-xl shadow-gray-200/20">
@@ -88,14 +88,14 @@ export default async function TermsOfService() {
                     {/* Premium Main Content */}
                     <div className="lg:col-span-9">
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-gray-200/30 prose prose-lg prose-gray max-w-none prose-headings:font-display prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary-600 prose-p:leading-relaxed prose-p:text-gray-600">
-                            
+
                             {policy?.content ? (
                                 <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(policy.content) }} />
                             ) : (
                                 <>
                                     <section id="introduction" className="mb-14 scroll-mt-32">
                                         <p className="lead text-xl text-gray-800 font-medium border-l-4 border-primary-500 pl-6 m-0">
-                                            Welcome to PahadiGo. By accessing or using our website, platform, and services, you agree to be bound by these Terms of Service. Please read them carefully before making any bookings.
+                                            Welcome to Tripdhara. By accessing or using our website, platform, and services, you agree to be bound by these Terms of Service. Please read them carefully before making any bookings.
                                         </p>
                                     </section>
 
@@ -132,7 +132,7 @@ export default async function TermsOfService() {
                                             </div>
                                             2. Bookings and Payments
                                         </h2>
-                                        <p>All bookings made through PahadiGo are subject to availability and acceptance by the respective vendor. We act as an intermediary and platform provider.</p>
+                                        <p>All bookings made through Tripdhara are subject to availability and acceptance by the respective vendor. We act as an intermediary and platform provider.</p>
                                         <div className="grid sm:grid-cols-2 gap-4 mt-8 not-prose">
                                             <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 transition-colors hover:border-gray-300">
                                                 <span className="font-bold text-gray-900 block mb-1">Vendor Responsibility</span>
@@ -162,7 +162,7 @@ export default async function TermsOfService() {
                                             </div>
                                             3. Limitation of Liability
                                         </h2>
-                                        <p>To the fullest extent permitted by applicable law, PahadiGo and its affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from:</p>
+                                        <p>To the fullest extent permitted by applicable law, Tripdhara and its affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from:</p>
                                         <ul className="list-disc pl-5 mt-4 space-y-2">
                                             <li>Your access to or use of or inability to access or use the services;</li>
                                             <li>Any conduct or content of any third party on the services;</li>

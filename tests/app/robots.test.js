@@ -12,11 +12,11 @@ describe('Next.js App: robots.js', () => {
     });
 
     it('should generate valid robots configuration with rules and sitemap', () => {
-        process.env.NEXT_PUBLIC_SITE_URL = 'https://pahadigo.co.in';
+        process.env.NEXT_PUBLIC_SITE_URL = 'https://tripdhara.in';
 
         const config = robots();
         expect(config).toBeDefined();
-        expect(config.sitemap).toBe('https://pahadigo.co.in/sitemap.xml');
+        expect(config.sitemap).toBe('https://tripdhara.in/sitemap.xml');
         expect(Array.isArray(config.rules)).toBe(true);
 
         // Check default userAgent rule
@@ -42,7 +42,7 @@ describe('Next.js App: robots.js', () => {
         delete process.env.NEXT_PUBLIC_SITE_URL;
 
         const config = robots();
-        expect(config.sitemap).toBe('https://pahadigo.co.in/sitemap.xml');
+        expect(config.sitemap).toBe('https://tripdhara.in/sitemap.xml');
     });
 });
 

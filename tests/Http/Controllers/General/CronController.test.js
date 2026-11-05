@@ -34,7 +34,7 @@ describe('Industry Standard: CronController', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockReq = {
-            url: 'https://pahadigo.co.in/api/cron?job=dailyBookings',
+            url: 'https://tripdhara.in/api/cron?job=dailyBookings',
             headers: {
                 get: jest.fn((name) => {
                     if (name.toLowerCase() === 'authorization') {
@@ -55,7 +55,7 @@ describe('Industry Standard: CronController', () => {
 
     it('[Validation] should return 400 when job param is unknown or missing', async () => {
         mockReq.query = { job: 'unknown_job' };
-        mockReq.url = 'https://pahadigo.co.in/api/cron?job=unknown_job';
+        mockReq.url = 'https://tripdhara.in/api/cron?job=unknown_job';
         const res = await CronController.handleCron(mockReq);
         expect(res.status).toBe(HTTP_STATUS.BAD_REQUEST);
     });

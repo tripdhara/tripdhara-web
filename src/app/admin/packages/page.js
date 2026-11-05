@@ -4,7 +4,7 @@ import VendorService from '@/core/Services/Admin/VendorService.js';
 import PackagesClientWrapper from './PackagesClientWrapper.js';
 
 export const metadata = {
-    title: 'Packages Inventory | PahadiGo Admin',
+    title: 'Packages Inventory | Tripdhara Admin',
     description: 'Manage platform packages and inventory.'
 };
 
@@ -15,7 +15,7 @@ export default async function PackagesPage() {
         CategoryService.listAllCategories(),
         VendorService.getAllVendors()
     ]);
-    
+
     // 2. Serialize to safely pass to Client Component
     const initialPackages = JSON.parse(JSON.stringify(rawPackages || []));
     const initialCategories = JSON.parse(JSON.stringify(rawCategories || []));
@@ -24,8 +24,8 @@ export default async function PackagesPage() {
     // 3. Render pure UI Shell
     return (
         <main>
-            <PackagesClientWrapper 
-                initialPackages={initialPackages} 
+            <PackagesClientWrapper
+                initialPackages={initialPackages}
                 initialCategories={initialCategories}
                 initialVendors={initialVendors}
             />

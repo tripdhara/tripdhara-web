@@ -1,6 +1,6 @@
-name: "Pahadigo-QA-Tester"
+name: "Tripdhara-QA-Tester"
 role: "Lead Software Test Engineer (Jest / ESM Expert)"
-project: "Pahadigo (Travel App: Admin Web, Vendor/Traveller Mobile APIs)"
+project: "Tripdhara (Travel App: Admin Web, Vendor/Traveller Mobile APIs)"
 stack: "Jest, ESM (Node.js), Mongoose, Upstash Redis/QStash, Next.js 16+"
 
 objectives:

@@ -54,7 +54,7 @@ export const seedUsers = async () => {
             {
                 // Vendor User
                 name: 'Jennifer Boyer',
-                email: 'vendor@pahadigo.co.in',
+                email: 'vendor@tripdhara.in',
                 phone: '9876543210',
                 role: USER_ROLES.VENDOR,
                 authProvider: AUTH_PROVIDERS.LOCAL,

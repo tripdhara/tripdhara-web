@@ -43,7 +43,7 @@ yarn-error.log*
 .vercel
 
 # audit
-pahadigo.co.in-audit/
+tripdhara.in-audit/
 
 # typescript
 *.tsbuildinfo

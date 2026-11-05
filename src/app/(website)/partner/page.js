@@ -4,19 +4,19 @@ import { TrendingUp, ShieldCheck, Banknote, MapPin, CheckCircle2, ArrowRight } f
 
 export const metadata = {
     title: 'Partner With Us - Vendor & Host Registration',
-    description: 'Grow your Himalayan travel business with PahadiGo. Partner as a verified homestay host, cab operator, trekking guide, or adventure vendor with 0% setup fee.',
+    description: 'Grow your Himalayan travel business with Tripdhara. Partner as a verified homestay host, cab operator, trekking guide, or adventure vendor with 0% setup fee.',
     keywords: [
-        'Partner with PahadiGo',
+        'Partner with Tripdhara',
         'Himachal Homestay Registration',
         'Himachal Cab Vendor Partner',
         'Trekking Guide Registration',
-        'PahadiGo Vendor'
+        'Tripdhara Vendor'
     ],
     openGraph: {
-        title: 'Partner With Us | PahadiGo Vendor Network',
-        description: 'Reach thousands of travelers seeking authentic Himalayan travel experiences with PahadiGo.',
-        url: 'https://pahadigo.co.in/partner',
-        siteName: 'PahadiGo',
+        title: 'Partner With Us | Tripdhara Vendor Network',
+        description: 'Reach thousands of travelers seeking authentic Himalayan travel experiences with Tripdhara.',
+        url: 'https://tripdhara.in/partner',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {
@@ -27,20 +27,20 @@ export const metadata = {
 export default function PartnerPage() {
     return (
         <div className="bg-[#fcfcfc] min-h-screen pb-24 font-sans selection:bg-primary-500 selection:text-white">
-            
+
             {/* Premium Hero Section */}
             <div className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden bg-gray-900">
                 <div className="absolute inset-0">
                     <img src="https://images.unsplash.com/photo-1540304473527-774fdbed8e68?q=80&w=2070&auto=format&fit=crop" alt="Partner with us" className="w-full h-full object-cover opacity-30 mix-blend-overlay" />
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
                 </div>
-                
+
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
                         <div>
                             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-6 shadow-sm">
                                 <TrendingUp className="w-4 h-4 text-primary-400 mr-2" />
-                                <span className="text-sm font-medium text-white tracking-wide uppercase">Grow With PahadiGo</span>
+                                <span className="text-sm font-medium text-white tracking-wide uppercase">Grow With Tripdhara</span>
                             </div>
                             <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6 font-display leading-tight">
                                 Turn your passion into a thriving <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">business</span>.
@@ -58,7 +58,7 @@ export default function PartnerPage() {
                                 </a>
                             </div>
                         </div>
-                        
+
                         {/* Hero Stats/Trust Card */}
                         <div className="hidden lg:block">
                             <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] p-10 shadow-2xl">
@@ -99,7 +99,7 @@ export default function PartnerPage() {
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                
+
                 {/* Benefits Section */}
                 <div id="benefits" className="text-center mb-16 scroll-mt-24">
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 font-display">Unmatched Benefits</h2>
@@ -116,13 +116,13 @@ export default function PartnerPage() {
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Grow Your Business</h3>
                         <p className="text-gray-600 leading-relaxed">Get discovered by thousands of travelers looking for unique, off-the-beaten-path experiences.</p>
                     </div>
-                    
+
                     <div className="bg-white p-10 rounded-[2rem] shadow-xl shadow-gray-200/40 border border-gray-100 hover:border-emerald-200 transition-colors group">
                         <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:scale-110 transition-transform">
                             <ShieldCheck className="w-8 h-8" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Verified Trust</h3>
-                        <p className="text-gray-600 leading-relaxed">Being a PahadiGo verified vendor instantly builds trust with travelers regarding safety and quality.</p>
+                        <p className="text-gray-600 leading-relaxed">Being a Tripdhara verified vendor instantly builds trust with travelers regarding safety and quality.</p>
                     </div>
 
                     <div className="bg-white p-10 rounded-[2rem] shadow-xl shadow-gray-200/40 border border-gray-100 hover:border-purple-200 transition-colors group">
@@ -136,14 +136,14 @@ export default function PartnerPage() {
 
                 {/* Application Form */}
                 <div id="apply" className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden max-w-5xl mx-auto flex flex-col md:flex-row scroll-mt-24">
-                    
+
                     {/* Form Sidebar */}
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-10 md:p-14 md:w-2/5 text-white flex flex-col justify-between relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
                         <div className="relative z-10">
                             <h3 className="text-3xl font-black mb-4 font-display">Ready to start?</h3>
                             <p className="text-gray-300 text-lg mb-8">Fill out the form and our partnership team will contact you within 48 hours to begin the verification process.</p>
-                            
+
                             <ul className="space-y-4">
                                 <li className="flex items-center">
                                     <CheckCircle2 className="w-5 h-5 text-primary-400 mr-3" />

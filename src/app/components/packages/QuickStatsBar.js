@@ -4,7 +4,6 @@ export default function QuickStatsBar({ service }) {
     if (!service) return null;
 
     const category = (service.category || service.serviceType || '').toLowerCase();
-    
     return (
         <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/40 mb-12 flex flex-wrap items-center justify-around gap-6">
 
@@ -110,7 +109,7 @@ export default function QuickStatsBar({ service }) {
                 </div>
                 <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Assurance</p>
-                    <p className="text-lg font-black text-gray-900">PahadiGo Verified</p>
+                    <p className="text-lg font-black text-gray-900">Tripdhara Verified</p>
                 </div>
             </div>
         </div>

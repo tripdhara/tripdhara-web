@@ -29,7 +29,7 @@ import { getLocationPoint } from '@/core/Helpers/addressHelper.js';
  * }} Sanitized query options
  */
 export function parseQuery(urlStr) {
-    const baseUrl = APP_DETAILS?.APP_URL || 'https://pahadigo.co.in' || 'https://tripdhara.com' || 'http://localhost:3000';
+    const baseUrl = APP_DETAILS?.APP_URL || 'https://tripdhara.in' || 'https://tripdhara.com' || 'http://localhost:3000';
     const url = urlStr instanceof URL ? urlStr : new URL(urlStr || '', baseUrl);
 
     // Pagination bounds
@@ -69,7 +69,7 @@ export function parseQuery(urlStr) {
 }
 
 export function notificationParseQuery(urlStr) {
-    const baseUrl = APP_DETAILS?.APP_URL || 'https://pahadigo.co.in' || 'https://tripdhara.com' || 'http://localhost:3000';
+    const baseUrl = APP_DETAILS?.APP_URL || 'https://tripdhara.in' || 'https://tripdhara.com' || 'http://localhost:3000';
     const url = urlStr instanceof URL ? urlStr : new URL(urlStr || '', baseUrl);
 
     // Pagination bounds

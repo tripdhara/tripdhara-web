@@ -3,7 +3,7 @@ import { parseQuery, notificationParseQuery, formatPackageItem } from '@/core/He
 describe('Helpers: search', () => {
     describe('parseQuery', () => {
         it('should parse defaults when empty or minimal url is provided', () => {
-            const result = parseQuery('https://pahadigo.co.in/packages');
+            const result = parseQuery('https://tripdhara.in/packages');
             expect(result.page).toBe(1);
             expect(result.limit).toBe(10);
             expect(result.minPrice).toBe(0);
@@ -18,7 +18,7 @@ describe('Helpers: search', () => {
         });
 
         it('should correctly parse pagination and price parameters', () => {
-            const url = 'https://pahadigo.co.in/packages?page=3&limit=20&minPrice=500&maxPrice=5000';
+            const url = 'https://tripdhara.in/packages?page=3&limit=20&minPrice=500&maxPrice=5000';
             const result = parseQuery(url);
             expect(result.page).toBe(3);
             expect(result.limit).toBe(20);
@@ -27,13 +27,13 @@ describe('Helpers: search', () => {
         });
 
         it('should handle limit=all correctly as limit 0', () => {
-            const url = 'https://pahadigo.co.in/packages?limit=all';
+            const url = 'https://tripdhara.in/packages?limit=all';
             const result = parseQuery(url);
             expect(result.limit).toBe(0);
         });
 
         it('should fallback gracefully on invalid numeric parameters', () => {
-            const url = 'https://pahadigo.co.in/packages?page=-5&limit=invalid&minPrice=abc&maxPrice=xyz&radius=bad';
+            const url = 'https://tripdhara.in/packages?page=-5&limit=invalid&minPrice=abc&maxPrice=xyz&radius=bad';
             const result = parseQuery(url);
             expect(result.page).toBe(1);
             expect(result.limit).toBe(10);
@@ -43,7 +43,7 @@ describe('Helpers: search', () => {
         });
 
         it('should parse query strings, categories, and coordinates', () => {
-            const url = 'https://pahadigo.co.in/packages?q=Rishikesh+Rafting&category=RAFTING&lat=30.0869&lng=78.2676&radius=25';
+            const url = 'https://tripdhara.in/packages?q=Rishikesh+Rafting&category=RAFTING&lat=30.0869&lng=78.2676&radius=25';
             const result = parseQuery(url);
             expect(result.query).toBe('Rishikesh Rafting');
             expect(result.category).toBe('rafting');
@@ -53,7 +53,7 @@ describe('Helpers: search', () => {
         });
 
         it('should support alternative query params like latitude, longitude, and city', () => {
-            const url = 'https://pahadigo.co.in/packages?query=Homestay&latitude=29.3803&longitude=79.4636&city=Nainital';
+            const url = 'https://tripdhara.in/packages?query=Homestay&latitude=29.3803&longitude=79.4636&city=Nainital';
             const result = parseQuery(url);
             expect(result.query).toBe('Homestay');
             expect(result.lat).toBe(29.3803);
@@ -62,7 +62,7 @@ describe('Helpers: search', () => {
         });
 
         it('should accept a URL instance directly', () => {
-            const urlObj = new URL('https://pahadigo.co.in/packages?page=2');
+            const urlObj = new URL('https://tripdhara.in/packages?page=2');
             const result = parseQuery(urlObj);
             expect(result.page).toBe(2);
         });
@@ -70,19 +70,19 @@ describe('Helpers: search', () => {
 
     describe('notificationParseQuery', () => {
         it('should parse default notification pagination', () => {
-            const result = notificationParseQuery('https://pahadigo.co.in/notifications');
+            const result = notificationParseQuery('https://tripdhara.in/notifications');
             expect(result.page).toBe(1);
             expect(result.limit).toBe(10);
         });
 
         it('should parse custom page and limit', () => {
-            const result = notificationParseQuery('https://pahadigo.co.in/notifications?page=4&limit=25');
+            const result = notificationParseQuery('https://tripdhara.in/notifications?page=4&limit=25');
             expect(result.page).toBe(4);
             expect(result.limit).toBe(25);
         });
 
         it('should support limit=all', () => {
-            const result = notificationParseQuery('https://pahadigo.co.in/notifications?limit=all');
+            const result = notificationParseQuery('https://tripdhara.in/notifications?limit=all');
             expect(result.limit).toBe(0);
         });
     });

@@ -134,7 +134,7 @@ export const generateOpenApiSpec = (routeDefinitions = []) => {
     return {
         openapi: OPENAPI_VERSION,
         info: {
-            title: 'PahadiGo API',
+            title: 'Tripdhara API',
             version: '2.6.0',
             description: 'Generated baseline OpenAPI specification from the modular route manifest.'
         },

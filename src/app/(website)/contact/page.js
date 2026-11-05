@@ -61,14 +61,14 @@ export default function ContactPage() {
             {/* Custom Animated Hero - Light Mode (Consistent with Careers) */}
             <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
                 <div className="absolute inset-0 z-0">
-                    <img 
-                        src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop" 
-                        alt="Himalayan Mountains" 
+                    <img
+                        src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop"
+                        alt="Himalayan Mountains"
                         className="w-full h-full object-cover opacity-30"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/80 to-gray-50"></div>
                 </div>
-                
+
                 {/* Animated Gradient Orbs */}
                 <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-[800px] h-[800px] bg-primary-100 rounded-full blur-[100px] opacity-60 animate-pulse pointer-events-none"></div>
                 <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-[600px] h-[600px] bg-secondary-500/20 rounded-full blur-[100px] opacity-60 pointer-events-none"></div>
@@ -89,7 +89,7 @@ export default function ContactPage() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10 -mt-10 lg:-mt-20">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-                    
+
                     {/* Left: Contact Information */}
                     <div className="lg:col-span-5 space-y-6 pt-4 lg:pt-10">
                         {/* Phone Card */}
@@ -103,7 +103,7 @@ export default function ContactPage() {
                                 <p className="text-sm text-gray-500 mt-1">Mon-Fri, 9am to 6pm IST</p>
                             </div>
                         </div>
-                        
+
                         {/* Email Card */}
                         <div className="group flex items-start p-6 bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-secondary-200 hover:shadow-xl hover:shadow-secondary-500/10 transition-all duration-300 hover:-translate-y-1">
                             <div className="flex-shrink-0 h-14 w-14 rounded-2xl bg-secondary-50 text-secondary-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -111,7 +111,7 @@ export default function ContactPage() {
                             </div>
                             <div className="ml-5">
                                 <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Email Us</p>
-                                <p className="text-xl font-medium text-gray-900 mt-1">support@pahadigo.co.in</p>
+                                <p className="text-xl font-medium text-gray-900 mt-1">support@tripdhara.in</p>
                                 <p className="text-sm text-gray-500 mt-1">We aim to reply within 24 hours</p>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ export default function ContactPage() {
                             </div>
                             <div className="ml-5">
                                 <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Visit Us</p>
-                                <p className="text-lg font-medium text-gray-900 mt-1">123 Mountain View Road<br/>Dehradun, UK 248001</p>
+                                <p className="text-lg font-medium text-gray-900 mt-1">123 Mountain View Road<br />Dehradun, UK 248001</p>
                             </div>
                         </div>
                     </div>
@@ -135,59 +135,59 @@ export default function ContactPage() {
                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-100/50 rounded-full blur-[80px] pointer-events-none"></div>
 
                             <h3 className="text-3xl font-bold text-gray-900 mb-8 relative z-10">Send us a Message</h3>
-                            
+
                             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div>
                                         <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
-                                        <input 
-                                            type="text" 
-                                            id="firstName" 
+                                        <input
+                                            type="text"
+                                            id="firstName"
                                             name="firstName"
                                             required
                                             value={formData.firstName}
                                             onChange={handleChange}
                                             disabled={isSubmitting}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50" 
-                                            placeholder="Jane" 
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50"
+                                            placeholder="Jane"
                                         />
                                     </div>
                                     <div>
                                         <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                                        <input 
-                                            type="text" 
-                                            id="lastName" 
+                                        <input
+                                            type="text"
+                                            id="lastName"
                                             name="lastName"
                                             required
                                             value={formData.lastName}
                                             onChange={handleChange}
                                             disabled={isSubmitting}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50" 
-                                            placeholder="Doe" 
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50"
+                                            placeholder="Doe"
                                         />
                                     </div>
                                 </div>
-                                
+
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                                    <input 
-                                        type="email" 
-                                        id="email" 
+                                    <input
+                                        type="email"
+                                        id="email"
                                         name="email"
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
                                         disabled={isSubmitting}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50" 
-                                        placeholder="jane@example.com" 
+                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none disabled:opacity-50"
+                                        placeholder="jane@example.com"
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
                                     <div className="relative">
-                                        <select 
-                                            id="subject" 
+                                        <select
+                                            id="subject"
                                             name="subject"
                                             value={formData.subject}
                                             onChange={handleChange}
@@ -207,21 +207,21 @@ export default function ContactPage() {
 
                                 <div>
                                     <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">Message</label>
-                                    <textarea 
-                                        id="message" 
+                                    <textarea
+                                        id="message"
                                         name="message"
                                         required
                                         rows="5"
                                         value={formData.message}
                                         onChange={handleChange}
                                         disabled={isSubmitting}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none resize-none disabled:opacity-50" 
+                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-primary-400 transition-all outline-none resize-none disabled:opacity-50"
                                         placeholder="How can we help you?"
                                     ></textarea>
                                 </div>
-                                
-                                <button 
-                                    type="submit" 
+
+                                <button
+                                    type="submit"
                                     disabled={isSubmitting}
                                     className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold py-4 px-8 rounded-2xl hover:shadow-lg hover:shadow-primary-500/30 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 group mt-4"
                                 >

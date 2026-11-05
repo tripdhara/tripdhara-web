@@ -2,7 +2,7 @@ import BookingService from '@/core/Services/Admin/BookingService.js';
 import BookingsClientWrapper from './BookingsClientWrapper.js';
 
 export const metadata = {
-    title: 'Bookings | PahadiGo Admin',
+    title: 'Bookings | Tripdhara Admin',
     description: 'Manage platform reservations and refunds.'
 };
 
@@ -13,7 +13,7 @@ export default async function BookingsPage({ searchParams }) {
 
     // Fetch data directly via Service (Server-side)
     const data = await BookingService.getAllBookings({ status: filterStatus }, currentPage, 10);
-    
+
     // Serialize to safely pass to Client Component
     const initialBookings = JSON.parse(JSON.stringify(data.bookings || []));
     const initialTotalMetadata = {
@@ -24,9 +24,9 @@ export default async function BookingsPage({ searchParams }) {
     // Render pure UI Shell
     return (
         <main>
-            <BookingsClientWrapper 
-                initialBookings={initialBookings} 
-                initialTotalMetadata={initialTotalMetadata} 
+            <BookingsClientWrapper
+                initialBookings={initialBookings}
+                initialTotalMetadata={initialTotalMetadata}
             />
         </main>
     );

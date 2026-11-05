@@ -34,15 +34,15 @@ export async function generateMetadata({ params }) {
 
     if (!service) {
         return {
-            title: 'Package Not Found | PahadiGo'
+            title: 'Package Not Found | Tripdhara'
         };
     }
 
     const defaultTitle = service.roomType || service.campingType || service.trekkingName || service.stretchName || service.jumpName || service.model || service.tourName || service.title || 'Package Details';
     const locationName = service.location?.address || service.location?.city || service.location || 'Himachal Pradesh';
     const categoryName = service.serviceType || service.category || 'Package';
-    const title = service.seoMetadata?.metaTitle || `${defaultTitle} - ${categoryName} in ${locationName} | PahadiGo`;
-    const description = service.seoMetadata?.metaDescription || service.description || `Book ${defaultTitle} in ${locationName} at best rates on PahadiGo. Verified hosts, transparent pricing, and instant booking.`;
+    const title = service.seoMetadata?.metaTitle || `${defaultTitle} - ${categoryName} in ${locationName} | Tripdhara`;
+    const description = service.seoMetadata?.metaDescription || service.description || `Book ${defaultTitle} in ${locationName} at best rates on Tripdhara. Verified hosts, transparent pricing, and instant booking.`;
 
     let imageUrl = '';
     if (service.photos && service.photos.length > 0) {
@@ -52,12 +52,12 @@ export async function generateMetadata({ params }) {
     return {
         title,
         description,
-        keywords: service.seoMetadata?.keywords?.join(', ') || `${defaultTitle}, ${categoryName}, ${locationName}, PahadiGo`,
+        keywords: service.seoMetadata?.keywords?.join(', ') || `${defaultTitle}, ${categoryName}, ${locationName}, Tripdhara`,
         openGraph: {
             title,
             description,
-            url: `https://pahadigo.co.in/packages/${id}`,
-            siteName: 'PahadiGo',
+            url: `https://tripdhara.in/packages/${id}`,
+            siteName: 'Tripdhara',
             images: imageUrl ? [{ url: imageUrl, alt: title }] : [],
             type: 'website',
         },
@@ -149,10 +149,10 @@ export default async function ServiceDetailPage({ params }) {
                     'price': price,
                     'priceCurrency': 'INR',
                     'availability': 'https://schema.org/InStock',
-                    'url': `https://pahadigo.co.in/packages/${id}`,
+                    'url': `https://tripdhara.in/packages/${id}`,
                     'seller': {
                         '@type': 'Organization',
-                        'name': service.vendor?.businessName || 'PahadiGo Verified Partner'
+                        'name': service.vendor?.businessName || 'Tripdhara Verified Partner'
                     }
                 },
                 ...(service.reviews && service.reviews.length > 0 ? {
@@ -170,19 +170,19 @@ export default async function ServiceDetailPage({ params }) {
                         '@type': 'ListItem',
                         'position': 1,
                         'name': 'Home',
-                        'item': 'https://pahadigo.co.in'
+                        'item': 'https://tripdhara.in'
                     },
                     {
                         '@type': 'ListItem',
                         'position': 2,
                         'name': 'Packages',
-                        'item': 'https://pahadigo.co.in/packages'
+                        'item': 'https://tripdhara.in/packages'
                     },
                     {
                         '@type': 'ListItem',
                         'position': 3,
                         'name': title,
-                        'item': `https://pahadigo.co.in/packages/${id}`
+                        'item': `https://tripdhara.in/packages/${id}`
                     }
                 ]
             }

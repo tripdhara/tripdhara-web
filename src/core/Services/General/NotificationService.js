@@ -258,7 +258,7 @@ class NotificationService {
     }
 
     async sendLoginAlertSMS(phone, details) {
-        const message = `PahadiGo Alert: Your account was logged in from ${details.device} (${details.location}) at ${details.loginTime}. If this wasn't you, please secure your account.`;
+        const message = `Tripdhara Alert: Your account was logged in from ${details.device} (${details.location}) at ${details.loginTime}. If this wasn't you, please secure your account.`;
         return await this.sendSMS(phone, message);
     }
 
@@ -462,8 +462,8 @@ class NotificationService {
         }
         try {
             const statusText = isOperating ? 'ONLINE / OPERATING' : 'OFFLINE / CLOSED';
-            const html = `<p>Dear <strong>${businessName}</strong>,</p><p>Your operational status on PahadiGo has been updated to <strong>${statusText}</strong>.</p>`;
-            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Operating Status Updated (${statusText}) - PahadiGo`, html });
+            const html = `<p>Dear <strong>${businessName}</strong>,</p><p>Your operational status on Tripdhara has been updated to <strong>${statusText}</strong>.</p>`;
+            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Operating Status Updated (${statusText}) - Tripdhara`, html });
             return true;
         } catch (error) {
             getLogger().error({ err: error }, "[NotificationService] sendVendorOperatingStatusUpdatedEmail Error");
@@ -676,7 +676,7 @@ class NotificationService {
     async sendBusinessDocumentsEmail(email, businessName) {
         try {
             const html = await renderTemplate('Emails/vendor/documents.html', { BUSINESS_NAME: businessName });
-            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Documents Received - PahadiGo`, html: html });
+            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Documents Received - Tripdhara`, html: html });
             return true;
         } catch (error) {
             getLogger().error({ err: error }, "[NotificationService] sendVendorDocumentsReceivedEmail Error");
@@ -688,7 +688,7 @@ class NotificationService {
     async sendBusinessDocumentsUpdatedEmail(email, businessName) {
         try {
             const html = await renderTemplate('Emails/vendor/documents.html', { BUSINESS_NAME: businessName });
-            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Documents Received - PahadiGo`, html: html });
+            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Documents Received - Tripdhara`, html: html });
             return true;
         } catch (error) {
             getLogger().error({ err: error }, "[NotificationService] sendVendorDocumentsReceivedEmail Error");
@@ -702,7 +702,7 @@ class NotificationService {
     async sendNewsletterWelcomeEmail(email) {
         try {
             const html = await renderTemplate('Emails/newsletter.html', {});
-            await this._sendEmailHelper({ to: email, subject: `Welcome to the PahadiGo Newsletter!`, html: html });
+            await this._sendEmailHelper({ to: email, subject: `Welcome to the Tripdhara Newsletter!`, html: html });
             return true;
         } catch (error) {
             getLogger().error({ err: error }, "[NotificationService] sendNewsletterWelcomeEmail Error");
@@ -887,7 +887,7 @@ class NotificationService {
             if (!user) return false;
             const userName = user.name || user.email || 'A user';
             const locationStr = alert?.location?.address ? alert.location.address : (alert?.location?.latitude && alert?.location?.longitude ? `Lat: ${alert.location.latitude}, Long: ${alert.location.longitude}` : 'Unknown Location');
-            const message = `EMERGENCY ALERT! ${userName} has triggered an SOS alert on PahadiGo. Location: ${locationStr}. Please check on them immediately.`;
+            const message = `EMERGENCY ALERT! ${userName} has triggered an SOS alert on Tripdhara. Location: ${locationStr}. Please check on them immediately.`;
             const contacts = Array.isArray(user.emergencyContacts) ? user.emergencyContacts : [];
 
             // Dispatch all SMS and push notifications concurrently
@@ -947,7 +947,7 @@ class NotificationService {
             await this._sendEmailHelper({
                 to: email,
                 subject: `Invoice for Booking ${booking.bookingCode}`,
-                html: `<p>Dear user,</p><p>Please find attached the invoice for your booking <strong>${booking.bookingCode}</strong>.</p><p>Thank you,<br/>PahadiGo Team</p>`,
+                html: `<p>Dear user,</p><p>Please find attached the invoice for your booking <strong>${booking.bookingCode}</strong>.</p><p>Thank you,<br/>Tripdhara Team</p>`,
                 attachments: [
                     {
                         filename: `Invoice_${booking.bookingCode}.pdf`,

@@ -7,43 +7,104 @@ const plusJakartaSans = Plus_Jakarta_Sans({
     subsets: ['latin'],
     variable: '--font-sans',
     display: 'swap',
+    preload: true,
 });
 
 const outfit = Outfit({
     subsets: ['latin'],
     variable: '--font-display',
     display: 'swap',
+    preload: true,
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
+
+/** @type {import('next').Metadata} */
 export const metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://pahadigo.co.in'),
+    metadataBase: new URL(siteUrl),
     title: {
-        template: '%s | PahadiGo',
-        default: 'PahadiGo - Book Himachal Tour Packages, Cabs & Homestays',
+        template: '%s | Tripdhara',
+        default: 'Tripdhara - Book Tour Packages, Cabs & Homestays',
     },
-    description: 'Discover and book verified homestays, cab rentals for Spiti & Manali, trekking, camping, and adventure activities across Himachal Pradesh.',
+    description: 'Discover and book verified homestays, hotels, cab rentals for Spiti, Manali, Char Dham, trekking, camping, and adventure activities across Himachal Pradesh & Uttarakhand with Tripdhara.',
+    applicationName: 'Tripdhara',
+    authors: [{ name: 'Tripdhara Team', url: siteUrl }],
+    creator: 'Tripdhara',
+    publisher: 'Tripdhara',
+    formatDetection: {
+        email: false,
+        address: false,
+        telephone: false,
+    },
     keywords: [
-        'PahadiGo',
+        'Tripdhara',
         'Himachal Tour Packages',
+        'Uttarakhand Tour Packages',
         'Manali Tour Packages',
         'Spiti Valley Trip',
+        'Char Dham Tour',
         'Kasol Homestays',
         'Himachal Cab Rental',
-        'Trekking in Himachal'
+        'Trekking in Himalayas'
     ],
-    // [SECURITY] Infrastructure Hardening Headers
-    other: {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://res.cloudinary.com https://www.google-analytics.com https://analytics.google.com; connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://analytics.google.com; font-src 'self' https://fonts.gstatic.com;",
-        'X-Frame-Options': 'DENY',
-        'X-Content-Type-Options': 'nosniff',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)'
-    }
+    alternates: {
+        canonical: '/',
+    },
+    openGraph: {
+        title: {
+            template: '%s | Tripdhara',
+            default: 'Tripdhara - Book Tour Packages, Cabs & Homestays',
+        },
+        description: 'Discover and book verified homestays, hotels, cab rentals for Spiti, Manali, Char Dham, trekking, camping, and adventure activities across Himachal Pradesh & Uttarakhand with Tripdhara.',
+        url: '/',
+        siteName: 'Tripdhara',
+        images: [
+            {
+                url: '/logo.png',
+                width: 1200,
+                height: 630,
+                alt: 'Tripdhara - Tour Packages, Cabs & Homestays',
+            }
+        ],
+        locale: 'en_IN',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: {
+            template: '%s | Tripdhara',
+            default: 'Tripdhara - Book Tour Packages, Cabs & Homestays',
+        },
+        description: 'Discover and book verified homestays, hotels, cab rentals for Spiti, Manali, Char Dham, trekking, camping, and adventure activities across Himachal Pradesh & Uttarakhand with Tripdhara.',
+        images: ['/logo.png'],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
+};
+
+/** @type {import('next').Viewport} */
+export const viewport = {
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+    ],
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
 };
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en" className={`${plusJakartaSans.variable} ${outfit.variable}`}>
+        <html lang="en" className={`${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
             <body className="antialiased font-sans">
                 <ToastProvider>
                     {children}
@@ -59,11 +120,12 @@ export default function RootLayout({ children }) {
                       function gtag(){dataLayer.push(arguments);}
                       gtag('js', new Date());
 
-                      gtag('config', 'G-1L0FGXLXS3');
+                      gtag('config', 'G-1L0FGXLXS3', {
+                          page_path: window.location.pathname,
+                      });
                     `}
                 </Script>
             </body>
         </html>
     );
 }
-

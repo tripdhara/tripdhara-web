@@ -5,7 +5,7 @@ import { getPackagesBy, getCategoriesBy, getBlogsBy } from '@/core/Helpers/query
 import { SCHEMA_KEYS } from '@/core/Constants/categories.js';
 
 export default async function sitemap() {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pahadigo.co.in';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
     // Core Static Routes
     const staticRoutes = [

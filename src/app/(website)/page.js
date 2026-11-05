@@ -1,10 +1,10 @@
 import ClientHome from './ClientHome.js';
 
 export const metadata = {
-    title: 'PahadiGo - Premier Himalayan Travel: Tour Packages, Mountain Cabs & Homestays',
-    description: 'Explore the Himalayas with PahadiGo. Book verified Himachal tour packages, Spiti Valley cab rentals, Kasol homestays, Leh-Ladakh bike trips, Uttarakhand trekking, and Kashmir tour packages at best prices.',
+    title: 'Tripdhara - Premier Himalayan Travel: Tour Packages, Mountain Cabs & Homestays',
+    description: 'Explore the Himalayas with Tripdhara. Book verified Himachal tour packages, Spiti Valley cab rentals, Kasol homestays, Leh-Ladakh bike trips, Uttarakhand trekking, and Kashmir tour packages at best prices.',
     keywords: [
-        'PahadiGo',
+        'Tripdhara',
         'Himalayan Tour Packages',
         'Himachal Tour Packages',
         'Manali Tour Packages',
@@ -23,24 +23,24 @@ export const metadata = {
         'Trekking in Himalayas',
         'Mountain Cab Booking India'
     ],
-    authors: [{ name: 'PahadiGo Travel Platform', url: 'https://pahadigo.co.in' }],
-    creator: 'PahadiGo',
-    publisher: 'PahadiGo',
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://pahadigo.co.in'),
+    authors: [{ name: 'Tripdhara Travel Platform', url: 'https://tripdhara.in' }],
+    creator: 'Tripdhara',
+    publisher: 'Tripdhara',
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tripdhara.in'),
     alternates: {
         canonical: '/',
     },
     openGraph: {
-        title: 'PahadiGo - Premier Himalayan Travel: Packages, Cabs, Homestays & Treks',
+        title: 'Tripdhara - Premier Himalayan Travel: Packages, Cabs, Homestays & Treks',
         description: 'Book verified Himalayan tour packages, mountain cab rentals for Spiti & Leh, cozy homestays in Kasol & Manali, and trekking across Himachal, Uttarakhand, Kashmir, Ladakh & Northeast India.',
-        url: 'https://pahadigo.co.in',
-        siteName: 'PahadiGo',
+        url: 'https://tripdhara.in',
+        siteName: 'Tripdhara',
         images: [
             {
                 url: '/logo.png',
                 width: 1200,
                 height: 630,
-                alt: 'PahadiGo Himalayan Travel Platform',
+                alt: 'Tripdhara Himalayan Travel Platform',
             },
         ],
         locale: 'en_IN',
@@ -48,10 +48,10 @@ export const metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'PahadiGo - Himalayan Tour Packages, Mountain Cabs & Homestays',
+        title: 'Tripdhara - Himalayan Tour Packages, Mountain Cabs & Homestays',
         description: 'Book verified Himalayan tour packages, Spiti & Leh cabs, and mountain homestays at best prices.',
         images: ['/logo.png'],
-        creator: '@pahadigo',
+        creator: '@Tripdhara',
     },
     robots: {
         index: true,
@@ -71,12 +71,12 @@ const jsonLdData = {
     '@graph': [
         {
             '@type': 'TravelAgency',
-            '@id': 'https://pahadigo.co.in/#organization',
-            'name': 'PahadiGo',
-            'url': 'https://pahadigo.co.in',
-            'logo': 'https://pahadigo.co.in/logo.png',
-            'image': 'https://pahadigo.co.in/logo.png',
-            'description': 'PahadiGo is India’s premier Himalayan travel platform offering verified mountain tour packages, cab rentals for high-altitude passes, authentic homestays, and trekking expeditions across Himachal Pradesh, Uttarakhand, Leh-Ladakh, Kashmir, and Northeast India.',
+            '@id': 'https://tripdhara.in/#organization',
+            'name': 'Tripdhara',
+            'url': 'https://tripdhara.in',
+            'logo': 'https://tripdhara.in/logo.png',
+            'image': 'https://tripdhara.in/logo.png',
+            'description': 'Tripdhara is India’s premier Himalayan travel platform offering verified mountain tour packages, cab rentals for high-altitude passes, authentic homestays, and trekking expeditions across Himachal Pradesh, Uttarakhand, Leh-Ladakh, Kashmir, and Northeast India.',
             'address': {
                 '@type': 'PostalAddress',
                 'addressRegion': 'Himachal Pradesh & Uttarakhand',
@@ -114,26 +114,26 @@ const jsonLdData = {
         },
         {
             '@type': 'WebSite',
-            '@id': 'https://pahadigo.co.in/#website',
-            'url': 'https://pahadigo.co.in',
-            'name': 'PahadiGo',
-            'publisher': { '@id': 'https://pahadigo.co.in/#organization' },
+            '@id': 'https://tripdhara.in/#website',
+            'url': 'https://tripdhara.in',
+            'name': 'Tripdhara',
+            'publisher': { '@id': 'https://tripdhara.in/#organization' },
             'potentialAction': {
                 '@type': 'SearchAction',
-                'target': 'https://pahadigo.co.in/packages?search={search_term_string}',
+                'target': 'https://tripdhara.in/packages?search={search_term_string}',
                 'query-input': 'required name=search_term_string'
             }
         },
         {
             '@type': 'FAQPage',
-            '@id': 'https://pahadigo.co.in/#faq',
+            '@id': 'https://tripdhara.in/#faq',
             'mainEntity': [
                 {
                     '@type': 'Question',
-                    'name': 'How to book a cab from Manali to Spiti Valley on PahadiGo?',
+                    'name': 'How to book a cab from Manali to Spiti Valley on Tripdhara?',
                     'acceptedAnswer': {
                         '@type': 'Answer',
-                        'text': 'Bottom Line Up Front (BLUF): You can book verified SUVs (Innova/Sumo) or Tempo Travellers directly on PahadiGo with transparent per-day pricing, licensed local drivers, and instant booking confirmation.'
+                        'text': 'Bottom Line Up Front (BLUF): You can book verified SUVs (Innova/Sumo) or Tempo Travellers directly on Tripdhara with transparent per-day pricing, licensed local drivers, and instant booking confirmation.'
                     }
                 },
                 {
@@ -141,15 +141,15 @@ const jsonLdData = {
                     'name': 'What are the best tour packages for Himachal Pradesh?',
                     'acceptedAnswer': {
                         '@type': 'Answer',
-                        'text': 'PahadiGo offers curated tour packages including 5-Day Manali Adventure, 7-Day Complete Spiti Circuit, Kasol Riverside Camping, and Shimla Heritage packages.'
+                        'text': 'Tripdhara offers curated tour packages including 5-Day Manali Adventure, 7-Day Complete Spiti Circuit, Kasol Riverside Camping, and Shimla Heritage packages.'
                     }
                 },
                 {
                     '@type': 'Question',
-                    'name': 'Are homestays listed on PahadiGo verified?',
+                    'name': 'Are homestays listed on Tripdhara verified?',
                     'acceptedAnswer': {
                         '@type': 'Answer',
-                        'text': 'Yes, all homestays on PahadiGo undergo strict physical verification for safety, hygiene, authentic local host experience, and reliable Wi-Fi.'
+                        'text': 'Yes, all homestays on Tripdhara undergo strict physical verification for safety, hygiene, authentic local host experience, and reliable Wi-Fi.'
                     }
                 }
             ]

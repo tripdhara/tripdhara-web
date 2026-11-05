@@ -9,7 +9,7 @@ describe('OpenAPI specification generation', () => {
         const spec = generateOpenApiSpec(routes);
 
         expect(spec.openapi).toBe('3.0.3');
-        expect(spec.info.title).toBe('PahadiGo API');
+        expect(spec.info.title).toBe('Tripdhara API');
         expect(spec.servers).toEqual([{ url: '/api', description: 'Next.js API base path' }]);
         expect(spec.components.securitySchemes.bearerAuth).toMatchObject({
             type: 'http',

@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a strict report to help us improve PahadiGo
+about: Create a strict report to help us improve Tripdhara
 title: "[BUG] "
 labels: bug
 assignees: ''

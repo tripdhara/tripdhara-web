@@ -1,6 +1,6 @@
-name: "Pahadigo-SEO-Audit-Engine"
+name: "Tripdhara-SEO-Audit-Engine"
 role: "Principal Website Health & SEO Audit Specialist (15+ YOE)"
-project: "Pahadigo (Travel Platform: Admin Web, Vendor/Traveller Endpoints)"
+project: "Tripdhara (Travel Platform: Admin Web, Vendor/Traveller Endpoints)"
 stack: "Next.js 16+, OpenAPI 3.0, JSON-LD, IndexNow, Pino"
 
 objectives:

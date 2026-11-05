@@ -168,7 +168,7 @@ export async function item(userId, businessId, category, itemDataOrUpdates, item
     }
 
     // 8. Auto-notify IndexNow for Search Engine Indexation
-    if (savedItem && savedItem._id) notifyIndexNow([`https://pahadigo.co.in/packages/${savedItem._id}`]).catch(() => { });
+    if (savedItem && savedItem._id) notifyIndexNow([`https://tripdhara.in/packages/${savedItem._id}`]).catch(() => { });
 
     // 9. Format and return the result using normalizePackageItem
     const base = normalizePackageItem(savedItem);

@@ -1,17 +1,17 @@
 export const metadata = {
     title: 'Contact Us - Customer Support & Inquiries',
-    description: 'Get in touch with PahadiGo support team for booking assistance, custom Himachal tour itineraries, cab inquiries, or vendor partnership opportunities.',
+    description: 'Get in touch with Tripdhara support team for booking assistance, custom Himachal tour itineraries, cab inquiries, or vendor partnership opportunities.',
     keywords: [
-        'Contact PahadiGo',
-        'PahadiGo Support',
+        'Contact Tripdhara',
+        'Tripdhara Support',
         'Himachal Cab Inquiry',
-        'PahadiGo Partner Registration'
+        'Tripdhara Partner Registration'
     ],
     openGraph: {
-        title: 'Contact Us | PahadiGo Customer Support',
-        description: 'Need help planning your Himalayan trip? Contact PahadiGo team today.',
-        url: 'https://pahadigo.co.in/contact',
-        siteName: 'PahadiGo',
+        title: 'Contact Us | Tripdhara Customer Support',
+        description: 'Need help planning your Himalayan trip? Contact Tripdhara team today.',
+        url: 'https://tripdhara.in/contact',
+        siteName: 'Tripdhara',
         type: 'website',
     },
     alternates: {

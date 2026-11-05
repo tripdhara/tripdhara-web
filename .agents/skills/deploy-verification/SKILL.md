@@ -1,12 +1,12 @@
 ---
 name: deploy-verification
-description: Pre-flight deployment verification checklist for PahadiGo. Validates Jest unit/integration tests, Zod environment variables, Mongoose schemas, and Next.js production build status before Vercel release.
+description: Pre-flight deployment verification checklist for Tripdhara. Validates Jest unit/integration tests, Zod environment variables, Mongoose schemas, and Next.js production build status before Vercel release.
 ---
 
-# PahadiGo Pre-Flight Deployment Verification
+# Tripdhara Pre-Flight Deployment Verification
 
 ## Overview
-This skill provides a standardized operational procedure for verifying the stability, security, and build health of PahadiGo before committing to production deployment.
+This skill provides a standardized operational procedure for verifying the stability, security, and build health of Tripdhara before committing to production deployment.
 
 ## Step-by-step Verification Workflow
 

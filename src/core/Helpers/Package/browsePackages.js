@@ -1,7 +1,7 @@
 /**
  * @file browsePackages.js
  * @module core/Helpers/browsePackages
- * @description High-performance public browsing, filtering, and discovery engine for PahadiGo packages.
+ * @description High-performance public browsing, filtering, and discovery engine for Tripdhara packages.
  *
  * Fulfills all core business and compliance rules:
  * 1. Vendor Basic Status  : active: true, isOperating: true, isApproved: true, deletedAt: null

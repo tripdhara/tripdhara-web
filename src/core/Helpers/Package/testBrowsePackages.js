@@ -1,7 +1,7 @@
 /**
  * @file browsePackages.js
  * @module core/Helpers/Package/browsePackages
- * @description Hybrid High-Performance discovery and compliance engine for PahadiGo packages.
+ * @description Hybrid High-Performance discovery and compliance engine for Tripdhara packages.
  *
  * Performance Architecture (Tarika 1 - High Performance Pre-filter):
  * 1. Parallel Pre-filter (Node.js level):

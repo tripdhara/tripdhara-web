@@ -1,7 +1,7 @@
 /**
  * @file MasterService.js
  * @module core/Services/MasterService
- * @description Centralized, universal business logic and compliance engine for PahadiGo.
+ * @description Centralized, universal business logic and compliance engine for Tripdhara.
  *
  * Single Source of Truth for:
  * 1. Vendor Operating Status     : status: 'active', isOperating: true, isApproved: true, deletedAt: null

@@ -15,37 +15,44 @@ const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
 const getPackageDetails = cache(async (id) => {
-    const result = await api.package.getById(id);
-    return result?.data || {};
+    try {
+        const result = await api.package.getById(id);
+        return result?.data || {};
+    } catch (error) {
+    }
 });
 
 const getSuggestedPackage = cache(async (currentId) => {
-    const results = await api.package.getBrowse({ limit: 5, format: 'flat' });
-    const allPackages = results?.data || [];
-    return allPackages.filter(p => (p._id !== currentId && p.id !== currentId)).slice(0, 4);
+    try {
+        const results = await api.package.getBrowse({ limit: 5, format: 'flat' });
+        const allPackages = results?.data || [];
+        return allPackages.filter(p => (p._id !== currentId && p.id !== currentId)).slice(0, 4);
+    } catch (error) { }
 });
 
 // 3. Dynamic Metadata
 export async function generateMetadata({ params }) {
-    const { id } = await params;
-    const service = await getPackageDetails(id);
-    if (!service) {
-        return createMetadata({ title: 'Package Not Found', noIndex: true });
-    }
+    try {
+        const { id } = await params;
+        const service = await getPackageDetails(id);
+        if (!service) {
+            return createMetadata({ title: 'Package Not Found', noIndex: true });
+        }
 
-    const title = service.title || 'Package Details';
-    const address = service.address || 'Himachal Pradesh';
-    const category = service.category_name || 'Package';
-    const metaTitle = `${title} - ${category} in ${address}`;
+        const title = service.title || 'Package Details';
+        const address = service.address || 'Himachal Pradesh';
+        const category = service.category_name || 'Package';
+        const metaTitle = `${title} - ${category} in ${address}`;
 
-    const description = service.description || `Book ${title} in ${address} at best rates on Tripdhara.`;
-    const image = service.photos?.[0]?.url || service.photos?.[0] || DEFAULT_IMAGE;
-    return createMetadata({
-        title: metaTitle,
-        description,
-        image,
-        path: `packages/${id}`
-    });
+        const description = service.description || `Book ${title} in ${address} at best rates on Tripdhara.`;
+        const image = service.photos?.[0]?.url || service.photos?.[0] || DEFAULT_IMAGE;
+        return createMetadata({
+            title: metaTitle,
+            description,
+            image,
+            path: `packages/${id}`
+        });
+    } catch (error) { }
 
 }
 
@@ -55,6 +62,8 @@ export default async function ServiceDetailPage({ params }) {
         getPackageDetails(id),
         getSuggestedPackage(id)
     ]);
+
+    console.log('service', service);
     if (!service) {
         return (
             <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center py-20">
@@ -71,39 +80,49 @@ export default async function ServiceDetailPage({ params }) {
     const description = service.description;
     const address = service.address;
     const price = service.pricing?.sellingPrice;
-    const category = service.title;
+    const category = service.category_name;
     const imageUrl = service.photos[0].url || service.photos[0] || DEFAULT_IMAGE;
 
     return (
         <div className="bg-gray-50 min-h-screen pb-25 font-sans">
             {/* Hero Section */}
-            <div className="relative h-[65vh] min-h-[500px] w-full">
-                <img src={imageUrl} alt={title} className="w-full h-full object-cover object-center" />
+            <div className="relative h-[55vh] sm:h-[65vh] lg:h-[72vh] min-h-[420px] sm:min-h-[500px] lg:min-h-[580px] w-full">
+                <Image
+                    src={imageUrl}
+                    alt={title || 'Package Image'}
+                    fill
+                    priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                    className="object-cover object-center"
+                />
                 <div className="absolute inset-0 bg-gray-900/40 mix-blend-multiply"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent opacity-90"></div>
 
-                <div className="absolute bottom-0 left-0 w-full px-4 sm:px-6 lg:px-8 pb-24 md:pb-32 text-white z-10">
-                    <div className="max-w-7xl mx-auto">
-                        <nav className="mb-4 flex items-center text-xs font-semibold text-white/80 gap-2">
-                            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-                            <span>/</span>
-                            <Link href="/packages" className="hover:text-white transition-colors">Packages</Link>
-                            <span>/</span>
-                            <span className="text-white truncate max-w-[200px]">{title}</span>
-                        </nav>
-                        <div className="mb-5 flex flex-wrap items-center gap-3">
-                            <span className="px-4 py-1.5 bg-primary-600/90 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(var(--color-primary-600),0.5)]">{category}</span>
-                            <span className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest border border-white/30 shadow-sm">Verified Experiences</span>
+                <div className="absolute inset-0 flex items-center w-full px-4 sm:px-6 lg:px-8 text-white z-10">
+                    <div className="max-w-7xl mx-auto w-full">
+                        <div className="flex flex-wrap items-center justify-between">
+                            <div className="mb-0 sm:mb-0 flex flex-wrap items-center gap-1 sm:gap-1">
+                                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-primary-600/90 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(var(--color-primary-600),0.5)]">{category}</span>
+                                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/30 shadow-sm">Verified Experiences</span>
+                            </div>
+                            <nav className="flex items-center text-xs font-semibold text-white/80 gap-1 sm:gap-1 overflow-hidden">
+                                <Link href="/" className="hover:text-white transition-colors shrink-0">Home</Link>
+                                <span>/</span>
+                                <Link href="/packages" className="hover:text-white transition-colors shrink-0">Packages</Link>
+                                <span>/</span>
+                                <span className="text-white truncate max-w-[140px] sm:max-w-[240px] md:max-w-md">{title}</span>
+                            </nav>
                         </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 leading-tight max-w-4xl tracking-tight font-display drop-shadow-lg">{title}</h1>
-                        <p className="text-lg md:text-2xl text-gray-200 flex items-center font-medium drop-shadow-md">
-                            <MapPin className="w-6 h-6 mr-3 text-primary-400" />{address || 'Location details unavailable'}
+                        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black my-3 sm:my-4 leading-tight max-w-4xl tracking-tight font-display drop-shadow-lg">{title}</h1>
+                        <p className="text-sm sm:text-base md:text-xl text-gray-200 flex items-center font-medium drop-shadow-md">
+                            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 mr-2 sm:mr-3 text-primary-400 shrink-0" />
+                            <span className="line-clamp-1">{address || 'Location details unavailable'}</span>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-5 relative z-20 -mt-16 md:-mt-24 top-[5vh]">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-10 sm:-mt-16 md:-mt-12">
 
                 {/* Floating Quick Stats Bar Component */}
                 <QuickStatsBar service={service} />
@@ -226,9 +245,9 @@ export default async function ServiceDetailPage({ params }) {
                                 <div className="flex flex-col sm:flex-row items-start gap-6 relative z-10">
                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary-100 to-primary-200 flex items-center justify-center text-3xl font-black text-primary-700 border-4 border-white shadow-md flex-shrink-0 overflow-hidden">
                                         {service.business.profileImage ? (
-                                            <img src={service.business.profileImage} alt={service.business.businessName} className="w-full h-full object-cover" />
+                                            <Image src={service.business.profileImage} alt={service.business.businessName || 'Host Profile'} width={60} height={60} className="w-full h-full object-cover" />
                                         ) : (
-                                            service.business.businessName?.[0] || 'V'
+                                            service.business.businessName?.[0]?.toUpperCase() || 'V'
                                         )}
                                     </div>
                                     <div>
@@ -264,8 +283,8 @@ export default async function ServiceDetailPage({ params }) {
                                         <div key={review.id || review._id || idx} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
                                             <div className="flex items-center mb-3">
                                                 <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center overflow-hidden mr-3">
-                                                    {review.user?.avatar || review.user?.profileImage ? (
-                                                        <img src={review.user.avatar || review.user.profileImage} alt={review.user.name} className="w-full h-full object-cover" />
+                                                    {review.user?.profileImage ? (
+                                                        <Image src={review.user.profileImage} alt={review.user.name || 'User Avatar'} width={40} height={40} className="w-full h-full object-cover" />
                                                     ) : (
                                                         review.user?.name?.[0]?.toUpperCase() || 'G'
                                                     )}

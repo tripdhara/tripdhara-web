@@ -3,33 +3,36 @@ import { Clock, Mountain, ShieldCheck, Users, Home as HomeIcon, Car } from 'luci
 export default function QuickStatsBar({ service }) {
     if (!service) return null;
 
-    const category = (service.category || service.serviceType || '').toLowerCase();
+    const category = service.category_slug.toLowerCase();
+    const pricing = service.pricing;
+    const details = service.details;
     return (
         <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/40 mb-12 flex flex-wrap items-center justify-around gap-6">
 
             {/* Hotel & Homestay Stats */}
             {['hotel', 'homestay'].includes(category) && (
                 <>
-                    {(service.maxAdults || service.maxGuests) && (
+                    {(pricing.maxAdults || pricing.maxGuests) && (
                         <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
                                 <Users className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Capacity</p>
-                                <p className="text-lg font-black text-gray-900">Up to {service.maxAdults || service.maxGuests} Guests</p>
+                                <p className="text-lg font-black text-gray-900">Up to {pricing.maxAdults || pricing.maxGuests} Guests</p>
                             </div>
                         </div>
                     )}
+
                     <div className="hidden md:block w-px h-12 bg-gray-200"></div>
-                    {service.roomType && (
+                    {details.roomType && (
                         <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                 <HomeIcon className="w-6 h-6" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Room</p>
-                                <p className="text-lg font-black text-gray-900">{service.roomType}</p>
+                                <p className="text-lg font-black text-gray-900">{details.roomType}</p>
                             </div>
                         </div>
                     )}

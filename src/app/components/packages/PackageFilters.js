@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Search, SlidersHorizontal, Check } from 'lucide-react';
 import { CATEGORY_SLUGS, CATEGORY_TITLES } from '@/core/Constants/categories.js';
 
-export default function PackageFilters({ visibleCategories }) {
+export default function PackageFilters({ categories }) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -84,17 +84,11 @@ export default function PackageFilters({ visibleCategories }) {
                             {!currentCategory && <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
                         </Link>
 
-                        {visibleCategories.map(key => {
-                            const slug = CATEGORY_SLUGS[key];
-                            const isSelected = currentCategory && currentCategory.toLowerCase() === slug;
-
-                            const params = new URLSearchParams(searchParams.toString());
-                            params.set('category', slug);
-                            params.delete('page');
-
+                        {categories.map((category) => {
+                            const isSelected = currentCategory && currentCategory.toLowerCase() === category.slug;
                             return (
-                                <Link key={slug} href={`${pathname}?${params.toString()}`} className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 ${isSelected ? 'bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium border border-transparent hover:border-gray-200/60'}`} >
-                                    <span className="font-semibold text-sm group-hover:translate-x-1 transition-transform duration-300">{CATEGORY_TITLES[key]}</span>
+                                <Link key={category.slug} href={`/packages?category=${category.slug}`} className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 ${isSelected ? 'bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium border border-transparent hover:border-gray-200/60'}`} >
+                                    <span className="font-semibold text-sm group-hover:translate-x-1 transition-transform duration-300">{category.name}</span>
                                     {isSelected && <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
                                 </Link>
                             );

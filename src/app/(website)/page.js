@@ -1,6 +1,10 @@
+import api from '@/core/Api/public/index.js';
 import ClientHome from './ClientHome.js';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL;
+
 export const metadata = {
+    metadataBase: new URL(siteUrl),
     title: 'Tripdhara - Premier Himalayan Travel: Tour Packages, Mountain Cabs & Homestays',
     description: 'Explore the Himalayas with Tripdhara. Book verified Himachal tour packages, Spiti Valley cab rentals, Kasol homestays, Leh-Ladakh bike trips, Uttarakhand trekking, and Kashmir tour packages at best prices.',
     keywords: [
@@ -23,17 +27,16 @@ export const metadata = {
         'Trekking in Himalayas',
         'Mountain Cab Booking India'
     ],
-    authors: [{ name: 'Tripdhara Travel Platform', url: 'https://tripdhara.in' }],
+    authors: [{ name: 'Tripdhara Travel Platform', url: siteUrl }],
     creator: 'Tripdhara',
     publisher: 'Tripdhara',
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tripdhara.in'),
     alternates: {
         canonical: '/',
     },
     openGraph: {
         title: 'Tripdhara - Premier Himalayan Travel: Packages, Cabs, Homestays & Treks',
         description: 'Book verified Himalayan tour packages, mountain cab rentals for Spiti & Leh, cozy homestays in Kasol & Manali, and trekking across Himachal, Uttarakhand, Kashmir, Ladakh & Northeast India.',
-        url: 'https://tripdhara.in',
+        url: siteUrl,
         siteName: 'Tripdhara',
         images: [
             {
@@ -71,11 +74,11 @@ const jsonLdData = {
     '@graph': [
         {
             '@type': 'TravelAgency',
-            '@id': 'https://tripdhara.in/#organization',
+            '@id': `${siteUrl}/#organization`,
             'name': 'Tripdhara',
-            'url': 'https://tripdhara.in',
-            'logo': 'https://tripdhara.in/logo.png',
-            'image': 'https://tripdhara.in/logo.png',
+            'url': siteUrl,
+            'logo': `${siteUrl}/logo.png`,
+            'image': `${siteUrl}/logo.png`,
             'description': 'Tripdhara is India’s premier Himalayan travel platform offering verified mountain tour packages, cab rentals for high-altitude passes, authentic homestays, and trekking expeditions across Himachal Pradesh, Uttarakhand, Leh-Ladakh, Kashmir, and Northeast India.',
             'address': {
                 '@type': 'PostalAddress',
@@ -109,24 +112,24 @@ const jsonLdData = {
             ],
             'priceRange': '₹₹',
             'sameAs': [
-                'https://github.com/ermradulsharma/pahadigo'
+                'https://github.com/tripdhara/tripdhara-web'
             ]
         },
         {
             '@type': 'WebSite',
-            '@id': 'https://tripdhara.in/#website',
-            'url': 'https://tripdhara.in',
+            '@id': `${siteUrl}/#website`,
+            'url': siteUrl,
             'name': 'Tripdhara',
-            'publisher': { '@id': 'https://tripdhara.in/#organization' },
+            'publisher': { '@id': `${siteUrl}/#organization` },
             'potentialAction': {
                 '@type': 'SearchAction',
-                'target': 'https://tripdhara.in/packages?search={search_term_string}',
+                'target': `${siteUrl}/packages?search={search_term_string}`,
                 'query-input': 'required name=search_term_string'
             }
         },
         {
             '@type': 'FAQPage',
-            '@id': 'https://tripdhara.in/#faq',
+            '@id': `${siteUrl}/#faq`,
             'mainEntity': [
                 {
                     '@type': 'Question',
@@ -157,19 +160,17 @@ const jsonLdData = {
     ]
 };
 
-import CategoryService from '@/core/Services/General/CategoryService.js';
-
-async function getCategories() {
+async function getServices() {
     try {
-        const categories = await CategoryService.getAllCategories();
-        return JSON.parse(JSON.stringify(categories || []));
+        const result = await api.service.categories.getAll();
+        return result.data || [];
     } catch (error) {
         return [];
     }
 }
 
 export default async function Home() {
-    const categories = await getCategories();
+    const categories = await getServices();
     return (
         <>
             <script

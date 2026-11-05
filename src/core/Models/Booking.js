@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { DEFAULTS, PAYMENT_GATEWAYS, BOOKING_STATUS, PAYMENT_STATUS, REFUND_STATUS, PAYOUT_STATUS } from '../Constants/index.js';
 
 const BookingSchema = new mongoose.Schema({
-    bookingCode: { type: String, unique: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
+    bookingCode: { type: String, unique: DEFAULTS.TRUE },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
     vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
     package: { type: mongoose.Schema.Types.ObjectId, ref: 'VendorPackage', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
@@ -106,7 +106,7 @@ const BookingSchema = new mongoose.Schema({
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE }
 });
 
-BookingSchema.index({ 'item.itemId': 1 });
+// Compound index covers queries on item.itemId alone, or with status and dates
 BookingSchema.index({ 'item.itemId': 1, status: 1, startDate: 1, endDate: 1 });
 BookingSchema.index({ createdAt: -1 });
 

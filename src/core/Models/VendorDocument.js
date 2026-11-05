@@ -3,7 +3,7 @@ import { DEFAULTS, VERIFICATION_STATUS } from '../Constants/index.js';
 
 const VendorDocumentSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
-    vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
+    vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: DEFAULTS.TRUE },
     category_slug: { type: String, required: DEFAULTS.TRUE },
     document_slug: { type: String, required: DEFAULTS.TRUE },
     url: { type: String, required: DEFAULTS.TRUE },
@@ -17,11 +17,11 @@ const VendorDocumentSchema = new mongoose.Schema({
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
-// Ensure unique document per vendor + category + doc_type
+// Ensure unique document per vendor + category + doc_type (also covers vendor & vendor+category queries)
 VendorDocumentSchema.index({ vendor: 1, category_slug: 1, document_slug: 1 }, { unique: DEFAULTS.TRUE });
 
-// Optimize category compliance checks
-VendorDocumentSchema.index({ status: 1, category_slug: 1 });
+// Fast category compliance and targeted discovery queries
+VendorDocumentSchema.index({ category_slug: 1, status: 1 });
 
 const VendorDocument = mongoose.models.VendorDocument || mongoose.model('VendorDocument', VendorDocumentSchema);
 export default VendorDocument;

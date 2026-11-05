@@ -4,8 +4,7 @@ const WebhookEventSchema = new mongoose.Schema({
     eventId: {
         type: String,
         required: true,
-        unique: true, // Prevents duplicate inserts (replay attacks)
-        index: true
+        unique: true // Prevents duplicate inserts (automatically creates unique index)
     },
     gateway: {
         type: String,

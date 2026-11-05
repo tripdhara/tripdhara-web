@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { DEFAULTS, USER_ROLES } from '../Constants/index.js';
 
 const ChatMessageSchema = new mongoose.Schema({
-  conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
+  conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', required: DEFAULTS.TRUE },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE },
   senderModel: { type: String, required: DEFAULTS.TRUE, enum: Object.values(USER_ROLES) },
   message: { type: String, required: DEFAULTS.TRUE },
@@ -13,5 +13,9 @@ const ChatMessageSchema = new mongoose.Schema({
   toJSON: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE },
   toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
+
+// Fast chronological retrieval and unread count queries
+ChatMessageSchema.index({ conversation: 1, createdAt: -1 });
+ChatMessageSchema.index({ conversation: 1, isRead: 1 });
 
 export default mongoose.models.ChatMessage || mongoose.model('ChatMessage', ChatMessageSchema);

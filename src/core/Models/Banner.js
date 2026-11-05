@@ -13,6 +13,7 @@ const BannerSchema = new mongoose.Schema({
   toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
-BannerSchema.index({ position: 1 });
+// Compound index for active banners ordered by position
+BannerSchema.index({ isActive: 1, position: 1 });
 
 export default mongoose.models.Banner || mongoose.model('Banner', BannerSchema);

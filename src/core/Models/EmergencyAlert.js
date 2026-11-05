@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { DEFAULTS } from '../Constants/index.js';
 
 const EmergencyAlertSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE },
     location: { latitude: { type: Number, default: DEFAULTS.NULL }, longitude: { type: Number, default: DEFAULTS.NULL }, address: { type: String, default: DEFAULTS.NULL } },
     status: { type: String, enum: ['active', 'resolved', 'false_alarm'], default: 'active', index: DEFAULTS.TRUE },
     notifiedContacts: [{ name: String, phone: String, status: { type: String, enum: ['sent', 'failed'], default: 'sent' } }],
@@ -13,5 +13,8 @@ const EmergencyAlertSchema = new mongoose.Schema({
     toJSON: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE },
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
+
+EmergencyAlertSchema.index({ userId: 1, status: 1 });
+EmergencyAlertSchema.index({ createdAt: -1 });
 
 export default mongoose.models.EmergencyAlert || mongoose.model('EmergencyAlert', EmergencyAlertSchema);

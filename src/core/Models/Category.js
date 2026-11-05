@@ -12,6 +12,8 @@ const CategorySchema = new mongoose.Schema({
   toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
+CategorySchema.index({ isActive: 1 });
+
 CategorySchema.pre('save', async function () {
   if (!this.isModified('name') && !this.isNew) return;
 

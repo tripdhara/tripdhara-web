@@ -13,6 +13,7 @@ const searchLogSchema = new mongoose.Schema({
   toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
+searchLogSchema.index({ query: 1 });
 searchLogSchema.index({ count: -1 });
 searchLogSchema.index({ lastSearched: -1 });
 

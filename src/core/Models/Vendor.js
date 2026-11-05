@@ -101,7 +101,7 @@ const VendorSchema = new mongoose.Schema({
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
-VendorSchema.index({ status: 1 });
+// Compound index covers queries on status alone, or combined with isOperating/isApproved
 VendorSchema.index({ status: 1, isOperating: 1, isApproved: 1 });
 VendorSchema.index({ 'address.location': '2dsphere' });
 VendorSchema.index({ businessName: 'text', ownerName: 'text', 'address.city': 'text', 'address.state': 'text' }, { name: 'VendorTextIndex', weights: { businessName: 10, ownerName: 5, 'address.city': 3 } });

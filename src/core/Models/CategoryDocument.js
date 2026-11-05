@@ -14,6 +14,7 @@ const CategoryDocumentSchema = new mongoose.Schema({
 });
 
 CategoryDocumentSchema.index({ category_slug: 1, slug: 1 }, { unique: DEFAULTS.TRUE });
+CategoryDocumentSchema.index({ category_slug: 1, isActive: 1 });
 
 const CategoryDocument = mongoose.models.CategoryDocument || mongoose.model('CategoryDocument', CategoryDocumentSchema);
 export default CategoryDocument;

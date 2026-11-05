@@ -30,6 +30,17 @@ const VendorPackageSchema = new mongoose.Schema({
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
+// [PERFORMANCE] Fast Lookup Indexes for Individual Category Items across all packages
+VendorPackageSchema.index({ 'homestay._id': 1 });
+VendorPackageSchema.index({ 'hotel._id': 1 });
+VendorPackageSchema.index({ 'camping._id': 1 });
+VendorPackageSchema.index({ 'trekking._id': 1 });
+VendorPackageSchema.index({ 'rafting._id': 1 });
+VendorPackageSchema.index({ 'bungeeJumping._id': 1 });
+VendorPackageSchema.index({ 'vehicleRental._id': 1 });
+VendorPackageSchema.index({ 'chardhamTour._id': 1 });
+VendorPackageSchema.index({ 'customTrip._id': 1 });
+
 // [PERFORMANCE] Compound Text Index for global search
 VendorPackageSchema.index({
     'homestay.title': 'text',

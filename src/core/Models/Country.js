@@ -13,4 +13,6 @@ const CountrySchema = new mongoose.Schema({
   toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
 
+CountrySchema.index({ status: 1 });
+
 export default mongoose.models.Country || mongoose.model('Country', CountrySchema);

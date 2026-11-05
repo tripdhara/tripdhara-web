@@ -17,5 +17,6 @@ const InquirySchema = new mongoose.Schema({
 });
 
 InquirySchema.index({ status: 1, createdAt: -1 });
+InquirySchema.index({ email: 1 });
 
 export default mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);

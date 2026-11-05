@@ -9,7 +9,7 @@ const DisputeSchema = new mongoose.Schema({
   reason: { type: String, required: DEFAULTS.TRUE, enum: ['vendor_no_show', 'quality_issue', 'safety_concern', 'wrong_information', 'other'] },
   description: { type: String, required: DEFAULTS.TRUE },
   evidenceUrls: [{ url: String, publicId: String }],
-  status: { type: String, enum: ['open', 'investigating', 'resolved_refunded', 'resolved_rejected'], default: 'open', index: DEFAULTS.TRUE },
+  status: { type: String, enum: ['open', 'investigating', 'resolved_refunded', 'resolved_rejected'], default: 'open' },
   adminNotes: { type: String, default: DEFAULTS.NULL },
   resolvedAt: { type: Date, default: DEFAULTS.NULL }
 }, {

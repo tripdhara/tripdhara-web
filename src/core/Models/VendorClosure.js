@@ -3,7 +3,7 @@ import { DEFAULTS } from '../Constants/index.js';
 
 const VendorClosureSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
-    vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: DEFAULTS.TRUE, index: DEFAULTS.TRUE },
+    vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: DEFAULTS.TRUE },
     startDate: { type: Date, required: DEFAULTS.TRUE },
     endDate: { type: Date, required: DEFAULTS.TRUE },
     reason: { type: String, trim: DEFAULTS.TRUE, default: DEFAULTS.NULL },
@@ -13,7 +13,7 @@ const VendorClosureSchema = new mongoose.Schema({
     toJSON: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE },
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
-VendorClosureSchema.index({ startDate: 1, endDate: 1 });
+
 VendorClosureSchema.index({ vendor: 1, startDate: 1, endDate: 1 });
 VendorClosureSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 VendorClosureSchema.pre('save', async function () {

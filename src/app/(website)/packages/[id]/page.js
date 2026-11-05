@@ -17,7 +17,7 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 const getPackageDetails = cache(async (id) => {
     try {
         const result = await api.package.getById(id);
-        return result?.data || {};
+        return result?.data || null;
     } catch (error) {
     }
 });
@@ -81,7 +81,7 @@ export default async function ServiceDetailPage({ params }) {
     const address = service.address;
     const price = service.pricing?.sellingPrice;
     const category = service.category_name;
-    const imageUrl = service.photos[0].url || service.photos[0] || DEFAULT_IMAGE;
+    const imageUrl = service.photos?.[0]?.url || service.photos?.[0] || DEFAULT_IMAGE;
 
     return (
         <div className="bg-gray-50 min-h-screen pb-25 font-sans">
@@ -104,6 +104,17 @@ export default async function ServiceDetailPage({ params }) {
                             <div className="mb-0 sm:mb-0 flex flex-wrap items-center gap-1 sm:gap-1">
                                 <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-primary-600/90 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(var(--color-primary-600),0.5)]">{category}</span>
                                 <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/30 shadow-sm">Verified Experiences</span>
+                                {service.rating?.average > 0 && (
+                                    <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider border border-white/20 shadow-sm flex items-center">
+                                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 mr-1.5 shrink-0" />
+                                        {service.rating.average} {service.rating.count ? `(${service.rating.count})` : ''}
+                                    </span>
+                                )}
+                                {service.mealsIncluded && (
+                                    <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-600/90 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white shadow-sm flex items-center">
+                                        <Check className="w-3.5 h-3.5 mr-1 shrink-0" /> {service.mealType || 'Meals Included'}
+                                    </span>
+                                )}
                             </div>
                             <nav className="flex items-center text-xs font-semibold text-white/80 gap-1 sm:gap-1 overflow-hidden">
                                 <Link href="/" className="hover:text-white transition-colors shrink-0">Home</Link>
@@ -196,7 +207,7 @@ export default async function ServiceDetailPage({ params }) {
                         )}
 
                         {/* Policies Section */}
-                        {(service.policies?.cancellationPolicy || service.policies?.instructions || service.policies?.medicalCertificate || service.policies?.isCouplesFriendly || service.policies?.isPetFriendly) && (
+                        {(service.policies?.cancellationPolicy || service.policies?.instructions || service.policies?.medicalCertificate || service.policies?.isCouplesFriendly || service.policies?.isPetFriendly || service.policies?.isSmokingAllowed || service.policies?.isMusicAllowed || service.details?.checkInTime) && (
                             <section className="bg-white rounded-[2rem] p-8 md:p-10 shadow-sm border border-gray-100">
                                 <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center font-display tracking-tight">
                                     <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center mr-4 shadow-sm">
@@ -223,9 +234,22 @@ export default async function ServiceDetailPage({ params }) {
                                         </div>
                                     )}
                                     {/* Tags */}
+                                    {(service.details?.checkInTime || service.details?.checkOutTime) && (
+                                        <div className="bg-gray-50/70 p-5 rounded-2xl border border-gray-100 col-span-1 md:col-span-2">
+                                            <h4 className="font-bold text-gray-900 mb-2 flex items-center text-sm uppercase tracking-wide">
+                                                <Clock className="w-4 h-4 mr-2 text-primary-600" /> Check-in & Check-out
+                                            </h4>
+                                            <div className="flex items-center space-x-8 text-sm text-gray-700">
+                                                {service.details?.checkInTime && <div><span className="text-gray-400 font-semibold text-xs block mb-0.5">CHECK-IN</span><span className="font-bold text-gray-900">{service.details.checkInTime}</span></div>}
+                                                {service.details?.checkOutTime && <div><span className="text-gray-400 font-semibold text-xs block mb-0.5">CHECK-OUT</span><span className="font-bold text-gray-900">{service.details.checkOutTime}</span></div>}
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="col-span-1 md:col-span-2 flex flex-wrap gap-3 mt-2">
                                         {service.policies?.isCouplesFriendly && <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-pink-50 text-pink-700 text-xs font-bold border border-pink-100"><Check className="w-3.5 h-3.5 mr-1.5" /> Couples Friendly</span>}
                                         {service.policies?.isPetFriendly && <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100"><Check className="w-3.5 h-3.5 mr-1.5" /> Pet Friendly</span>}
+                                        {service.policies?.isSmokingAllowed && <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100"><Check className="w-3.5 h-3.5 mr-1.5" /> Smoking Allowed</span>}
+                                        {service.policies?.isMusicAllowed && <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold border border-purple-100"><Check className="w-3.5 h-3.5 mr-1.5" /> Music Allowed</span>}
                                         {service.policies?.medicalCertificate && <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold border border-red-100"><ShieldAlert className="w-3.5 h-3.5 mr-1.5" /> Medical Certificate Req.</span>}
                                     </div>
                                 </div>

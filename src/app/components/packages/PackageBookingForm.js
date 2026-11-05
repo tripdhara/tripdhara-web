@@ -19,8 +19,8 @@ export default function PackageBookingForm({ service, price }) {
             return;
         }
 
-        const title = service.title || service.roomType || service.campingType || service.trekkingName || service.tourName || 'Package';
-        const category = service.serviceType || service.category || 'Package';
+        const title = service.title || 'Package';
+        const category = service.category_name || 'Package';
         const message = `*Tripdhara Booking Inquiry*\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n` +
             `*Package:* ${title}\n` +
@@ -57,12 +57,12 @@ export default function PackageBookingForm({ service, price }) {
             </div>
 
             <div className="p-6 sm:p-8">
-                {service.vendor && (
+                {(service.business) && (
                     <div className="flex items-center space-x-4 pb-6 mb-6 border-b border-gray-100">
-                        <div className="w-12 h-12 bg-gradient-to-tr from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 border border-gray-200 shadow-sm">{service.vendor.businessName?.[0]}</div>
+                        <div className="w-12 h-12 bg-gradient-to-tr from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 border border-gray-200 shadow-sm overflow-hidden">{(service.business.businessName?.[0] || 'V').toUpperCase()}</div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Verified Partner</p>
-                            <p className="font-bold text-gray-900 text-sm">{service.vendor.businessName}</p>
+                            <p className="font-bold text-gray-900 text-sm">{service.business.businessName}</p>
                         </div>
                     </div>
                 )}

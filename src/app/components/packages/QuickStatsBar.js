@@ -4,8 +4,8 @@ export default function QuickStatsBar({ service }) {
     if (!service) return null;
 
     const category = service.category_slug.toLowerCase();
-    const pricing = service.pricing;
-    const details = service.details;
+    const pricing = service.pricing || {};
+    const details = service.details || {};
     return (
         <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/40 mb-12 flex flex-wrap items-center justify-around gap-6">
 

@@ -12,7 +12,7 @@ export default function PackageCard({ item = {} }) {
     const rating = item.rating.average;
 
     return (
-        <Link href={`packages/${id}`} className="group flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-200/60 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+        <Link href={`/packages/${id}`} className="group flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-200/60 overflow-hidden transition-all duration-300 hover:-translate-y-1">
             <div className="aspect-[4/3] w-full relative overflow-hidden bg-gray-100">
                 <Image src={image} alt={title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
                 <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-gray-900 shadow-sm border border-white/20">{category}</div>

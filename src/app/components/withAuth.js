@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken, getRole, removeToken } from '@/app/utils/authUtils.js';
+import api from '@/core/Api/index.js';
 
 export default function withAuth(Component, allowedRoles = []) {
     return function ProtectedRoute(props) {
@@ -9,49 +10,58 @@ export default function withAuth(Component, allowedRoles = []) {
         const [auth, setAuth] = useState(false);
 
         useEffect(() => {
+            let isMounted = true;
+
             const verifySession = async () => {
                 const token = getToken();
                 const userRole = getRole();
 
+                // 1. अगर टोकन नहीं है तो ब्राउज़र हिस्ट्री रिप्लेस करके सीधे लॉगिन पर भेजें
                 if (!token) {
-                    router.push('/login');
+                    router.replace('/login');
                     return;
                 }
 
-                try {
-                    // Check if token is actually valid
-                    const res = await fetch('/api/admin/profile', {
-                        headers: {
-                            'Authorization': 'Bearer ' + token
-                        }
-                    });
+                // 2. क्लाइंट-साइड रोल वैलिडेशन
+                if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+                    redirectToDashboard(userRole);
+                    return;
+                }
 
-                    if (res.status === 401 || res.status === 403) {
-                        removeToken(); // Token is expired or invalid
-                        router.push('/login');
+                // 3. सर्वर-साइड सेशन वेरिफिकेशन वाया Redis & Core API
+                try {
+                    const res = await api.auth.verify();
+                    const verifiedRole = res?.data?.role || userRole;
+
+                    if (allowedRoles.length > 0 && !allowedRoles.includes(verifiedRole)) {
+                        redirectToDashboard(verifiedRole);
                         return;
                     }
 
-                    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-                        // Redirect based on actual role to prevent loop or show forbidden
-                        if (userRole === 'admin') router.push('/admin');
-                        else if (userRole === 'vendor') router.push('/vendor');
-                        else router.push('/traveller');
-                    } else {
-                        setAuth(true);
-                    }
+                    if (isMounted) setAuth(true);
                 } catch (error) {
-                    // In case of network error, just fallback to local role validation
-                    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-                        if (userRole === 'admin') router.push('/admin');
-                        else if (userRole === 'vendor') router.push('/vendor');
-                        else router.push('/traveller');
-                    } else {
-                        setAuth(true);
+                    // अगर टोकन इनवैलिड या ब्लैकलिस्टेड (Redis) है
+                    if (error?.status === 401 || error?.status === 403) {
+                        removeToken();
+                        router.replace('/login');
+                        return;
                     }
+                    // नेटवर्क ग्लिच होने पर लोकल ऑथ पर जाने दें
+                    if (isMounted) setAuth(true);
                 }
             };
+
+            const redirectToDashboard = (role) => {
+                if (role === 'admin') router.replace('/admin');
+                else if (role === 'vendor') router.replace('/vendor');
+                else router.replace('/login');
+            };
+
             verifySession();
+
+            return () => {
+                isMounted = false;
+            };
         }, [router]);
 
         if (!auth) {

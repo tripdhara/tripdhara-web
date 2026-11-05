@@ -99,6 +99,58 @@ export default function ProfileClientWrapper({ initialProfile }) {
         }
     });
 
+    useEffect(() => {
+        let ignore = false;
+        if (!initialProfile || !initialProfile.email) {
+            api.admin.profile.get()
+                .then(res => {
+                    const prof = res?.data || res;
+                    if (!ignore && prof && prof.email) {
+                        setFormData({
+                            name: prof.name || '',
+                            email: prof.email || '',
+                            phone: prof.phone || '',
+                            gender: prof.gender || '',
+                            dateOfBirth: prof.dateOfBirth ? new Date(prof.dateOfBirth).toISOString().split('T')[0] : '',
+                            designation: prof.designation || '',
+                            bio: prof.bio || '',
+                            website: prof.website || '',
+                            socialLinks: {
+                                whatsapp: prof.socialLinks?.whatsapp || '',
+                                twitter: prof.socialLinks?.twitter || '',
+                                instagram: prof.socialLinks?.instagram || '',
+                                youtube: prof.socialLinks?.youtube || ''
+                            },
+                            expertise: Array.isArray(prof.expertise) ? prof.expertise.join(', ') : '',
+                            emergencyContacts: prof.emergencyContacts && prof.emergencyContacts.length > 0 ? {
+                                name: prof.emergencyContacts[0].name || '',
+                                phone: prof.emergencyContacts[0].phone || '',
+                                relationship: prof.emergencyContacts[0].relationship || ''
+                            } : { name: '', phone: '', relationship: '' },
+                            address: {
+                                addressLine1: prof.address?.addressLine1 || '',
+                                addressLine2: prof.address?.addressLine2 || '',
+                                city: prof.address?.city || '',
+                                state: prof.address?.state || '',
+                                country: prof.address?.country || '',
+                                pincode: prof.address?.pincode || ''
+                            },
+                            preferences: {
+                                language: prof.preferences?.language || 'en',
+                                notifications: {
+                                    email: prof.preferences?.notifications?.email ?? true,
+                                    sms: prof.preferences?.notifications?.sms ?? true,
+                                    push: prof.preferences?.notifications?.push ?? true
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(() => {});
+        }
+        return () => { ignore = true; };
+    }, [initialProfile]);
+
     const fetchCountries = useCallback(async () => {
         try {
             const res = await fetch('/api/countries?limit=all');

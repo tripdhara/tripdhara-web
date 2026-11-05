@@ -1,44 +1,43 @@
 import { jest } from '@jest/globals';
 
-const mockCookies = {
-    get: jest.fn(),
-    set: jest.fn(),
-    remove: jest.fn()
+const mockStorage = {};
+const mockLocalStorage = {
+    getItem: jest.fn((key) => mockStorage[key] || null),
+    setItem: jest.fn((key, value) => { mockStorage[key] = String(value); }),
+    removeItem: jest.fn((key) => { delete mockStorage[key]; }),
+    clear: jest.fn(() => {
+        Object.keys(mockStorage).forEach(k => delete mockStorage[k]);
+    })
 };
-
-jest.unstable_mockModule('js-cookie', () => ({
-    default: mockCookies
-}));
 
 const { getToken, getRole, setToken, removeToken } = await import('@/app/utils/authUtils.js');
 
 describe('App Utils: authUtils.js', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Setup window object in test environment
+        mockLocalStorage.clear();
         global.window = {
             location: {
                 protocol: 'https:'
             }
         };
+        global.localStorage = mockLocalStorage;
     });
 
     afterAll(() => {
         delete global.window;
+        delete global.localStorage;
     });
 
     describe('getToken & getRole', () => {
-        it('should retrieve token and role from cookies in browser environment', () => {
-            mockCookies.get.mockImplementation((key) => {
-                if (key === 'token') return 'jwt_mock_token';
-                if (key === 'role') return 'vendor';
-                return null;
-            });
+        it('should retrieve token and role from localStorage in browser environment', () => {
+            mockStorage.token = 'jwt_mock_token';
+            mockStorage.role = 'vendor';
 
             expect(getToken()).toBe('jwt_mock_token');
             expect(getRole()).toBe('vendor');
-            expect(mockCookies.get).toHaveBeenCalledWith('token');
-            expect(mockCookies.get).toHaveBeenCalledWith('role');
+            expect(mockLocalStorage.getItem).toHaveBeenCalledWith('token');
+            expect(mockLocalStorage.getItem).toHaveBeenCalledWith('role');
         });
 
         it('should return null when running in server-side environment (window is undefined)', () => {
@@ -53,39 +52,13 @@ describe('App Utils: authUtils.js', () => {
     });
 
     describe('setToken', () => {
-        it('should set cookies with session expiry when rememberMe is false', () => {
-            setToken('token_123', 'traveller', false);
+        it('should set token and role into localStorage', () => {
+            setToken('token_123', 'traveller');
 
-            expect(mockCookies.set).toHaveBeenCalledWith(
-                'token',
-                'token_123',
-                expect.objectContaining({
-                    secure: true,
-                    sameSite: 'strict',
-                    expires: undefined
-                })
-            );
-            expect(mockCookies.set).toHaveBeenCalledWith(
-                'role',
-                'traveller',
-                expect.objectContaining({
-                    secure: true,
-                    sameSite: 'strict',
-                    expires: undefined
-                })
-            );
-        });
-
-        it('should set cookies with 30-day expiry when rememberMe is true', () => {
-            setToken('token_persistent', 'admin', true);
-
-            expect(mockCookies.set).toHaveBeenCalledWith(
-                'token',
-                'token_persistent',
-                expect.objectContaining({
-                    expires: 30
-                })
-            );
+            expect(mockLocalStorage.setItem).toHaveBeenCalledWith('token', 'token_123');
+            expect(mockLocalStorage.setItem).toHaveBeenCalledWith('role', 'traveller');
+            expect(mockStorage.token).toBe('token_123');
+            expect(mockStorage.role).toBe('traveller');
         });
 
         it('should do nothing when running server-side (window is undefined)', () => {
@@ -93,18 +66,23 @@ describe('App Utils: authUtils.js', () => {
             delete global.window;
 
             setToken('token_123', 'traveller');
-            expect(mockCookies.set).not.toHaveBeenCalled();
+            expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
 
             global.window = tempWindow;
         });
     });
 
     describe('removeToken', () => {
-        it('should remove token and role cookies', () => {
+        it('should remove token and role from localStorage', () => {
+            mockStorage.token = 'token_to_remove';
+            mockStorage.role = 'admin';
+
             removeToken();
 
-            expect(mockCookies.remove).toHaveBeenCalledWith('token');
-            expect(mockCookies.remove).toHaveBeenCalledWith('role');
+            expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('token');
+            expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('role');
+            expect(mockStorage.token).toBeUndefined();
+            expect(mockStorage.role).toBeUndefined();
         });
 
         it('should do nothing when running server-side (window is undefined)', () => {
@@ -112,10 +90,9 @@ describe('App Utils: authUtils.js', () => {
             delete global.window;
 
             removeToken();
-            expect(mockCookies.remove).not.toHaveBeenCalled();
+            expect(mockLocalStorage.removeItem).not.toHaveBeenCalled();
 
             global.window = tempWindow;
         });
     });
 });
-

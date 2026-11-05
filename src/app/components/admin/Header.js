@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { removeToken, getRole } from '@/app/utils/authUtils.js';
+import api from '@/core/Api/index.js';
 import { useEffect, useState, useRef } from 'react';
 import { Network, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import NotificationBell from '@/app/components/NotificationBell.js';
@@ -32,9 +33,15 @@ export default function Header({ title }) {
     };
   }, []);
 
-  const handleLogout = () => {
-    removeToken();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await api.auth.logout();
+    } catch {
+      // Non-fatal if offline
+    } finally {
+      removeToken();
+      router.replace('/login');
+    }
   };
 
   return (

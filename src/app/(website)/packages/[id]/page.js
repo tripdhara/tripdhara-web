@@ -1,199 +1,81 @@
+import { cache } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar.js';
+import Image from 'next/image';
+
 import PackageBookingForm from '@/app/components/packages/PackageBookingForm.js';
 import PackageCard from '@/app/components/packages/PackageCard.js';
 import QuickStatsBar from '@/app/components/packages/QuickStatsBar.js';
-import connectDB from '@/core/Config/db.js';
-import Package from '@/core/Models/Package.js';
-import '@/core/Models/Vendor.js';
+
+import createMetadata from '@/app/helper/metadata.js';
+import api from '@/core/Api/public/index.js'
+
 import { MapPin, Clock, Mountain, CheckCircle, Info, ShieldCheck, Map, FileText, ShieldAlert, Check, UserCheck, Users, Home as HomeIcon, Key, Car, Fuel, Star } from 'lucide-react';
 
-async function getServiceDetails(id) {
-    try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/packages/${id}`, { cache: 'no-store' });
-        if (!res.ok) return null;
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
-        const result = await res.json();
-        const service = result.data;
-        if (!service) return null;
+const getPackageDetails = cache(async (id) => {
+    const result = await api.package.getById(id);
+    return result?.data || {};
+});
 
-        return {
-            ...service,
-            serviceType: service.category || service.serviceType || 'Package',
-            vendor: service.vendor || { businessName: 'Verified Vendor' }
-        };
-    } catch (error) {
-        console.error("Failed to fetch package details", error);
-        return null;
-    }
-}
+const getSuggestedPackage = cache(async (currentId) => {
+    const results = await api.package.getBrowse({ limit: 5, format: 'flat' });
+    const allPackages = results?.data || [];
+    return allPackages.filter(p => (p._id !== currentId && p.id !== currentId)).slice(0, 4);
+});
 
+// 3. Dynamic Metadata
 export async function generateMetadata({ params }) {
     const { id } = await params;
-    const service = await getServiceDetails(id);
-
+    const service = await getPackageDetails(id);
     if (!service) {
-        return {
-            title: 'Package Not Found | Tripdhara'
-        };
+        return createMetadata({ title: 'Package Not Found', noIndex: true });
     }
 
-    const defaultTitle = service.roomType || service.campingType || service.trekkingName || service.stretchName || service.jumpName || service.model || service.tourName || service.title || 'Package Details';
-    const locationName = service.location?.address || service.location?.city || service.location || 'Himachal Pradesh';
-    const categoryName = service.serviceType || service.category || 'Package';
-    const title = service.seoMetadata?.metaTitle || `${defaultTitle} - ${categoryName} in ${locationName} | Tripdhara`;
-    const description = service.seoMetadata?.metaDescription || service.description || `Book ${defaultTitle} in ${locationName} at best rates on Tripdhara. Verified hosts, transparent pricing, and instant booking.`;
+    const title = service.title || 'Package Details';
+    const address = service.address || 'Himachal Pradesh';
+    const category = service.category_name || 'Package';
+    const metaTitle = `${title} - ${category} in ${address}`;
 
-    let imageUrl = '';
-    if (service.photos && service.photos.length > 0) {
-        imageUrl = service.photos[0].url || service.photos[0];
-    }
-
-    return {
-        title,
+    const description = service.description || `Book ${title} in ${address} at best rates on Tripdhara.`;
+    const image = service.photos?.[0]?.url || service.photos?.[0] || DEFAULT_IMAGE;
+    return createMetadata({
+        title: metaTitle,
         description,
-        keywords: service.seoMetadata?.keywords?.join(', ') || `${defaultTitle}, ${categoryName}, ${locationName}, Tripdhara`,
-        openGraph: {
-            title,
-            description,
-            url: `https://tripdhara.in/packages/${id}`,
-            siteName: 'Tripdhara',
-            images: imageUrl ? [{ url: imageUrl, alt: title }] : [],
-            type: 'website',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title,
-            description,
-            images: imageUrl ? [imageUrl] : [],
-        },
-        alternates: {
-            canonical: `/packages/${id}`,
-        }
-    };
+        image,
+        path: `packages/${id}`
+    });
+
 }
 
 export default async function ServiceDetailPage({ params }) {
-    const { id } = await params; // Next.js 15+ needs await on params
-    const service = await getServiceDetails(id);
+    const { id } = await params;
+    const [service, suggestions] = await Promise.all([
+        getPackageDetails(id),
+        getSuggestedPackage(id)
+    ]);
     if (!service) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Navbar />
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold text-gray-900">Service Not Found</h2>
-                        <Link href="/packages" className="text-indigo-600 hover:text-indigo-800 mt-4 inline-block">Back to Packages</Link>
-                    </div>
+            <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center py-20">
+                <div className="text-center">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Package Not Found</h2>
+                    <p className="text-gray-500 mb-6">The package you are looking for is no longer available.</p>
+                    <Link href="/packages" className="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition">Back to Packages</Link>
                 </div>
             </div>
         );
     }
 
-    // Determine specific fields based on type
-    const title = service.title || service.roomType || service.campingType || service.trekkingName || service.stretchName || service.jumpName || service.model || service.tourName;
-    const price = service.pricing?.sellingPrice || service.pricing?.basePrice || service.pricePerNight || service.pricePerPerson || service.pricePerDay || 0;
-
-    let imageUrl = '';
-    if (service.photos && service.photos.length > 0) {
-        imageUrl = service.photos[0].url || service.photos[0];
-    }
-
-    if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
-        imageUrl = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
-    }
-
-    // Fetch Suggestions
-    let suggestions = [];
-    try {
-        const suggRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/packages?limit=5&format=flat`, { cache: 'no-store' });
-        if (suggRes.ok) {
-            const suggData = await suggRes.json();
-            let allPackages = [];
-
-            if (Array.isArray(suggData.data?.items)) {
-                allPackages = suggData.data.items;
-            } else if (Array.isArray(suggData.data)) {
-                allPackages = suggData.data;
-            } else if (Array.isArray(suggData.data?.packages)) {
-                allPackages = suggData.data.packages;
-            } else if (Array.isArray(suggData.data?.data)) {
-                allPackages = suggData.data.data;
-            } else if (Array.isArray(suggData.items)) {
-                allPackages = suggData.items;
-            } else if (Array.isArray(suggData.packages)) {
-                allPackages = suggData.packages;
-            } else {
-                // Fallback: Find the first array property in the data object
-                const firstArray = Object.values(suggData.data || {}).find(val => Array.isArray(val));
-                if (firstArray) allPackages = firstArray;
-            }
-
-            suggestions = allPackages.filter(p => (p._id !== id && p.id !== id)).slice(0, 4);
-        }
-    } catch (err) {
-        console.error("Failed to fetch suggestions", err);
-    }
-
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@graph': [
-            {
-                '@type': 'Product',
-                'name': title,
-                'description': service.description || title,
-                'image': imageUrl ? [imageUrl] : [],
-                'category': service.serviceType || service.category || 'Travel Package',
-                'offers': {
-                    '@type': 'Offer',
-                    'price': price,
-                    'priceCurrency': 'INR',
-                    'availability': 'https://schema.org/InStock',
-                    'url': `https://tripdhara.in/packages/${id}`,
-                    'seller': {
-                        '@type': 'Organization',
-                        'name': service.vendor?.businessName || 'Tripdhara Verified Partner'
-                    }
-                },
-                ...(service.reviews && service.reviews.length > 0 ? {
-                    'aggregateRating': {
-                        '@type': 'AggregateRating',
-                        'ratingValue': (service.reviews.reduce((acc, r) => acc + (r.rating || 5), 0) / service.reviews.length).toFixed(1),
-                        'reviewCount': service.reviews.length
-                    }
-                } : {})
-            },
-            {
-                '@type': 'BreadcrumbList',
-                'itemListElement': [
-                    {
-                        '@type': 'ListItem',
-                        'position': 1,
-                        'name': 'Home',
-                        'item': 'https://tripdhara.in'
-                    },
-                    {
-                        '@type': 'ListItem',
-                        'position': 2,
-                        'name': 'Packages',
-                        'item': 'https://tripdhara.in/packages'
-                    },
-                    {
-                        '@type': 'ListItem',
-                        'position': 3,
-                        'name': title,
-                        'item': `https://tripdhara.in/packages/${id}`
-                    }
-                ]
-            }
-        ]
-    };
+    const title = service.title;
+    const description = service.description;
+    const address = service.address;
+    const price = service.pricing?.sellingPrice;
+    const category = service.title;
+    const imageUrl = service.photos[0].url || service.photos[0] || DEFAULT_IMAGE;
 
     return (
         <div className="bg-gray-50 min-h-screen pb-25 font-sans">
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-            <Navbar />
-
             {/* Hero Section */}
             <div className="relative h-[65vh] min-h-[500px] w-full">
                 <img src={imageUrl} alt={title} className="w-full h-full object-cover object-center" />
@@ -210,19 +92,12 @@ export default async function ServiceDetailPage({ params }) {
                             <span className="text-white truncate max-w-[200px]">{title}</span>
                         </nav>
                         <div className="mb-5 flex flex-wrap items-center gap-3">
-                            <span className="px-4 py-1.5 bg-primary-600/90 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(var(--color-primary-600),0.5)]">
-                                {service.serviceType || service.category}
-                            </span>
-                            <span className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest border border-white/30 shadow-sm">
-                                Verified Experience
-                            </span>
+                            <span className="px-4 py-1.5 bg-primary-600/90 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(var(--color-primary-600),0.5)]">{category}</span>
+                            <span className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest border border-white/30 shadow-sm">Verified Experiences</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 leading-tight max-w-4xl tracking-tight font-display drop-shadow-lg">
-                            {title}
-                        </h1>
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 leading-tight max-w-4xl tracking-tight font-display drop-shadow-lg">{title}</h1>
                         <p className="text-lg md:text-2xl text-gray-200 flex items-center font-medium drop-shadow-md">
-                            <MapPin className="w-6 h-6 mr-3 text-primary-400" />
-                            {service.location?.address || service.location || 'Location details unavailable'}
+                            <MapPin className="w-6 h-6 mr-3 text-primary-400" />{address || 'Location details unavailable'}
                         </p>
                     </div>
                 </div>
@@ -245,13 +120,7 @@ export default async function ServiceDetailPage({ params }) {
                                 </div>
                                 About this Experience
                             </h2>
-                            <div className="prose text-gray-600 leading-relaxed text-lg max-w-none">
-                                {service.description ? (
-                                    <p>{service.description}</p>
-                                ) : (
-                                    <p>Experience the thrill of {title}. This package is specially curated to offer you an unforgettable journey combining comfort, safety, and breathtaking moments.</p>
-                                )}
-                            </div>
+                            <div className="prose text-gray-600 leading-relaxed text-lg max-w-none">{description ? (<p>{description}</p>) : (<p>Experience the thrill of {title}. This package is specially curated to offer you an unforgettable journey combining comfort, safety, and breathtaking moments.</p>)}</div>
                         </section>
 
                         {/* Features/Amenities Grid */}
@@ -345,7 +214,7 @@ export default async function ServiceDetailPage({ params }) {
                         )}
 
                         {/* Vendor Profile */}
-                        {service.vendor && (
+                        {service.business && (
                             <section className="bg-white rounded-[2rem] p-8 md:p-10 shadow-sm border border-gray-100 overflow-hidden relative">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary-100/50 to-transparent rounded-bl-full -z-0"></div>
                                 <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center font-display tracking-tight relative z-10">
@@ -356,24 +225,24 @@ export default async function ServiceDetailPage({ params }) {
                                 </h3>
                                 <div className="flex flex-col sm:flex-row items-start gap-6 relative z-10">
                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary-100 to-primary-200 flex items-center justify-center text-3xl font-black text-primary-700 border-4 border-white shadow-md flex-shrink-0 overflow-hidden">
-                                        {service.vendor.profileImage ? (
-                                            <img src={service.vendor.profileImage} alt={service.vendor.businessName} className="w-full h-full object-cover" />
+                                        {service.business.profileImage ? (
+                                            <img src={service.business.profileImage} alt={service.business.businessName} className="w-full h-full object-cover" />
                                         ) : (
-                                            service.vendor.businessName?.[0] || 'V'
+                                            service.business.businessName?.[0] || 'V'
                                         )}
                                     </div>
                                     <div>
                                         <div className="flex items-center flex-wrap gap-2 mb-2">
-                                            <h4 className="text-xl font-bold text-gray-900">{service.vendor.businessName || 'Verified Partner'}</h4>
-                                            {service.vendor.trustBadge && service.vendor.trustBadge !== 'none' && (
+                                            <h4 className="text-xl font-bold text-gray-900">{service.business.businessName || 'Verified Partner'}</h4>
+                                            {service.business.trustBadge && service.business.trustBadge !== 'none' && (
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 text-green-800 text-[10px] font-bold uppercase tracking-wider">
-                                                    <ShieldCheck className="w-3 h-3 mr-1" /> {service.vendor.trustBadge.replace('_', ' ')}
+                                                    <ShieldCheck className="w-3 h-3 mr-1" /> {service.business.trustBadge.replace('_', ' ')}
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm text-gray-500 font-medium mb-4">{service.vendor.profileType || 'Local Business'} • Member since {service.vendor.createdAt ? new Date(service.vendor.createdAt).getFullYear() : 'Recent'}</p>
-                                        {service.vendor.businessAbout && (
-                                            <p className="text-gray-600 leading-relaxed text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">{service.vendor.businessAbout}</p>
+                                        <p className="text-sm text-gray-500 font-medium mb-4">{service.business.profileType || 'Local Business'} • Member since {service.business.createdAt ? new Date(service.business.createdAt).getFullYear() : 'Recent'}</p>
+                                        {service.business.businessAbout && (
+                                            <p className="text-gray-600 leading-relaxed text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">{service.business.businessAbout}</p>
                                         )}
                                     </div>
                                 </div>
@@ -443,7 +312,7 @@ export default async function ServiceDetailPage({ params }) {
                         <h2 className="text-2xl font-black text-gray-900 py-4 font-display">Similar Experiences</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-3">
                             {suggestions.map((pkg, idx) => (
-                                <PackageCard key={pkg._id || pkg.id || idx} service={pkg} />
+                                <PackageCard key={pkg._id || pkg.id || idx} item={pkg} />
                             ))}
                         </div>
                     </section>

@@ -15,6 +15,7 @@ const envSchema = z.object({
     RAZORPAY_WEBHOOK_SECRET: z.union([z.string().min(1, "RAZORPAY_WEBHOOK_SECRET is required for webhooks"), z.literal('')]).optional(),
     UPSTASH_REDIS_REST_URL: z.union([z.string().url("UPSTASH_REDIS_REST_URL is required for rate-limiting and caching"), z.literal('')]).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.union([z.string().min(1, "UPSTASH_REDIS_REST_TOKEN is required"), z.literal('')]).optional(),
+    INDEXNOW_KEY: z.string().optional(),
 });
 
 export const validateEnv = () => {

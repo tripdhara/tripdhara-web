@@ -1,155 +1,351 @@
 import Link from 'next/link';
-import PageHero from '@/components/PageHero.js';
+import Image from 'next/image';
+import {
+    Car,
+    Home,
+    Bike,
+    Waves,
+    Mountain,
+    Tent,
+    ShieldCheck,
+    Banknote,
+    TrendingUp,
+    CheckCircle2,
+    ArrowRight,
+    MessageCircle,
+    Phone,
+    MapPin,
+    Sparkles,
+    Users
+} from 'lucide-react';
+import createMetadata from '@/core/Helpers/metadata.js';
 
-export const metadata = {
-    title: 'Careers - Build the Future of Himalayan Travel',
-    description: 'Join Tripdhara team and help build authentic, sustainable travel experiences across the Himalayas. Remote-first opportunities in engineering, marketing, operations, and product.',
+export const metadata = createMetadata({
+    title: 'Earn with Tripdhara - Self-Employment & Income Platform for Himalayan Locals',
+    description: 'Monetize your commercial cab, homestay, bike rental, rafting setup, or guiding skills with Tripdhara. 0% listing fee, direct traveler bookings, and guaranteed weekly bank payouts.',
+    path: '/careers',
     keywords: [
-        'Tripdhara Careers',
-        'Travel Tech Jobs India',
-        'Remote Jobs Himachal',
-        'Tripdhara Hiring'
-    ],
-    openGraph: {
-        title: 'Careers | Tripdhara',
-        description: 'Build the future of authentic Himalayan travel with Tripdhara.',
-        url: 'https://tripdhara.in/careers',
-        siteName: 'Tripdhara',
-        type: 'website',
-    },
-    alternates: {
-        canonical: '/careers',
-    }
-};
+        'Earn with Tripdhara',
+        'Himachal Cab Driver Registration',
+        'Homestay Earning Platform',
+        'Rishikesh Rafting Partner',
+        'Bike Rental Income Himalayas',
+        'Trek Guide Income'
+    ]
+});
 
-export default function Careers() {
+const earningStreams = [
+    {
+        title: 'Cab & Mountain Taxi Drivers',
+        model: 'Mountain Taxi & Cab Network',
+        icon: Car,
+        color: 'from-blue-500/20 to-indigo-500/10 text-blue-600',
+        borderColor: 'hover:border-blue-400',
+        description: 'Drive outstation routes, Spiti Valley circuits, Manali transfers, and Chardham Yatra pilgrimages with your Innova, Scorpio, Dzire, or Tempo Traveller.',
+        perks: ['Set your own route availability', 'Direct per-kilometer mountain rates', 'Zero commission deductions on fuel & tolls']
+    },
+    {
+        title: 'Homestay & Cottage Hosts',
+        model: 'Village Homestay & Cottage Network',
+        icon: Home,
+        color: 'from-amber-500/20 to-orange-500/10 text-amber-600',
+        borderColor: 'hover:border-amber-400',
+        description: 'Host verified travelers in your traditional Kath-Kuni wooden home, farm cottage, or spare rooms. Offer authentic Pahadi hospitality and earn steady monthly income.',
+        perks: ['Retain 100% of your room tariff', 'Direct interaction with verified guests', 'Free professional listing assistance']
+    },
+    {
+        title: 'Bike & Scooter Rental Owners',
+        model: 'Two-Wheeler Mountain Mobility Network',
+        icon: Bike,
+        color: 'from-violet-500/20 to-purple-500/10 text-violet-600',
+        borderColor: 'hover:border-violet-400',
+        description: 'Rent out your Royal Enfield Himalayan 450, Classic 350, or automatic scooters to tourists in transit hubs like Rishikesh, Dehradun, Haridwar, and Manali.',
+        perks: ['Daily and multi-day rental earnings', 'Verified rider identity checks', 'Luggage gear & helmet bundle support']
+    },
+    {
+        title: 'White Water Rafting Marshals',
+        model: 'Direct River Booking Desk',
+        icon: Waves,
+        color: 'from-cyan-500/20 to-blue-500/10 text-cyan-600',
+        borderColor: 'hover:border-cyan-400',
+        description: 'Secure direct group bookings for Ganga white-water rapids in Rishikesh (Brahmpuri, Shivpuri, Marine Drive, and Kaudiyala) without paying cuts to travel agents.',
+        perks: ['Direct guest slot assignments', 'Full CE-gear safety compliance', 'Prompt payouts post-run confirmation']
+    },
+    {
+        title: 'Certified Trek Leaders & Guides',
+        model: 'Direct Expedition Guiding',
+        icon: Mountain,
+        color: 'from-emerald-500/20 to-green-500/10 text-emerald-700',
+        borderColor: 'hover:border-emerald-500',
+        description: 'Monetize your intimate knowledge of alpine trails. Lead trekking batches across Kedarkantha, Dayara Bugyal, Valley of Flowers, Har Ki Dun, and Chopta.',
+        perks: ['Guaranteed per-day guiding rates', 'High-altitude first-aid & oxygen backing', 'Seasonal batch scheduling']
+    },
+    {
+        title: 'Riverside & Alpine Camp Operators',
+        model: 'Direct Adventure Stays',
+        icon: Tent,
+        color: 'from-rose-500/20 to-orange-500/10 text-rose-600',
+        borderColor: 'hover:border-rose-400',
+        description: 'Host outdoor campers in luxury Swiss cottage tents along the Ganga in Rishikesh, or all-weather alpine dome tents pitched on high bugyal meadows.',
+        perks: ['Full stay & food package bookings', 'Advance booking deposit protection', 'Group offsite & family leads']
+    }
+];
+
+const howItWorks = [
+    {
+        step: '01',
+        title: 'Free Registration',
+        desc: 'Submit your vehicle permit, property details, or guide credentials online. Zero listing fee or upfront deposits.'
+    },
+    {
+        step: '02',
+        title: 'Quick Verification',
+        desc: 'Our local field operations desk in Rishikesh & Dehradun verifies your listing within 24 hours.'
+    },
+    {
+        step: '03',
+        title: 'Receive Bookings & Payouts',
+        desc: 'Start receiving confirmed traveler bookings. Enjoy automated weekly payouts directly to your bank account.'
+    }
+];
+
+export default function EarnWithTripdharaPage() {
     return (
         <div className="bg-gray-50 min-h-screen font-sans selection:bg-primary-500 selection:text-white">
-            {/* Custom Animated Hero */}
-            <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop"
-                        alt="Tripdhara Team"
-                        className="w-full h-full object-cover opacity-50"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-gray-50"></div>
-                </div>
 
-                {/* Animated Gradient Orbs */}
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary-100 rounded-full blur-[100px] opacity-60 animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-secondary-500/20 rounded-full blur-[100px] opacity-60"></div>
+            {/* Hero Section */}
+            <header className="relative pt-36 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-gray-950 text-white">
+                <Image
+                    src="/img/background.png"
+                    alt="Earn with Tripdhara"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover opacity-25"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent"></div>
 
-                <div className="container mx-auto px-4 relative z-10 text-center">
-                    <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 font-medium text-sm tracking-wide">
-                        Join Our Team
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-6 shadow-xl backdrop-blur-md">
+                        <TrendingUp className="w-3.5 h-3.5" /> Self-Employment & Income Platform for Himalayan Locals
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-6 tracking-tight leading-tight">
-                        Build the Future of <br className="hidden md:block" />
-                        <span className="text-gradient">Travel with Us</span>
-                    </h1>
-                    <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                        We are bringing the Himalayas closer to the world. Join us in our mission to create authentic, sustainable, and unforgettable travel experiences.
-                    </p>
-                </div>
-            </div>
 
-            {/* Why Join Us Section */}
-            <div className="py-24 bg-gray-50">
-                <div className="container mx-auto px-4 max-w-6xl">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Tripdhara?</h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">More than just a workplace, we are a community of adventurers and builders.</p>
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight font-display mb-6 leading-tight max-w-5xl mx-auto">
+                        Monetize Your Vehicle, Homestay, or{' '}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-primary-400 to-secondary-300">
+                            Mountain Skills
+                        </span>
+                    </h1>
+
+                    <p className="text-base sm:text-xl text-gray-200 max-w-3xl mx-auto font-medium leading-relaxed mb-10">
+                        Tripdhara is the dedicated Himalayan travel network that empowers mountain drivers, homestay families, bike fleet owners, and adventure operators to connect directly with travelers and earn dignified, sustainable livelihoods.
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-center gap-4">
+                        <Link
+                            href="/partner"
+                            className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-bold shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 text-sm"
+                        >
+                            <span>Register as an Earning Partner</span>
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                        <a
+                            href="https://wa.me/917017288052?text=Hello%20Tripdhara!%20I%20want%20to%20register%20and%20start%20earning%20with%20my%20vehicle/homestay."
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-bold backdrop-blur-md transition-all flex items-center gap-2 text-sm"
+                        >
+                            <MessageCircle className="w-5 h-5 text-emerald-400" />
+                            <span>WhatsApp Host Desk: +91 7017288052</span>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 -mt-8 relative z-20">
+
+                {/* Platform Guarantees Banner */}
+                <div className="bg-white rounded-3xl p-8 sm:p-10 border border-gray-200 shadow-xl mb-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <Banknote className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 text-base">0% Upfront Listing Fee</h3>
+                            <p className="text-xs text-gray-500 mt-1">Completely free to list your taxi, homestay, camp, or bike rental fleet.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 text-base">Direct Customer Bookings</h3>
+                            <p className="text-xs text-gray-500 mt-1">No middlemen eating 30-40% commissions. Keep your hard-earned money.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-secondary-50 text-secondary-600 flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 text-base">Guaranteed Bank Payouts</h3>
+                            <p className="text-xs text-gray-500 mt-1">Automated weekly payouts transferred directly to your bank account.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 6 Earning Streams */}
+                <section className="mb-24">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <span className="text-primary-600 font-extrabold text-xs uppercase tracking-widest block mb-2">
+                            Self-Employment Opportunities
+                        </span>
+                        <h2 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight font-display mb-4">
+                            6 Ways to Earn with Tripdhara
+                        </h2>
+                        <p className="text-gray-600 text-base sm:text-lg">
+                            Whether you own a commercial cab, extra rooms, two-wheelers, or outdoor adventure licenses, there is a dedicated earning model for you.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {earningStreams.map((item, idx) => {
+                            const IconComp = item.icon;
+                            return (
+                                <div
+                                    key={idx}
+                                    className={`bg-white rounded-3xl p-8 border border-gray-200/90 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between ${item.borderColor} group`}
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center`}>
+                                                <IconComp className="w-7 h-7" />
+                                            </div>
+                                            <span className="text-[10px] font-extrabold text-primary-600 uppercase tracking-wider bg-primary-50 px-2.5 py-1 rounded-full">
+                                                {item.model}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-2xl font-black text-gray-900 font-display mb-3 group-hover:text-primary-600 transition-colors">
+                                            {item.title}
+                                        </h3>
+
+                                        <p className="text-sm text-gray-600 leading-relaxed mb-6 font-normal">
+                                            {item.description}
+                                        </p>
+
+                                        <div className="space-y-2 mb-6 pt-4 border-t border-gray-100">
+                                            {item.perks.map((p, i) => (
+                                                <div key={i} className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                    <span>{p}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        href="/partner"
+                                        className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-primary-600 group-hover:text-primary-700"
+                                    >
+                                        <span>Start Earning in this Category</span>
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </Link>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                {/* How It Works */}
+                <section className="mb-24 bg-white rounded-3xl p-8 sm:p-14 border border-gray-200 shadow-sm">
+                    <div className="text-center max-w-2xl mx-auto mb-14">
+                        <span className="text-primary-600 font-extrabold text-xs uppercase tracking-widest block mb-2">
+                            Simple Process
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl font-black text-gray-900 font-display">
+                            How to Start Earning in 3 Steps
+                        </h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Perk 1 */}
-                        <div className="group bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-primary-100 hover:shadow-xl hover:shadow-primary-500/10 transition-all duration-300 hover:-translate-y-2">
-                            <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                        {howItWorks.map((st, i) => (
+                            <div key={i} className="p-6 bg-gray-50 rounded-2xl relative">
+                                <span className="text-3xl font-black text-gray-300 font-mono block mb-3">
+                                    {st.step}
+                                </span>
+                                <h3 className="text-xl font-black text-gray-900 font-display mb-2">
+                                    {st.title}
+                                </h3>
+                                <p className="text-xs text-gray-600 leading-relaxed font-normal">
+                                    {st.desc}
+                                </p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">Work from Anywhere</h3>
-                            <p className="text-gray-600 leading-relaxed">
-                                We are a remote-first team. Work from the comfort of your home, or better yet, from a homestay in the mountains.
+                        ))}
+                    </div>
+                </section>
+
+                {/* Direct Onboarding Action Section */}
+                <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-primary-950 text-white rounded-3xl p-8 sm:p-14 lg:p-16 border border-white/10 shadow-2xl relative overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                        <div className="lg:col-span-8 space-y-6">
+                            <span className="text-secondary-400 font-bold text-xs uppercase tracking-widest inline-flex items-center gap-2">
+                                <Sparkles className="w-3.5 h-3.5" /> Local Partner Onboarding Desk
+                            </span>
+                            <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight leading-tight">
+                                Ready to Turn Your Property, Vehicle, or Craft into Regular Income?
+                            </h2>
+                            <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-normal">
+                                Our onboarding team is stationed at our Rishikesh & Dehradun operational headquarters. We guide you through digital profile creation, price optimization, and direct guest communication.
+                            </p>
+
+                            <div className="flex flex-wrap gap-4 pt-2">
+                                <Link
+                                    href="/partner"
+                                    className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 transform hover:scale-105"
+                                >
+                                    <span>Fill 3-Minute Registration Form</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <a
+                                    href="https://wa.me/917017288052?text=Hello%20Tripdhara!%20I%20want%20to%20register%20as%20a%20local%20earning%20partner."
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2"
+                                >
+                                    <MessageCircle className="w-4 h-4" />
+                                    <span>WhatsApp: +91 7017288052</span>
+                                </a>
+                            </div>
+
+                            <p className="text-xs text-gray-400 pt-2 flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-primary-400" /> Operational Headquarters: Rishikesh / Dehradun, Uttarakhand, India
                             </p>
                         </div>
 
-                        {/* Perk 2 */}
-                        <div className="group bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-primary-100 hover:shadow-xl hover:shadow-primary-500/10 transition-all duration-300 hover:-translate-y-2">
-                            <div className="w-14 h-14 bg-secondary-500/10 text-secondary-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">Adventure Perks</h3>
-                            <p className="text-gray-600 leading-relaxed">
-                                Enjoy exclusive discounts on our curated trips, treks, and homestays. We want you to experience what we build.
+                        <div className="lg:col-span-4 bg-white/10 border border-white/20 rounded-3xl p-8 backdrop-blur-xl text-center">
+                            <h3 className="text-lg font-black font-display mb-2 text-white">Have Direct Questions?</h3>
+                            <p className="text-xs text-gray-300 mb-6 leading-relaxed">
+                                Talk directly with our vendor coordination desk for vehicle documentation, homestay photography, or river permits.
                             </p>
-                        </div>
-
-                        {/* Perk 3 */}
-                        <div className="group bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-primary-100 hover:shadow-xl hover:shadow-primary-500/10 transition-all duration-300 hover:-translate-y-2">
-                            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">Impact Driven</h3>
-                            <p className="text-gray-600 leading-relaxed">
-                                Everything we do helps local Himalayan communities thrive sustainably. Your work directly impacts lives.
-                            </p>
+                            <a
+                                href="tel:+917017288052"
+                                className="w-full py-3.5 bg-white hover:bg-gray-100 text-gray-900 font-bold rounded-xl text-center block transition-all shadow-md text-sm mb-3"
+                            >
+                                Call Helpline: +91 7017288052
+                            </a>
+                            <a
+                                href="mailto:contact@tripdhara.com"
+                                className="text-xs font-semibold text-gray-300 hover:text-white block transition-colors"
+                            >
+                                contact@tripdhara.com
+                            </a>
                         </div>
                     </div>
-                </div>
-            </div>
+                </section>
 
-            {/* Application Section */}
-            <div className="py-24 relative overflow-hidden">
-                {/* Decorative background elements */}
-                <div className="absolute inset-0 bg-primary-600"></div>
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-secondary-500/30 rounded-full blur-[120px] mix-blend-overlay"></div>
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-400/30 rounded-full blur-[100px] mix-blend-overlay"></div>
-
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-10 md:p-16 text-center text-white shadow-2xl">
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl mb-8 border border-white/30 shadow-inner">
-                            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight text-white">No Open Positions Currently</h2>
-                        <p className="text-white/90 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-                            While our team is currently full, we're always on the lookout for exceptional talent. If you believe you belong here, don't wait for an opening.
-                        </p>
-
-                        <a
-                            href="mailto:careers@tripdhara.in"
-                            className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-primary-600 bg-white rounded-full hover:bg-gray-50 hover:scale-105 transition-all duration-300 shadow-xl shadow-black/10 group"
-                        >
-                            Send Spontaneous Application
-                            <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </a>
-
-                        <div className="border-t border-white/20 pt-10 mt-12">
-                            <p className="font-semibold text-white/90 mb-6 text-sm uppercase tracking-widest">Departments We Typically Hire For</p>
-                            <div className="flex flex-wrap gap-3 justify-center">
-                                {['Engineering', 'Product', 'Marketing', 'Customer Success', 'Operations'].map(dept => (
-                                    <span
-                                        key={dept}
-                                        className="px-5 py-2.5 bg-white/10 backdrop-blur-md text-white rounded-full text-sm font-medium border border-white/20 hover:bg-white/20 transition-colors cursor-default"
-                                    >
-                                        {dept}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </main>
         </div>
     );
 }

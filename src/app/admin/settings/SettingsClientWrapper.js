@@ -65,7 +65,7 @@ export default function SettingsClientWrapper({ initialSettings }) {
         privacy_policy: '', rate_on_apple_store: '', rate_on_google_store: '', cloudinary_url: '',
         social_pass: '', other_account_pass: '', master_otp: '', cron_secret: '', debug_mode: false, gst: '', service_tax: '',
         tax_homestay: '', tax_hotel: '', tax_camping: '', tax_trekking: '', tax_rafting: '', tax_bungee_jumping: '', tax_bike_scooter_rental: '', tax_chardham_tour: '', tax_custom_trip: '',
-        upstash_redis_rest_url: '', upstash_redis_rest_token: '', upstash_redis_url: '', pahadigo_redis_url: ''
+        upstash_redis_rest_url: '', upstash_redis_rest_token: '', upstash_redis_url: '', tripdhara_redis_url: '', pahadigo_redis_url: ''
     };
 
     Object.keys(initialFormData).forEach(key => {
@@ -239,9 +239,9 @@ export default function SettingsClientWrapper({ initialSettings }) {
             id: 'VercelRedis',
             title: 'Vercel Official Redis',
             icon: Database,
-            keys: ['pahadigo_redis_url'],
+            keys: ['tripdhara_redis_url', 'pahadigo_redis_url'],
             fields: [
-                { name: 'pahadigo_redis_url', label: 'Vercel Redis URL (TCP)', type: 'password', placeholder: 'redis://...' }
+                { name: 'tripdhara_redis_url', label: 'Vercel Redis URL (TCP)', type: 'password', placeholder: 'redis://...' }
             ]
         },
         {

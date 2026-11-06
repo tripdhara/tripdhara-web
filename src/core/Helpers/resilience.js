@@ -1,3 +1,5 @@
+import { getLogger } from '@/core/Lib/logger.js';
+
 /**
  * Resilience utilities for external gateway integrations.
  */
@@ -35,7 +37,7 @@ export const withRetry = async (operation, options = {}) => {
             const jitter = delay * (Math.random() * 0.2);
             
             if (process.env.NODE_ENV !== 'test') {
-                console.warn(`[Resilience] Attempt ${attempt} failed. Retrying in ${Math.round(delay + jitter)}ms... Error: ${error.message}`);
+                getLogger().warn({ attempt, err: error?.message }, `[Resilience] Attempt ${attempt} failed. Retrying in ${Math.round(delay + jitter)}ms...`);
             }
             
             await new Promise((resolve) => setTimeout(resolve, delay + jitter));

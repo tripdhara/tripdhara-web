@@ -38,7 +38,7 @@ export const setToken = (token, role, rememberMe = DEFAULTS.FALSE) => {
       localStorage.removeItem(STORAGE_KEYS.ROLE);
     }
   } catch (error) {
-    console.error('[authUtils] Error persisting token to localStorage:', error);
+    // Gracefully handle private browsing or quota limits
   }
 };
 
@@ -48,7 +48,7 @@ export const removeToken = () => {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.ROLE);
   } catch (error) {
-    console.error('[authUtils] Error clearing token from localStorage:', error);
+    // Gracefully handle private browsing or quota limits
   }
 };
 

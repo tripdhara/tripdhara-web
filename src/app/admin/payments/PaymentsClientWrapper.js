@@ -27,7 +27,9 @@ export default function PaymentsClientWrapper({ initialPayments }) {
           try {
               const hist = await api.admin.payments.getHistory();
               if (hist.success) setPayments(hist.data.payments || hist.data.history || []);
-          } catch(e) {}
+          } catch(e) {
+              toast(e?.message || "Failed to refresh payment history", "error");
+          }
       } else {
           toast(data.error || "Terminal Fault marking payout.", "error");
       }

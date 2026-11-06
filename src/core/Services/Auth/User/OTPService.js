@@ -30,7 +30,7 @@ class OTPService {
             ...(testIdentifiersConfig ? testIdentifiersConfig.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [])
         ]);
         const normalizedIdentifier = identifier.toLowerCase().trim();
-        return allowedTestAccounts.has(normalizedIdentifier) || normalizedIdentifier.endsWith('@pahadigo.test');
+        return allowedTestAccounts.has(normalizedIdentifier) || normalizedIdentifier.endsWith('@tripdhara.test');
     }
 
     /**

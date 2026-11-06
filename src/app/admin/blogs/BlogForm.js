@@ -205,7 +205,7 @@ export default function BlogForm({ initialData = null }) {
                                     value={formData.coverImage}
                                     onChange={handleChange}
                                     className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-white/10 rounded-lg text-slate-300 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all text-xs"
-                                    placeholder="https://images.unsplash.com/..."
+                                    placeholder="https://res.cloudinary.com/tripdhara/..."
                                 />
                             </div>
                         </div>

@@ -6,12 +6,14 @@ import PackageBookingForm from '@/app/components/packages/PackageBookingForm.js'
 import PackageCard from '@/app/components/packages/PackageCard.js';
 import QuickStatsBar from '@/app/components/packages/QuickStatsBar.js';
 
-import createMetadata from '@/app/helper/metadata.js';
-import api from '@/core/Api/public/index.js'
+import createMetadata from '@/core/Helpers/metadata.js';
+import api from '@/core/Api/public/index.js';
+import { getLogger } from '@/core/Lib/logger.js';
+import { BRAND_ASSETS } from '@/core/Constants/base.js';
 
 import { MapPin, Clock, Mountain, CheckCircle, Info, ShieldCheck, Map, FileText, ShieldAlert, Check, UserCheck, Users, Home as HomeIcon, Key, Car, Fuel, Star } from 'lucide-react';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
+const DEFAULT_IMAGE = BRAND_ASSETS.DEFAULT_COVER;
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
 const getPackageDetails = cache(async (id) => {
@@ -19,6 +21,8 @@ const getPackageDetails = cache(async (id) => {
         const result = await api.package.getById(id);
         return result?.data || null;
     } catch (error) {
+        getLogger().error({ err: error, id }, '[PackageDetailPage] Failed to fetch package details');
+        return null;
     }
 });
 
@@ -27,7 +31,10 @@ const getSuggestedPackage = cache(async (currentId) => {
         const results = await api.package.getBrowse({ limit: 5, format: 'flat' });
         const allPackages = results?.data || [];
         return allPackages.filter(p => (p._id !== currentId && p.id !== currentId)).slice(0, 4);
-    } catch (error) { }
+    } catch (error) {
+        getLogger().error({ err: error, currentId }, '[PackageDetailPage] Failed to fetch suggested packages');
+        return [];
+    }
 });
 
 // 3. Dynamic Metadata
@@ -52,8 +59,10 @@ export async function generateMetadata({ params }) {
             image,
             path: `packages/${id}`
         });
-    } catch (error) { }
-
+    } catch (error) {
+        getLogger().error({ err: error }, '[PackageDetailPage] Failed to generate metadata');
+        return createMetadata({ title: 'Package Details', noIndex: true });
+    }
 }
 
 export default async function ServiceDetailPage({ params }) {
@@ -63,7 +72,6 @@ export default async function ServiceDetailPage({ params }) {
         getSuggestedPackage(id)
     ]);
 
-    console.log('service', service);
     if (!service) {
         return (
             <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center py-20">
@@ -83,8 +91,79 @@ export default async function ServiceDetailPage({ params }) {
     const category = service.category_name;
     const imageUrl = service.photos?.[0]?.url || service.photos?.[0] || DEFAULT_IMAGE;
 
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': category?.toLowerCase()?.includes('homestay') || category?.toLowerCase()?.includes('hotel') ? 'VacationRental' : 'TouristTrip',
+                '@id': `${siteUrl}/packages/${id}#experience`,
+                name: title,
+                description: description || `${title} in ${address || 'Himachal Pradesh'}`,
+                image: imageUrl,
+                touristType: ['Adventure', 'Nature', 'Culture'],
+                provider: {
+                    '@type': 'TravelAgency',
+                    name: 'Tripdhara',
+                    url: siteUrl,
+                },
+                offers: {
+                    '@type': 'Offer',
+                    price: price || 0,
+                    priceCurrency: 'INR',
+                    availability: 'https://schema.org/InStock',
+                    url: `${siteUrl}/packages/${id}`,
+                },
+                ...(service.location?.coordinates?.coordinates && {
+                    geo: {
+                        '@type': 'GeoCoordinates',
+                        latitude: service.location.coordinates.coordinates[1],
+                        longitude: service.location.coordinates.coordinates[0],
+                    }
+                }),
+                ...(address && {
+                    contentLocation: {
+                        '@type': 'Place',
+                        name: address,
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressRegion: address,
+                            addressCountry: 'IN'
+                        }
+                    }
+                })
+            },
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    {
+                        '@type': 'ListItem',
+                        position: 1,
+                        name: 'Home',
+                        item: siteUrl,
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 2,
+                        name: 'Packages',
+                        item: `${siteUrl}/packages`,
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 3,
+                        name: title,
+                        item: `${siteUrl}/packages/${id}`,
+                    }
+                ]
+            }
+        ]
+    };
+
     return (
         <div className="bg-gray-50 min-h-screen pb-25 font-sans">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             {/* Hero Section */}
             <div className="relative h-[55vh] sm:h-[65vh] lg:h-[72vh] min-h-[420px] sm:min-h-[500px] lg:min-h-[580px] w-full">
                 <Image

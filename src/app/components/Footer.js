@@ -41,7 +41,7 @@ export default function Footer() {
                 <div className="grid md:grid-cols-4 gap-12 mb-8">
                     <div className="space-y-6">
                         <span className="text-3xl font-bold font-display text-white block">
-                            Pahadi<span className="text-primary-500">Go</span>
+                            Trip<span className="text-primary-500">dhara</span>
                         </span>
                         <p className="text-gray-400 leading-relaxed text-sm">
                             We are on a mission to make Himalayan travel accessible, authentic, and sustainable. Join our community of explorers.
@@ -76,9 +76,8 @@ export default function Footer() {
                     <div>
                         <h4 className="text-lg font-bold mb-6">Discover</h4>
                         <ul className="space-y-4 text-gray-400 text-sm">
-                            <li><Link href="/packages?category=trekking" className="hover:text-white transition-colors">Trekking Packages</Link></li>
-                            <li><Link href="/packages?category=camping" className="hover:text-white transition-colors">Camping Sites</Link></li>
-                            <li><Link href="/packages?category=homestay" className="hover:text-white transition-colors">Homestays</Link></li>
+                            <li><Link href="/packages" className="hover:text-white transition-colors">Explore Packages</Link></li>
+                            <li><Link href="/blog" className="hover:text-white transition-colors">Field Guides & Blog</Link></li>
                             <li><Link href="/partner" className="hover:text-white transition-colors">Partner with Us</Link></li>
                         </ul>
                     </div>

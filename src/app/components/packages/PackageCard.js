@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Star, MapPin, ChevronRight } from 'lucide-react';
+import { BRAND_ASSETS } from '@/core/Constants/base.js';
 
 export default function PackageCard({ item = {} }) {
     const id = item.id;
@@ -8,7 +9,7 @@ export default function PackageCard({ item = {} }) {
     const category = item.category_name;
     const address = item.address;
     const price = item.pricing.sellingPrice || 0;
-    const image = item.photos || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
+    const image = item.photos || BRAND_ASSETS.DEFAULT_COVER;
     const rating = item.rating.average;
 
     return (

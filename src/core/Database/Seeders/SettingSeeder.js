@@ -46,6 +46,7 @@ export const seedSettings = async () => {
             upstash_redis_rest_url: config.redis.upstash_url,
             upstash_redis_rest_token: config.redis.upstash_token,
             upstash_redis_url: config.redis.upstash_tcp_url,
+            tripdhara_redis_url: config.redis.standard_url,
             pahadigo_redis_url: config.redis.standard_url,
 
             // JWT

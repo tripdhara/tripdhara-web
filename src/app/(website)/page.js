@@ -1,7 +1,7 @@
 import api from '@/core/Api/public/index.js';
 import ClientHome from './ClientHome.js';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL;
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
 export const metadata = {
     metadataBase: new URL(siteUrl),

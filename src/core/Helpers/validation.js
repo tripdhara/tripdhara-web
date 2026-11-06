@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { RESPONSE_MESSAGES, USER_ROLES, DEFAULTS } from '@/core/Constants/index.js';
 
 /**
- * Common validation schemas for the Pahadigo platform.
+ * Common validation schemas for the Tripdhara platform.
  */
 const optionalString = (max = 500) => z.string().trim().max(max).optional().nullable();
 const idString = z.string().trim().min(1, RESPONSE_MESSAGES.VALIDATION.ID_REQUIRED);

@@ -79,7 +79,9 @@ function BannersManager({ initialBanners }) {
       await api.admin.marketing.banners.delete(id);
       setBanners(prev => prev.filter(b => b._id !== id));
       router.refresh();
-    } catch (e) { }
+    } catch (e) {
+      toast(e?.message || "Error deleting banner.", "error");
+    }
   };
 
   return (
@@ -215,7 +217,9 @@ function CouponsManager({ initialCoupons }) {
       await api.admin.marketing.coupons.delete(id);
       setCoupons(prev => prev.filter(c => c._id !== id));
       router.refresh();
-    } catch (e) { }
+    } catch (e) {
+      toast(e?.message || "Error deleting coupon.", "error");
+    }
   };
 
   return (

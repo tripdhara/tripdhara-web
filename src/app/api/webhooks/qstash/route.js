@@ -1,5 +1,6 @@
 import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import QStashWebhookController from '@/core/Http/Controllers/General/QStashWebhookController.js';
+import { getLogger } from '@/core/Lib/logger.js';
 
 /**
  * QStash Webhook Receiver (Serverless Background Job Processor)
@@ -18,7 +19,7 @@ export const POST = hasKeys
     })
     : async function (req) {
         if (process.env.NODE_ENV === 'production') {
-            console.warn('[QStash Webhook] QSTASH_CURRENT_SIGNING_KEY and QSTASH_NEXT_SIGNING_KEY are missing.');
+            getLogger().warn('[QStash Webhook] QSTASH_CURRENT_SIGNING_KEY and QSTASH_NEXT_SIGNING_KEY are missing.');
         }
         return handler(req);
     };

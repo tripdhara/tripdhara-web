@@ -40,7 +40,7 @@ export default async function TermsOfService() {
             {/* Premium Header */}
             <header className="relative bg-gray-900 overflow-hidden pt-32 pb-20">
                 <div className="absolute inset-0">
-                    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop" alt="Background" className="w-full h-full object-cover opacity-20 mix-blend-overlay" />
+                    <img src="/img/background.png" alt="Background" className="w-full h-full object-cover opacity-20 mix-blend-overlay" />
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
                 </div>
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

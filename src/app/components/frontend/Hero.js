@@ -44,10 +44,10 @@ export default function Hero() {
                 <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.2, duration: 0.8, type: "spring" }} className="absolute top-1/3 right-4 xl:-right-10 hidden lg:flex items-center gap-4 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-3xl shadow-2xl">
                     <div className="flex -space-x-3">
                         <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                            <Image src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="User" width={48} height={48} className="w-full h-full object-cover" />
+                            <Image src="/img/logo.png" alt="User" width={48} height={48} className="w-full h-full object-cover" />
                         </div>
                         <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                            <Image src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=100&auto=format&fit=crop" alt="User" width={48} height={48} className="w-full h-full object-cover" />
+                            <Image src="/img/features.png" alt="User" width={48} height={48} className="w-full h-full object-cover" />
                         </div>
                         <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-primary-600 flex items-center justify-center text-white text-xs font-bold shadow-inner">9k+</div>
                     </div>

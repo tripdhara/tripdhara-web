@@ -34,10 +34,13 @@ export const uploadToCloudinary = async (file, folder = 'general') => {
 
         const base64Image = `data:${mimeType};base64,${buffer.toString('base64')}`;
         
+        const brandFolder = process.env.CLOUDINARY_FOLDER || 'tripdhara';
+        const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET || 'tripdhara_uploads';
+
         const uploadResponse = await withRetry(async () => {
             return await cloudinary.uploader.upload(base64Image, { 
-                folder: `pahadigo/${folder}`, 
-                upload_preset: 'pahadigo_uploads', 
+                folder: `${brandFolder}/${folder}`, 
+                upload_preset: uploadPreset, 
                 resource_type: 'auto' 
             });
         }, { maxRetries: 3, baseDelayMs: 1000 });

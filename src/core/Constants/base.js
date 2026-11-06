@@ -1,3 +1,9 @@
+export const BRAND_ASSETS = {
+    LOGO: '/img/logo.png',
+    BACKGROUND: '/img/background.png',
+    DEFAULT_COVER: '/img/background.png'
+};
+
 export const APP_DETAILS = {
     APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     APP_URL: process.env.NEXT_PUBLIC_APP_URL,
@@ -170,5 +176,5 @@ export const SYSTEM_ENV = {
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     UPSTASH_REDIS_URL: process.env.REDIS_URL,
 
-    PAHADIGO_REDIS_URL: process.env.PAHADIGO_REDIS_URL
+    TRIPDHARA_REDIS_URL: process.env.TRIPDHARA_REDIS_URL || process.env.PAHADIGO_REDIS_URL
 };

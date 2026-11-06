@@ -5,10 +5,11 @@ import PackageFilters from '@/app/components/packages/PackageFilters';
 import PackageSort from '@/app/components/packages/PackageSort';
 import PackageCard from '@/app/components/packages/PackageCard';
 import Pagination from '@/app/components/ui/Pagination';
-import createMetadata from '@/app/helper/metadata.js';
+import createMetadata from '@/core/Helpers/metadata.js';
 import api from '@/core/Api/public/index.js';
+import { BRAND_ASSETS } from '@/core/Constants/base.js';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
+const DEFAULT_IMAGE = BRAND_ASSETS.DEFAULT_COVER;
 
 
 async function getPackages({ page = 1, limit = 12, minPrice = '', maxPrice = '', format = 'flat', sort = 'Newest', q = '', latitude = '', longitude = '', radius = '', address = '', category = '' } = {}) {
@@ -63,9 +64,26 @@ export default async function PackagesPage({ searchParams }) {
     const totalPages = pagination?.totalPages || 1;
     const currentCat = categories.find(c => c.slug?.toLowerCase() === category?.toLowerCase());
     const displayCategoryTitle = currentCat ? currentCat.name : category;
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
+
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: displayCategoryTitle ? `${displayCategoryTitle} Packages - Tripdhara` : 'Himalayan Tour Packages & Stays - Tripdhara',
+        itemListElement: (services || []).map((service, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${siteUrl}/packages/${service.id || service._id}`,
+            name: service.title
+        }))
+    };
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             {/* Top Page Header (Clean, Typography Driven) */}
             <div className="bg-gray-900 pt-32 pb-16 relative overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

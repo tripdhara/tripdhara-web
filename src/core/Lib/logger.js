@@ -43,7 +43,7 @@ if (isVercel) {
                 fs.mkdirSync(logDir, { recursive: true });
             }
 
-            const logFilePath = path.join(logDir, `${dateStr}_pahadigo.log`);
+            const logFilePath = path.join(logDir, `${dateStr}_tripdhara.log`);
             if (!fs.existsSync(logFilePath)) {
                 fs.writeFileSync(logFilePath, '', { flag: 'a' });
             }

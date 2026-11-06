@@ -84,6 +84,7 @@ export * from './cloudinary.js';
 export * from './dateUtils.js';
 export * from './env.js';
 export * from './indexNow.js';
+export * from './metadata.js';
 export * from './mathUtils.js';
 export * from './resilience.js';
 export * from './sellingPrice.js';

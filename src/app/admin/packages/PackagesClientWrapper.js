@@ -63,7 +63,9 @@ export default function PackagesClientWrapper({ initialPackages, initialCategori
                 try {
                     const data = await api.admin.packages.getAll();
                     if (data.success) setPackages(data.data.packages || data.data);
-                } catch(err) {}
+                } catch(err) {
+                    toast(err?.message || "Failed to refresh package list", "error");
+                }
             } else {
                 toast(res.message || res.error || "Failed to add item", "error");
             }

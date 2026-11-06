@@ -1,0 +1,23 @@
+# Tripdhara - Premier Himalayan & Mountain Travel Platform
+
+> Tripdhara is an enterprise travel marketplace specializing in Mountain & Himalayan travel: connecting travelers directly with verified local tour packages, cab operators, authentic mountain homestays, and trekking expeditions.
+
+## Primary Himalayan Destinations Covered
+- **Himachal Pradesh**: Manali, Shimla, Spiti Valley, Kasol, Parvati Valley, Dharamshala, McLeod Ganj, Jibhi, Bir Billing, Dalhousie.
+- **Uttarakhand**: Rishikesh, Haridwar, Badrinath, Kedarnath, Gangotri, Yamunotri, Uttarkashi, Auli, Chopta, Nainital, Mussoorie, Valley of Flowers.
+- **Leh & Ladakh**: Leh City, Nubra Valley, Pangong Tso, Khardung La Pass, Zanskar Valley.
+- **Jammu & Kashmir**: Srinagar, Gulmarg, Pahalgam, Sonamarg, Katra.
+- **North-East Himalayas**: Gangtok, Pelling, Shillong, Cherrapunji, Tawang, Darjeeling.
+
+## Core Offerings
+- **Tour Packages**: Verified multi-day Himalayan journeys operated by licensed local hosts.
+- **Mountain Cab Rentals**: Outstation and high-altitude taxi services with experienced hill drivers.
+- **Homestays & Stays**: Verified mountain homestays and cottages with local families.
+- **Treks & Adventure**: Guided high-altitude trekking, camping, and outdoor expeditions.
+
+## Platform Links
+- **Platform Homepage**: https://tripdhara.in
+- **Packages Catalog**: https://tripdhara.in/packages
+- **About Tripdhara**: https://tripdhara.in/about
+- **Help Center & FAQ**: https://tripdhara.in/faq
+- **Contact Support**: https://tripdhara.in/contact

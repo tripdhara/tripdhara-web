@@ -19,6 +19,45 @@ const outfit = Outfit({
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tripdhara.in';
 
+const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+        {
+            '@type': 'Organization',
+            '@id': `${siteUrl}/#organization`,
+            name: 'Tripdhara',
+            url: siteUrl,
+            logo: `${siteUrl}/logo.png`,
+            sameAs: [
+                'https://www.instagram.com/tripdhara',
+                'https://www.facebook.com/tripdhara'
+            ],
+            contactPoint: {
+                '@type': 'ContactPoint',
+                contactType: 'customer support',
+                email: 'support@tripdhara.in',
+                areaServed: 'IN',
+                availableLanguage: ['English', 'Hindi']
+            }
+        },
+        {
+            '@type': 'WebSite',
+            '@id': `${siteUrl}/#website`,
+            url: siteUrl,
+            name: 'Tripdhara',
+            description: 'Premier Himalayan & Mountain Travel Platform',
+            publisher: {
+                '@id': `${siteUrl}/#organization`
+            },
+            potentialAction: {
+                '@type': 'SearchAction',
+                target: `${siteUrl}/packages?q={search_term_string}`,
+                'query-input': 'required name=search_term_string'
+            }
+        }
+    ]
+};
+
 /** @type {import('next').Metadata} */
 export const metadata = {
     metadataBase: new URL(siteUrl),
@@ -105,6 +144,12 @@ export const viewport = {
 export default function RootLayout({ children }) {
     return (
         <html lang="en" className={`${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
+            <head>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+                />
+            </head>
             <body className="antialiased font-sans">
                 <ToastProvider>
                     {children}

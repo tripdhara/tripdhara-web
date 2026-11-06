@@ -158,7 +158,9 @@ export default function ProfileClientWrapper({ initialProfile }) {
             if (data.success) {
                 setCountries(data.data.countries || []);
             }
-        } catch (error) {}
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to fetch country options.' });
+        }
     }, []);
 
     const fetchStates = useCallback(async (countryId) => {
@@ -168,7 +170,9 @@ export default function ProfileClientWrapper({ initialProfile }) {
             if (data.success) {
                 setStates(data.data.states || []);
             }
-        } catch (error) {}
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to fetch state options.' });
+        }
     }, []);
 
     useEffect(() => {

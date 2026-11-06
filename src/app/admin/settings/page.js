@@ -1,5 +1,6 @@
 import SettingsService from '@/core/Services/Admin/SettingsService.js';
 import SettingsClientWrapper from './SettingsClientWrapper.js';
+import { getLogger } from '@/core/Lib/logger.js';
 
 export const metadata = {
     title: 'Global Environment | Admin Dashboard',
@@ -12,7 +13,7 @@ export default async function SettingsPage() {
     try {
         rawSettings = await SettingsService.getSettings();
     } catch (e) {
-        console.log("rawSettings error", e);
+        getLogger().error({ err: e }, '[AdminSettingsPage] Failed to fetch settings');
     }
 
     const initialSettings = JSON.parse(JSON.stringify(rawSettings || {}));

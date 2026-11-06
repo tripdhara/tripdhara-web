@@ -29,6 +29,7 @@ const SettingSchema = new mongoose.Schema({
     upstash_redis_rest_url: { type: String, default: DEFAULTS.NULL },
     upstash_redis_rest_token: { type: String, default: DEFAULTS.NULL },
     upstash_redis_url: { type: String, default: DEFAULTS.NULL },
+    tripdhara_redis_url: { type: String, default: DEFAULTS.NULL },
     pahadigo_redis_url: { type: String, default: DEFAULTS.NULL },
 
     jwt_secret: { type: String, default: DEFAULTS.NULL },

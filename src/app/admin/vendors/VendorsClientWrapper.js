@@ -34,7 +34,7 @@ export default function VendorsClientWrapper({ initialVendors }) {
             const data = await api.admin.vendors.getAll();
             if (data.data) setVendors(data.data);
         } catch (e) {
-            console.error(e);
+            toast(e?.message || "Failed to reload vendors", "error");
         }
     };
 

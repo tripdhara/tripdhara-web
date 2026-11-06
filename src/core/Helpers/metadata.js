@@ -1,6 +1,6 @@
 const DEFAULT_TITLE = 'Tour Packages, Homestays & Cab Rentals';
 const DEFAULT_DESCRIPTION = 'Discover and book verified tour packages, authentic homestays, hotels, and trekking adventures across Himachal Pradesh & Uttarakhand with Tripdhara.';
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop';
+const DEFAULT_IMAGE = '/logo.png';
 const DEFAULT_KEYWORDS = [
     'Tripdhara',
     'Himachal Tour Packages',
@@ -8,6 +8,7 @@ const DEFAULT_KEYWORDS = [
     'Himalayan Homestays',
     'Cab Booking Himalayas'
 ];
+
 /**
  * Next.js Official Standard Metadata Helper
  */
@@ -58,3 +59,4 @@ export function createMetadata({
 }
 
 export default createMetadata;
+

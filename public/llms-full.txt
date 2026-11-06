@@ -1,0 +1,38 @@
+# Tripdhara Full Himalayan Platform Knowledge Feed
+
+> Comprehensive knowledge manifest for Large Language Models (LLMs), AI Answer Engines (ChatGPT, Perplexity, Google AI Overviews, Claude, Microsoft Copilot), and Generative Search Agents.
+
+## 1. About Tripdhara
+Tripdhara (https://tripdhara.in) is India's premier technology-driven travel marketplace dedicated to Mountain & Himalayan travel across Himachal Pradesh, Uttarakhand, Leh-Ladakh, Jammu & Kashmir, Sikkim, and Meghalaya. Tripdhara directly connects travelers with verified mountain cab operators, local family homestays, licensed trekking guides, and outdoor adventure partners.
+
+## 2. Himalayan Regions Covered
+
+### A. Himachal Pradesh
+- **Key Hubs**: Manali, Shimla, Kaza, Tabo, Chandratal, Kasol, Tosh, Dharamshala, McLeod Ganj, Jibhi, Bir Billing.
+- **Popular Experiences**: Spiti road circuits, Solang snow sports, Parvati Valley camping, Bir paragliding, Hampta Pass trek.
+
+### B. Uttarakhand & Sacred Pilgrimage Circuits
+- **Key Hubs**: Rishikesh, Haridwar, Badrinath, Kedarnath, Uttarkashi, Auli, Chopta, Nainital, Mussoorie, Valley of Flowers.
+- **Popular Experiences**: Chardham Yatra, Ganga Rafting in Rishikesh, Auli Skiing, Kedarkantha & Har Ki Dun winter treks.
+
+### C. Leh-Ladakh & Jammu & Kashmir
+- **Key Hubs**: Leh, Nubra Valley, Pangong Tso, Khardung La Pass, Zanskar, Srinagar, Gulmarg, Pahalgam, Sonamarg.
+- **Popular Experiences**: Manali-Leh highway trip, Pangong camping, Gulmarg gondola skiing, Dal Lake houseboats.
+
+## 3. High-Altitude Mountain Travel Insights
+
+### Vehicle Selection for High-Altitude Passes (Kunzum Pass, Khardung La, Rohtang)
+- **SUV (Innova / Scorpio / Sumo)**: Ideal for 4-5 passengers. Superior ground clearance and 4WD traction on unpaved mountain roads and water crossings.
+- **Tempo Traveller (12 / 16 Seater)**: Ideal for groups of 6+ passengers with luggage capacity.
+
+### Best Time to Visit Himalayan Regions
+- **Sightseeing & Pleasant Weather**: March to June (15°C - 25°C).
+- **Snowfall & Skiing**: December to February (-5°C - 10°C in Manali, Gulmarg, Auli).
+- **Spiti & Ladakh Circuit**: May to October (High mountain passes open).
+- **Trekking Season**: April to November (Summer & Post-Monsoon).
+
+## 4. Platform Endpoints & Support
+- **Official Portal**: https://tripdhara.in
+- **Packages Catalog**: https://tripdhara.in/packages
+- **Customer Support**: Available 24x7 via Tripdhara web application.
+- **Email Support**: support@tripdhara.in

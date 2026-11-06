@@ -104,10 +104,27 @@ export default function FAQPage() {
 
     const activeFaqs = faqCategories.find(c => c.id === activeCategory)?.faqs || [];
 
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqCategories.flatMap(cat => cat.faqs).map(f => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: f.answer
+            }
+        }))
+    };
+
     return (
         <div className="bg-gray-50/50 min-h-screen pb-24 font-sans selection:bg-primary-500 selection:text-white">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <PageHero
-                image="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
+                image="/img/background.png"
                 badge="Help Center"
                 title={<>Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-indigo-500">Questions</span></>}
                 subtitle="Everything you need to know about booking your Himalayan adventure with us."

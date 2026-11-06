@@ -12,6 +12,7 @@ import { packageItemResponse } from './packageResponse.js';
 import { paginateArray } from '../queryUtils.js';
 import { schemaKey } from './shared.js';
 import { Package } from '@/core/Models/index.js';
+import { getLogger } from '@/core/Lib/logger.js';
 
 /**
  * Retrieves, filters, and formats a vendor's package catalog with search, price, geo, and pagination support.
@@ -284,7 +285,7 @@ export async function getVendorPackageItemById(userId, category, itemId) {
         return results[0] || null;
 
     } catch (error) {
-        console.error('Error fetching vendor package item:', error);
+        getLogger().error({ err: error }, 'Error fetching vendor package item');
         return null;
     }
 }

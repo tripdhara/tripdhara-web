@@ -1,15 +1,18 @@
 export const metadata = {
-    title: 'Contact Us - Customer Support & Inquiries',
-    description: 'Get in touch with Tripdhara support team for booking assistance, custom Himachal tour itineraries, cab inquiries, or vendor partnership opportunities.',
+    title: 'Contact Tripdhara - 24/7 Himalayan Travel Support & Inquiries',
+    description: 'Connect with Tripdhara at our Rishikesh & Dehradun headquarters. 24/7 phone support (+91 7017288052), WhatsApp booking assistance, custom Himalayan trip planning, and vendor partnerships.',
     keywords: [
         'Contact Tripdhara',
-        'Tripdhara Support',
-        'Himachal Cab Inquiry',
-        'Tripdhara Partner Registration'
+        'Tripdhara Phone Number',
+        'Tripdhara WhatsApp Support',
+        'Himalayan Travel Assistance',
+        'Rishikesh Rafting Booking',
+        'Chardham Yatra Inquiries',
+        'Tripdhara Partner Support'
     ],
     openGraph: {
-        title: 'Contact Us | Tripdhara Customer Support',
-        description: 'Need help planning your Himalayan trip? Contact Tripdhara team today.',
+        title: 'Contact Tripdhara | 24/7 Himalayan Travel Support',
+        description: 'Plan your Himalayan adventure with verified local experts. 24/7 helpline and WhatsApp support.',
         url: 'https://tripdhara.in/contact',
         siteName: 'Tripdhara',
         type: 'website',

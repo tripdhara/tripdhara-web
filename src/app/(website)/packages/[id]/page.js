@@ -30,7 +30,10 @@ const getSuggestedPackage = cache(async (currentId) => {
     try {
         const results = await api.package.getBrowse({ limit: 5, format: 'flat' });
         const allPackages = results?.data || [];
-        return allPackages.filter(p => (p._id !== currentId && p.id !== currentId)).slice(0, 4);
+        const currentIdStr = String(currentId);
+        return allPackages
+            .filter(p => String(p._id) !== currentIdStr && String(p.id) !== currentIdStr)
+            .slice(0, 4);
     } catch (error) {
         getLogger().error({ err: error, currentId }, '[PackageDetailPage] Failed to fetch suggested packages');
         return [];
@@ -47,7 +50,7 @@ export async function generateMetadata({ params }) {
         }
 
         const title = service.title || 'Package Details';
-        const address = service.address || 'Himachal Pradesh';
+        const address = service.address || 'Uttarakhand & Himalayas, India';
         const category = service.category_name || 'Package';
         const metaTitle = `${title} - ${category} in ${address}`;
 
@@ -98,7 +101,7 @@ export default async function ServiceDetailPage({ params }) {
                 '@type': category?.toLowerCase()?.includes('homestay') || category?.toLowerCase()?.includes('hotel') ? 'VacationRental' : 'TouristTrip',
                 '@id': `${siteUrl}/packages/${id}#experience`,
                 name: title,
-                description: description || `${title} in ${address || 'Himachal Pradesh'}`,
+                description: description || `${title} in ${address || 'Uttarakhand & Himalayas, India'}`,
                 image: imageUrl,
                 touristType: ['Adventure', 'Nature', 'Culture'],
                 provider: {

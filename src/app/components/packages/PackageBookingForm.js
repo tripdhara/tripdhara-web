@@ -36,7 +36,7 @@ export default function PackageBookingForm({ service, price }) {
             `_Inquiry sent securely via Tripdhara.com_`;
 
         const encodedText = encodeURIComponent(message);
-        const waUrl = `https://wa.me/919536489063?text=${encodedText}`;
+        const waUrl = `https://wa.me/917017288052?text=${encodedText}`;
 
         // Simulate a brief loading state for UX
         setTimeout(() => {

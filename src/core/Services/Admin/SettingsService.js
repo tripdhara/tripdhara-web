@@ -1,4 +1,5 @@
 import Setting from '@/core/Models/Setting.js';
+import dbConnect from '@/core/Config/db.js';
 import { clearAppConfigCache } from '@/core/Lib/appConfig.js';
 import AppError from '@/core/Helpers/AppError.js';
 import { getSettingBy } from '@/core/Helpers/queryHelpers.js';
@@ -9,6 +10,7 @@ import { getSettingBy } from '@/core/Helpers/queryHelpers.js';
  */
 class SettingsService {
     async getSettings() {
+        await dbConnect();
         let setting = await Setting.findOne({});
         if (!setting) {
             const newSetting = await Setting.create({});
@@ -18,6 +20,7 @@ class SettingsService {
     }
 
     async updateSettings(data) {
+        await dbConnect();
         let setting = await Setting.findOne();
         if (!setting) {
             setting = new Setting(data);

@@ -1,6 +1,7 @@
 import DashboardService from '@/core/Services/Admin/DashboardService.js';
 import PackageService from '@/core/Services/Admin/PackageService.js';
 import DashboardClientWrapper from './DashboardClientWrapper.js';
+import dbConnect from '@/core/Config/db.js';
 
 export const metadata = {
     title: 'Admin Dashboard | Tripdhara',
@@ -8,6 +9,8 @@ export const metadata = {
 };
 
 export default async function AdminDashboard() {
+    await dbConnect();
+
     // 1. Fetch initial data via Services (Server-side)
     // We execute these in parallel for maximum performance
     const [rawStats, rawPackages] = await Promise.all([

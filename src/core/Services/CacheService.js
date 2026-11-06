@@ -23,7 +23,7 @@ function isNetworkOrOfflineError(err) {
         return true;
     }
     const msg = err?.message || String(err);
-    return /ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|retries exhausted|Socket closed unexpectedly|fetch failed/i.test(msg);
+    return /ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|retries exhausted|Socket closed unexpectedly|fetch failed|Connection timeout|timeout/i.test(msg);
 }
 
 class CacheService {

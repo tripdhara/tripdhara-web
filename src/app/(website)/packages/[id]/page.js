@@ -213,68 +213,91 @@ export default async function ServiceDetailPage({ params }) {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
 
-            {/* Cinematic Himalayan Hero Banner */}
-            <header className="relative bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white pt-28 sm:pt-32 pb-16 lg:pb-24 overflow-hidden border-b border-gray-800/80">
-                {/* Atmospheric Radial Glows */}
-                <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-primary-600/15 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-secondary-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(79,70,229,0.12),transparent_70%)] pointer-events-none" />
+            {/* Grand Cinematic Himalayan Hero Banner */}
+            <header className="relative h-[62vh] sm:h-[72vh] lg:h-[78vh] min-h-[460px] sm:min-h-[540px] lg:min-h-[620px] w-full overflow-hidden bg-gray-950 text-white flex items-end pb-16 sm:pb-20">
+                {/* Featured Package Image Background */}
+                <Image
+                    src={mainPhoto}
+                    alt={title}
+                    fill
+                    priority
+                    loading="eager"
+                    sizes="100vw"
+                    className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+                />
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    {/* Breadcrumbs Navigation */}
-                    <nav aria-label="Breadcrumb" className="flex items-center text-xs font-semibold text-gray-400 gap-2 mb-6 overflow-x-auto whitespace-nowrap custom-scrollbar py-1">
-                        <Link href="/" className="hover:text-white transition-colors">Home</Link>
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                        <Link href="/packages" className="hover:text-white transition-colors">Packages</Link>
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                        {service.category_slug && (
-                            <>
-                                <Link
-                                    href={`/packages?category=${service.category_slug}`}
-                                    className="hover:text-white transition-colors capitalize text-secondary-400"
-                                >
-                                    {category}
-                                </Link>
-                                <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                            </>
-                        )}
-                        <span className="text-gray-200 truncate font-bold">{title}</span>
-                    </nav>
+                {/* Signature Tripdhara Mountain Gradient Overlays */}
+                <div className="absolute inset-0 bg-gray-950/30 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent opacity-95" />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-950/80 via-transparent to-transparent" />
 
-                    {/* Badge Row & Actions */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-                        <div className="flex flex-wrap items-center gap-2.5">
+                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10">
+                    {/* Badges & Breadcrumb Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                        <div className="flex flex-wrap items-center gap-2">
                             {/* Category Pill with Glowing Pulse Dot */}
-                            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-500/20 text-primary-300 border border-primary-500/30 text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-lg shadow-primary-950/30">
+                            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-600/90 backdrop-blur-md text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-primary-950/40">
                                 <span className="w-2 h-2 rounded-full bg-secondary-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
                                 {category}
                             </span>
 
                             {/* Verified Local Host Pill */}
-                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold backdrop-blur-md">
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm">
                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                                 Verified Himalayan Partner
                             </span>
 
                             {/* Rating Badge */}
                             {service.rating?.average > 0 && (
-                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 text-white border border-white/15 text-xs font-bold backdrop-blur-md">
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-sm">
                                     <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                                     <span>{service.rating.average}</span>
-                                    {service.rating.count ? <span className="text-gray-400 font-normal">({service.rating.count} reviews)</span> : null}
+                                    {service.rating.count ? <span className="text-gray-300 font-normal">({service.rating.count})</span> : null}
                                 </span>
                             )}
 
                             {/* Meals or Special Perk Pill */}
                             {service.mealsIncluded && (
-                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold backdrop-blur-md">
-                                    <Check className="w-3.5 h-3.5 text-amber-400" />
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-xs font-bold shadow-sm">
+                                    <Check className="w-3.5 h-3.5" />
                                     {service.mealType || 'Organic Pahadi Meals'}
                                 </span>
                             )}
                         </div>
 
-                        {/* Direct Action Toolbar */}
+                        {/* Breadcrumbs */}
+                        <nav aria-label="Breadcrumb" className="flex items-center text-xs font-semibold text-white/80 gap-1.5 overflow-hidden">
+                            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                            <span>/</span>
+                            <Link href="/packages" className="hover:text-white transition-colors">Packages</Link>
+                            {service.category_slug && (
+                                <>
+                                    <span>/</span>
+                                    <Link
+                                        href={`/packages?category=${service.category_slug}`}
+                                        className="hover:text-white transition-colors capitalize text-secondary-300"
+                                    >
+                                        {category}
+                                    </Link>
+                                </>
+                            )}
+                            <span>/</span>
+                            <span className="text-white truncate max-w-[140px] sm:max-w-[200px] font-bold">{title}</span>
+                        </nav>
+                    </div>
+
+                    {/* Master Headline */}
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white font-display tracking-tight leading-[1.1] my-3 sm:my-4 max-w-4xl drop-shadow-2xl">
+                        {title}
+                    </h1>
+
+                    {/* Location & Quick Action Toolbar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                        <p className="text-sm sm:text-base md:text-lg text-gray-200 flex items-center font-medium drop-shadow-md">
+                            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary-400 shrink-0" />
+                            <span>{address}</span>
+                        </p>
+
                         <div className="flex items-center gap-2.5">
                             <PackageShareButton title={title} />
 
@@ -288,35 +311,17 @@ export default async function ServiceDetailPage({ params }) {
                             </a>
                         </div>
                     </div>
-
-                    {/* Master Headline */}
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white font-display tracking-tight leading-[1.1] max-w-5xl drop-shadow-md">
-                        {title}
-                    </h1>
-
-                    {/* Location Badge */}
-                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-300 font-medium">
-                        <span className="flex items-center gap-1.5 text-gray-200 font-semibold">
-                            <MapPin className="w-4 h-4 text-primary-400 shrink-0" />
-                            <span>{address}</span>
-                        </span>
-                        <span className="hidden sm:inline text-gray-600">•</span>
-                        <span className="text-gray-400 text-xs sm:text-sm">Direct Host Booking • Zero Middleman Markup</span>
-                    </div>
                 </div>
             </header>
 
             {/* Main Content Area */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-14 relative z-20">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-10 sm:-mt-14">
 
-                {/* Interactive Photo Showcase Gallery */}
-                <PackageGallery photos={displayPhotos} title={title} />
-
-                {/* Quick Stats Bar Component */}
+                {/* Floating Quick Stats Bar Component */}
                 <QuickStatsBar service={service} />
 
                 {/* Main 2-Column Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 mt-10">
 
                     {/* Left Column (8 cols): Story, Details, Itinerary, Host */}
                     <div className="lg:col-span-8 space-y-8">
@@ -343,6 +348,9 @@ export default async function ServiceDetailPage({ params }) {
                                 Fair Mountain Economy
                             </span>
                         </div>
+
+                        {/* Experience Photo Gallery Showcase */}
+                        <PackageGallery photos={displayPhotos} title={title} />
 
                         {/* About this Himalayan Experience */}
                         <section className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-100 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.05)] ring-1 ring-gray-900/5 hover:border-gray-200 transition-all duration-300">

@@ -49,7 +49,12 @@ describe('Industry Standard: Logger (Pino Wrapper)', () => {
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yyyy = now.getFullYear();
-        const logFilePath = path.resolve(process.cwd(), 'logs', `${dd}_${mm}_${yyyy}_pahadigo.log`);
+        const logFileNameTripdhara = `${dd}_${mm}_${yyyy}_tripdhara.log`;
+        const logFileNamePahadigo = `${dd}_${mm}_${yyyy}_pahadigo.log`;
+        let logFilePath = path.resolve(process.cwd(), 'logs', logFileNameTripdhara);
+        if (!fs.existsSync(logFilePath)) {
+            logFilePath = path.resolve(process.cwd(), 'logs', logFileNamePahadigo);
+        }
 
         expect(fs.existsSync(logFilePath)).toBe(true);
         const fileContent = fs.readFileSync(logFilePath, 'utf8');

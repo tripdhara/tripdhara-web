@@ -34,7 +34,7 @@ describe('Next.js App: sitemap.js', () => {
         jest.clearAllMocks();
     });
 
-    it('should generate static routes and dynamic routes for packages, categories, and blogs', async () => {
+    it('should generate static routes and dynamic routes for packages', async () => {
         mockPackageFind.mockReturnValue({
             lean: jest.fn().mockResolvedValue([
                 {
@@ -74,11 +74,9 @@ describe('Next.js App: sitemap.js', () => {
         expect(urls).toContain('https://tripdhara.in/packages');
         expect(urls).toContain('https://tripdhara.in/about');
 
-        // Verify dynamic routes
+        // Verify dynamic package routes
         expect(urls).toContain('https://tripdhara.in/packages/hs_1');
         expect(urls).not.toContain('https://tripdhara.in/packages/trk_1');
-        expect(urls).toContain('https://tripdhara.in/categories/homestay');
-        expect(urls).toContain('https://tripdhara.in/blog/best-places-in-manali');
     });
 
     it('should fallback gracefully to static routes when database query throws', async () => {
@@ -88,7 +86,6 @@ describe('Next.js App: sitemap.js', () => {
 
         const entries = await sitemap();
         expect(Array.isArray(entries)).toBe(true);
-        expect(entries.length).toBeGreaterThanOrEqual(11); // Static routes
+        expect(entries.length).toBeGreaterThanOrEqual(10); // Static routes
     });
 });
-

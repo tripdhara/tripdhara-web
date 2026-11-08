@@ -3,18 +3,26 @@ import { jest } from '@jest/globals';
 describe('Industry Standard: IndexNow Helper', () => {
     let notifyIndexNow;
     const originalFetch = global.fetch;
+    const originalIndexNowKey = process.env.INDEXNOW_KEY;
 
     beforeAll(async () => {
+        process.env.INDEXNOW_KEY = 'test_indexnow_api_key';
         const module = await import('@/core/Helpers/indexNow.js');
         notifyIndexNow = module.notifyIndexNow;
     });
 
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env.INDEXNOW_KEY = 'test_indexnow_api_key';
     });
 
     afterAll(() => {
         global.fetch = originalFetch;
+        if (originalIndexNowKey !== undefined) {
+            process.env.INDEXNOW_KEY = originalIndexNowKey;
+        } else {
+            delete process.env.INDEXNOW_KEY;
+        }
     });
 
     it('[Validation] should return error when no URLs are provided', async () => {

@@ -3,20 +3,30 @@ import { jest } from '@jest/globals';
 const mockGetToken = jest.fn();
 
 jest.unstable_mockModule('@/app/utils/authUtils.js', () => ({
-    getToken: mockGetToken
+    getToken: mockGetToken,
+    getAuthToken: mockGetToken
 }));
+
+process.env.NEXT_PUBLIC_API_URL = '/api';
 
 const { default: api } = await import('@/core/Api/index.js');
 
 describe('Industry Standard: Base API Client (src/core/Api/index.js)', () => {
     const originalFetch = global.fetch;
+    const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env.NEXT_PUBLIC_API_URL = '/api';
     });
 
     afterAll(() => {
         global.fetch = originalFetch;
+        if (originalApiUrl !== undefined) {
+            process.env.NEXT_PUBLIC_API_URL = originalApiUrl;
+        } else {
+            delete process.env.NEXT_PUBLIC_API_URL;
+        }
     });
 
     it('should export admin API client tree', () => {

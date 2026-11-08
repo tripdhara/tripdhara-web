@@ -2,11 +2,14 @@ import { jest } from '@jest/globals';
 
 describe('Industry Standard: IndexNow Helper', () => {
     let notifyIndexNow;
+    let logger;
     const originalFetch = global.fetch;
     const originalIndexNowKey = process.env.INDEXNOW_KEY;
 
     beforeAll(async () => {
         process.env.INDEXNOW_KEY = 'test_indexnow_api_key';
+        const loggerModule = await import('@/core/Lib/logger.js');
+        logger = loggerModule.getLogger();
         const module = await import('@/core/Helpers/indexNow.js');
         notifyIndexNow = module.notifyIndexNow;
     });
@@ -68,10 +71,13 @@ describe('Industry Standard: IndexNow Helper', () => {
     });
 
     it('[Failure] should return error object if fetch throws an exception', async () => {
+        const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
         global.fetch = jest.fn().mockRejectedValue(new Error('Network offline'));
 
         const res = await notifyIndexNow(['https://tripdhara.in/packages/trek-1']);
         expect(res.success).toBe(false);
         expect(res.error).toBe('Network offline');
+        expect(errorSpy).toHaveBeenCalled();
+        errorSpy.mockRestore();
     });
 });

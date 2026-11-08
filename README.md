@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/img/pahadigo_banner.png" alt="Tripdhara Banner" width="100%" style="height: 70vh;"/>
+  <img src="public/img/tripdhara.webp" alt="Tripdhara Banner" width="100%" style="height: 70vh;"/>
 </p>
 
 <p align="center">

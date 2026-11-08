@@ -39,8 +39,9 @@ export default function Footer() {
     return (
         <footer className="bg-gray-900 text-white pt-10">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid md:grid-cols-4 gap-4 mb-8">
-                    <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 lg:gap-10 mb-8">
+                    {/* 1st Column: 100% on mobile */}
+                    <div className="col-span-2 md:col-span-1 space-y-6">
                         <span className="text-3xl font-bold font-display text-white block">Trip<span className="text-primary-500">dhara</span></span>
                         <p className="text-gray-400 leading-relaxed text-sm">We are on a mission to make Himalayan travel accessible, authentic, and sustainable. Join our community of explorers.</p>
                         <div className="flex space-x-4">
@@ -59,9 +60,10 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    <div>
-                        <h4 className="text-lg font-bold mb-6">Company</h4>
-                        <ul className="space-y-4 text-gray-400 text-sm">
+                    {/* 2nd Column: 50% on mobile */}
+                    <div className="col-span-1 md:col-span-1">
+                        <h4 className="text-lg font-bold mb-4 sm:mb-6 text-white">Company</h4>
+                        <ul className="space-y-3 sm:space-y-4 text-gray-400 text-sm">
                             <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
                             <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
@@ -70,9 +72,10 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    <div>
-                        <h4 className="text-lg font-bold mb-6">Discover</h4>
-                        <ul className="space-y-4 text-gray-400 text-sm">
+                    {/* 3rd Column: 50% on mobile */}
+                    <div className="col-span-1 md:col-span-1">
+                        <h4 className="text-lg font-bold mb-4 sm:mb-6 text-white">Discover</h4>
+                        <ul className="space-y-3 sm:space-y-4 text-gray-400 text-sm">
                             <li><Link href="/careers" className="hover:text-white transition-colors">Careers with Us</Link></li>
                             <li><Link href="/partner" className="hover:text-white transition-colors">Partner with Us</Link></li>
                             <li><Link href="/yatra" className="hover:text-white transition-colors">Yatra Packages</Link></li>
@@ -82,7 +85,8 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    <div>
+                    {/* 4th Column: 100% on mobile */}
+                    <div className="col-span-2 md:col-span-1">
                         <h4 className="text-lg font-bold mb-4 text-white">Newsletter</h4>
                         <p className="text-gray-400 text-sm mb-4 leading-relaxed">Subscribe to get the latest offers, seasonal deals, and trekking guides.</p>
                         <form onSubmit={handleSubscribe} className="space-y-2.5">
@@ -97,10 +101,10 @@ export default function Footer() {
                                     )}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                            {/* <p className="text-xs text-gray-500 flex items-center gap-1.5">
                                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
                                 <span>No spam ever. Unsubscribe at any time.</span>
-                            </p>
+                            </p> */}
                         </form>
                     </div>
                 </div>

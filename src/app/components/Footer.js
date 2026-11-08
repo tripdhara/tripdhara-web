@@ -1,21 +1,20 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { useToast } from '@/app/components/ui/ToastContext.js';
+import Link from 'next/link';
 import { Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/ToastContext.js';
 
 export default function Footer() {
     const [email, setEmail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const toast = useToast();
+    const { toast } = useToast();
 
     const handleSubscribe = async (e) => {
         e.preventDefault();
         if (!email) return;
 
         setIsSubmitting(true);
-
         try {
             const res = await fetch('/api/newsletter/subscribe', {
                 method: 'POST',
@@ -23,13 +22,15 @@ export default function Footer() {
                 body: JSON.stringify({ email })
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                toast('Successfully subscribed to the newsletter!', 'success');
+                toast(data.message || 'Subscribed successfully to Tripdhara newsletter!', 'success');
                 setEmail('');
             } else {
                 toast('Failed to subscribe. Please try again.', 'error');
             }
-        } catch (error) {
+        } catch {
             toast('An error occurred. Please try again later.', 'error');
         } finally {
             setIsSubmitting(false);
@@ -39,7 +40,7 @@ export default function Footer() {
     return (
         <footer className="bg-gray-900 text-white pt-10">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 lg:gap-10 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10 mb-8">
                     {/* 1st Column: 100% on mobile */}
                     <div className="col-span-2 md:col-span-1 space-y-6">
                         <span className="text-3xl font-bold font-display text-white block">Trip<span className="text-primary-500">dhara</span></span>
@@ -62,13 +63,15 @@ export default function Footer() {
 
                     {/* 2nd Column: 50% on mobile */}
                     <div className="col-span-1 md:col-span-1">
-                        <h4 className="text-lg font-bold mb-4 sm:mb-6 text-white">Company</h4>
+                        <h4 className="text-lg font-bold mb-4 sm:mb-6 text-white">Policies</h4>
                         <ul className="space-y-3 sm:space-y-4 text-gray-400 text-sm">
-                            <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                            <li><Link href="/faq" className="hover:text-white transition-colors">FAQ &amp; Help Desk</Link></li>
                             <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
                             <li><Link href="/cancellation" className="hover:text-white transition-colors">Cancellation &amp; Weather</Link></li>
+                            <li><Link href="/grievance" className="hover:text-white transition-colors">Grievance Redressal</Link></li>
+                            <li><Link href="/shipping" className="hover:text-white transition-colors">Shipping &amp; Delivery</Link></li>
                         </ul>
                     </div>
 
@@ -78,10 +81,10 @@ export default function Footer() {
                         <ul className="space-y-3 sm:space-y-4 text-gray-400 text-sm">
                             <li><Link href="/careers" className="hover:text-white transition-colors">Careers with Us</Link></li>
                             <li><Link href="/partner" className="hover:text-white transition-colors">Partner with Us</Link></li>
-                            <li><Link href="/yatra" className="hover:text-white transition-colors">Yatra Packages</Link></li>
-                            <li><Link href="/activities" className="hover:text-white transition-colors">Activities Packages</Link></li>
-                            <li><Link href="/accommodation" className="hover:text-white transition-colors">Accommodation Packages</Link></li>
-                            <li><Link href="/rental" className="hover:text-white transition-colors">Bike/Scooter Rental Packages</Link></li>
+                            <li><Link href="/rental-policy" className="hover:text-white transition-colors">Rental &amp; Deposit Policy</Link></li>
+                            <li><Link href="/safety-policy" className="hover:text-white transition-colors">Adventure &amp; Safety</Link></li>
+                            <li><Link href="/permit-policy" className="hover:text-white transition-colors">Border &amp; ILP Permits</Link></li>
+                            <li><Link href="/eco-policy" className="hover:text-white transition-colors">Eco-Tourism Policy</Link></li>
                         </ul>
                     </div>
 
@@ -101,16 +104,25 @@ export default function Footer() {
                                     )}
                                 </button>
                             </div>
-                            {/* <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
                                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
                                 <span>No spam ever. Unsubscribe at any time.</span>
-                            </p> */}
+                            </p>
                         </form>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 py-4 text-center sm:text-end text-gray-400 text-sm">
-                    <p>&copy; {new Date().getFullYear()} <Link href="/" className="font-semibold text-gray-200 hover:text-primary-400 transition-colors">Trip<span className="text-primary-600">dhara</span></Link>. All rights reserved.</p>
+                <div className="border-t border-gray-800 py-6 text-gray-400 text-xs sm:text-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-gray-400 text-xs">
+                        <Link href="/grievance" className="hover:text-primary-400 transition-colors">Grievance Redressal</Link>|
+                        <Link href="/shipping" className="hover:text-primary-400 transition-colors">Shipping &amp; Delivery</Link>|
+                        <Link href="/rental-policy" className="hover:text-primary-400 transition-colors">Rental Terms</Link>|
+                        <Link href="/safety-policy" className="hover:text-primary-400 transition-colors">Trekking Safety</Link>|
+                        <Link href="/vendor-terms" className="hover:text-primary-400 transition-colors">Vendor Terms</Link>|
+                        <Link href="/permit-policy" className="hover:text-primary-400 transition-colors">Border Permits</Link>|
+                        <Link href="/eco-policy" className="hover:text-primary-400 transition-colors">Eco Policy</Link>
+                    </div>
+                    <p className="shrink-0 text-center md:text-end">&copy; {new Date().getFullYear()} <Link href="/" className="font-semibold text-gray-200 hover:text-primary-400 transition-colors">Trip<span className="text-primary-500">dhara</span></Link>. All rights reserved.</p>
                 </div>
             </div>
         </footer>

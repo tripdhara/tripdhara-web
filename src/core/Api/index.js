@@ -1,17 +1,18 @@
-import { getToken } from '@/app/utils/authUtils.js';
+import { getToken, getAuthToken } from '@/app/utils/authUtils.js';
 import { adminApi } from './admin.js';
 import { authApi } from './auth.js';
 import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 
 const fetcher = async (url, options = {}) => {
-    const token = getToken();
+    const token = typeof getAuthToken === 'function' ? await getAuthToken() : getToken();
     const headers = {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
     };
     if (options.body instanceof FormData) delete headers['Content-Type'];
-    const res = await fetch(url, { ...options, headers });
+    const path = process.env.NEXT_PUBLIC_API_URL + '/' + url;
+    const res = await fetch(path, { ...options, headers });
 
     let data;
     const contentType = res.headers.get('content-type');

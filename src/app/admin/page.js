@@ -1,7 +1,5 @@
-import DashboardService from '@/core/Services/Admin/DashboardService.js';
-import PackageService from '@/core/Services/Admin/PackageService.js';
+import adminApi from '@/core/Api/index.js';
 import DashboardClientWrapper from './DashboardClientWrapper.js';
-import dbConnect from '@/core/Config/db.js';
 
 export const metadata = {
     title: 'Admin Dashboard | Tripdhara',
@@ -9,20 +7,29 @@ export const metadata = {
 };
 
 export default async function AdminDashboard() {
-    await dbConnect();
 
-    // 1. Fetch initial data via Services (Server-side)
-    // We execute these in parallel for maximum performance
-    const [rawStats, rawPackages] = await Promise.all([
-        DashboardService.getDashboardStats(),
-        PackageService.getAllServices()
-    ]);
+    let rawStats = null;
+    let rawPackages = null;
 
-    // 2. Serialize to safely pass to Client Component (App Router requirement for Date/ObjectId)
+    // 1. Fetch initial data via adminApi client
+    try {
+        const stats = adminApi.admin?.stats?.getStats;
+        const packages = adminApi.admin?.packages?.getAll;
+        const [statsRes, packagesRes] = await Promise.all([
+            stats(),
+            packages()
+        ]);
+        rawStats = statsRes?.data?.stats ?? statsRes?.data ?? statsRes;
+        rawPackages = packagesRes?.data?.packages ?? packagesRes?.data ?? packagesRes;
+    } catch (error) {
+        console.error('error', error);
+    }
+
+    // // 3. Serialize to safely pass to Client Component (App Router requirement for Date/ObjectId)
     const initialStats = JSON.parse(JSON.stringify(rawStats || {}));
     const initialPackages = JSON.parse(JSON.stringify(rawPackages || []));
 
-    // 3. Render Pure UI Shell wrapper
+    // 4. Render Pure UI Shell wrapper
     return (
         <main>
             <DashboardClientWrapper

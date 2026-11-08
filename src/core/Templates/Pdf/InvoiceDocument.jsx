@@ -20,7 +20,7 @@ const DETAILS = [
     { label: "brandName", value: "TRIPDHARA TRAVELS" },
     { label: "tagLineHindi", value: "जहाँ नदी की धारा, वहां सुकून हमारा" },
     { label: "tagLineEnglish", value: "Where the river flows, peace begins" },
-    { label: "phone", value: "+91 9971883682" },
+    { label: "phone", value: "+91 7017288052" },
     { label: "email", value: "contact@tripdhara.com" },
     { label: "website", value: "https://tripdhara.com" },
     { label: "address", value: "Gali Number 13, Meera Nagar, Garhi Maychak, Veerbhadra, Rishikesh, Uttarakhand 249202" },
@@ -275,7 +275,7 @@ const InvoiceDocument = ({ booking, role = 'traveller' }) => {
                         </View>
                         <Text style={styles.billedName}>Tripdhara Travels</Text>
                         <Text style={styles.billedText}>Gali Number 13, Meera Nagar, Garhi Maychak, Veerbhadra, Rishikesh, Uttarakhand 249202</Text>
-                        <View style={[styles.iconRow, { marginTop: 5 }]}><IconPhone color={PRIMARY_COLOR} /><Text style={styles.iconTextDark}>+91 9536489063</Text></View>
+                        <View style={[styles.iconRow, { marginTop: 5 }]}><IconPhone color={PRIMARY_COLOR} /><Text style={styles.iconTextDark}>+91 7017288052</Text></View>
                         <View style={styles.iconRow}><IconEmail color={PRIMARY_COLOR} /><Text style={styles.iconTextDark}>info@tripdhara.com</Text></View>
                     </View>
                     <View style={styles.billedBox}>

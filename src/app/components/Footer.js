@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useToast } from '@/app/components/ui/ToastContext.js';
+import { Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function Footer() {
     const [email, setEmail] = useState('');
@@ -38,14 +39,10 @@ export default function Footer() {
     return (
         <footer className="bg-gray-900 text-white pt-10">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid md:grid-cols-4 gap-12 mb-8">
+                <div className="grid md:grid-cols-4 gap-4 mb-8">
                     <div className="space-y-6">
-                        <span className="text-3xl font-bold font-display text-white block">
-                            Trip<span className="text-primary-500">dhara</span>
-                        </span>
-                        <p className="text-gray-400 leading-relaxed text-sm">
-                            We are on a mission to make Himalayan travel accessible, authentic, and sustainable. Join our community of explorers.
-                        </p>
+                        <span className="text-3xl font-bold font-display text-white block">Trip<span className="text-primary-500">dhara</span></span>
+                        <p className="text-gray-400 leading-relaxed text-sm">We are on a mission to make Himalayan travel accessible, authentic, and sustainable. Join our community of explorers.</p>
                         <div className="flex space-x-4">
                             <a href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-600 transition-colors">
                                 <span className="sr-only">Facebook</span>
@@ -65,57 +62,51 @@ export default function Footer() {
                     <div>
                         <h4 className="text-lg font-bold mb-6">Company</h4>
                         <ul className="space-y-4 text-gray-400 text-sm">
-                            <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                            <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
                             <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
                             <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                            <li><Link href="/cancellation" className="hover:text-white transition-colors">Cancellation &amp; Weather</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="text-lg font-bold mb-6">Discover</h4>
                         <ul className="space-y-4 text-gray-400 text-sm">
-                            <li><Link href="/packages" className="hover:text-white transition-colors">Explore Packages</Link></li>
-                            <li><Link href="/blog" className="hover:text-white transition-colors">Field Guides & Blog</Link></li>
+                            <li><Link href="/careers" className="hover:text-white transition-colors">Careers with Us</Link></li>
                             <li><Link href="/partner" className="hover:text-white transition-colors">Partner with Us</Link></li>
+                            <li><Link href="/yatra" className="hover:text-white transition-colors">Yatra Packages</Link></li>
+                            <li><Link href="/activities" className="hover:text-white transition-colors">Activities Packages</Link></li>
+                            <li><Link href="/accommodation" className="hover:text-white transition-colors">Accommodation Packages</Link></li>
+                            <li><Link href="/rental" className="hover:text-white transition-colors">Bike/Scooter Rental Packages</Link></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 className="text-lg font-bold mb-6">Newsletter</h4>
-                        <p className="text-gray-400 text-sm mb-4">Subscribe to get the latest offers and trekking guides.</p>
-                        <form onSubmit={handleSubscribe} className="flex">
-                            <input type="email"
-                                placeholder="Your email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isSubmitting}
-                                className="bg-gray-800 text-white px-4 py-2 rounded-l-lg focus:outline-none w-full border border-gray-700 focus:border-primary-500 disabled:opacity-50"
-                            />
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="bg-primary-600 px-4 py-2 rounded-r-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center min-w-[50px]"
-                            >
-                                {isSubmitting ? (
-                                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                ) : (
-                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                )}
-                            </button>
+                        <h4 className="text-lg font-bold mb-4 text-white">Newsletter</h4>
+                        <p className="text-gray-400 text-sm mb-4 leading-relaxed">Subscribe to get the latest offers, seasonal deals, and trekking guides.</p>
+                        <form onSubmit={handleSubscribe} className="space-y-2.5">
+                            <div className="relative flex items-center">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500"><Mail className="w-4 h-4" /></div>
+                                <input type="email" placeholder="Enter your email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} aria-label="Email address for newsletter" className="w-full bg-gray-800 text-white pl-10 pr-12 py-2.5 sm:py-3 rounded-xl border border-gray-700 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all placeholder:text-gray-500 disabled:opacity-50" />
+                                <button type="submit" disabled={isSubmitting || !email} aria-label="Subscribe to newsletter" className="absolute right-1.5 p-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-all disabled:opacity-40 disabled:hover:bg-primary-600 shadow-sm flex items-center justify-center cursor-pointer disabled:cursor-not-allowed">
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <ArrowRight className="w-4 h-4" />
+                                    )}
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
+                                <span>No spam ever. Unsubscribe at any time.</span>
+                            </p>
                         </form>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 py-4 text-center text-gray-500 text-sm">
-                    <p className='text-sm text-end'>&copy; {new Date().getFullYear()} Tripdhara. All rights reserved.</p>
+                <div className="border-t border-gray-800 py-4 text-center sm:text-end text-gray-400 text-sm">
+                    <p>&copy; {new Date().getFullYear()} <Link href="/" className="font-semibold text-gray-200 hover:text-primary-400 transition-colors">Trip<span className="text-primary-600">dhara</span></Link>. All rights reserved.</p>
                 </div>
             </div>
         </footer>

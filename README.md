@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/img/tripdhara.webp" alt="Tripdhara Banner" width="100%" style="height: 70vh;"/>
+  <img src="public/img/tripdhara.webp" alt="Tripdhara Banner" width="100%"/>
 </p>
 
 <p align="center">

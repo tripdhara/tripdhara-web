@@ -91,7 +91,9 @@ console.log = (...args) => {
 
 console.warn = (...args) => {
   const noise = [
-    '[CACHE] Upstash Redis credentials not found'
+    '[CACHE] Upstash Redis credentials not found',
+    '[CACHE] Redis credentials not found',
+    '[IndexNow]'
   ];
   const combinedMsg = args.map(arg => String(arg)).join(' ');
   if (noise.some(n => combinedMsg.includes(n))) return;
@@ -108,6 +110,7 @@ const suppressedLogPatterns = [
   '[QueueService]',
   '[AuthEvents] OTP email sending failed',
   '[CACHE] Redis credentials not found',
+  '[IndexNow]',
   '[ENV VALIDATION ERROR]',
   '[ENV VALIDATION FAILED]'
 ];

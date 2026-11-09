@@ -1,5 +1,16 @@
 import { jest } from '@jest/globals';
 
+const mockLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+};
+
+jest.unstable_mockModule('@/core/Lib/logger.js', () => ({
+    getLogger: jest.fn().mockReturnValue(mockLogger),
+}));
+
 jest.unstable_mockModule('@/core/Lib/appConfig.js', () => ({
     getAppConfig: jest.fn().mockImplementation(() => Promise.resolve({
         cloudinary: { url: 'cloudinary://test:test@test' }

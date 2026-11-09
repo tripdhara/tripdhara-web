@@ -24,6 +24,15 @@ const nextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production',
     },
+    allowedDevOrigins: [
+        '10.192.91.197',
+        '10.192.91.197:3000',
+        'localhost:3000',
+        'tripdhara.in',
+        'tripdhara.com',
+        '*.tripdhara.in',
+        '*.tripdhara.com',
+    ],
     async headers() {
         return [
             {

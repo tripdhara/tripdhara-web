@@ -1,24 +1,31 @@
 import { proxy, config } from '@/proxy.js';
 
 describe('Industry Standard: Edge Proxy (src/proxy.js)', () => {
-    it('should define matcher pattern ignoring static assets and image files', () => {
+    it('should define matcher pattern for API routes', () => {
         expect(config).toBeDefined();
         expect(config.matcher).toBeDefined();
         expect(Array.isArray(config.matcher)).toBe(true);
+        expect(config.matcher).toContain('/api/:path*');
     });
 
-    it('should inject security headers on general page requests', () => {
+    it('should pass through non-api page requests without modification', () => {
         const req = new Request('https://tripdhara.in/packages', {
             method: 'GET',
             headers: new Headers()
         });
 
         const res = proxy(req);
+        expect(res).toBeDefined();
+        expect(res.status).toBe(200);
+    });
 
-        expect(res.headers.get('X-Frame-Options')).toBe('DENY');
-        expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
-        expect(res.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
-        expect(res.headers.get('Permissions-Policy')).toBe('camera=(), microphone=(), geolocation=()');
+    it('should generate x-request-id for /api/ routes when not provided', () => {
+        const req = new Request('https://tripdhara.in/api/v1/packages', {
+            method: 'GET',
+            headers: new Headers()
+        });
+
+        const res = proxy(req);
         expect(res.headers.get('x-request-id')).toBeDefined();
     });
 

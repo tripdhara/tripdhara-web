@@ -20,9 +20,40 @@ import {
     ArrowLeft
 } from 'lucide-react';
 
+// Verified Real Himalayan & Tripdhara Coordinates
+const REAL_LOCATIONS = {
+    KEDARNATH: {
+        tag: 'Kedarnath',
+        name: 'Kedarnath Alpine Ridge',
+        lat: '30.7346° N',
+        lng: '79.0669° E',
+        alt: '3,583m',
+        region: 'Rudraprayag, Uttarakhand'
+    },
+    RISHIKESH: {
+        tag: 'Rishikesh HQ',
+        name: 'Tripdhara HQ, Rishikesh',
+        lat: '30.0869° N',
+        lng: '78.2676° E',
+        alt: '372m',
+        region: 'Uttarakhand, India'
+    },
+    MANALI: {
+        tag: 'Manali',
+        name: 'Manali Valley Basecamp',
+        lat: '32.2432° N',
+        lng: '77.1892° E',
+        alt: '2,050m',
+        region: 'Kullu Valley, Himachal'
+    }
+};
+
 export default function NotFound() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLocKey, setSelectedLocKey] = useState('KEDARNATH');
+
+    const activeLoc = REAL_LOCATIONS[selectedLocKey] || REAL_LOCATIONS.KEDARNATH;
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -204,19 +235,57 @@ export default function NotFound() {
                             </div>
                         </div>
 
-                        {/* Right: Glassmorphic Telemetry Card with Illustration */}
+                        {/* Right: Glassmorphic Real GPS Telemetry Card with Illustration */}
                         <div className="lg:col-span-5 flex justify-center">
                             <div className="relative w-full max-w-sm sm:max-w-md">
                                 <div className="absolute inset-0 bg-gradient-to-tr from-[#017974]/40 via-teal-400/20 to-transparent rounded-3xl blur-2xl transform rotate-2 scale-95" />
 
                                 <div className="relative bg-white/[0.06] border border-white/15 backdrop-blur-2xl rounded-3xl p-5 sm:p-7 shadow-2xl overflow-hidden">
-                                    {/* Telemetry Header */}
-                                    <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3 text-xs font-mono text-gray-400">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                            <span>GPS: 30.7352° N, 79.0669° E</span>
+                                    {/* Real Coordinates Telemetry Header */}
+                                    <div className="border-b border-white/10 pb-3 mb-3 text-xs font-mono">
+                                        <div className="flex items-center justify-between text-gray-400 mb-1.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                <span className="text-white font-medium text-[11px] uppercase tracking-wide">
+                                                    REAL HIMALAYAN COORDINATES
+                                                </span>
+                                            </div>
+                                            <span className="text-emerald-400 font-semibold font-mono">{activeLoc.alt}</span>
                                         </div>
-                                        <span className="text-emerald-400 font-semibold">ALT: 3,583m</span>
+
+                                        <div className="flex items-center justify-between text-[11px] my-1">
+                                            <span className="text-gray-100 font-bold tracking-wider font-mono text-xs">
+                                                {activeLoc.lat}, {activeLoc.lng}
+                                            </span>
+                                            <span className="text-[10px] text-emerald-300 font-sans font-semibold px-2 py-0.5 rounded bg-emerald-400/10 border border-emerald-400/20">
+                                                Survey Geo-Fix
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2">
+                                            <span className="truncate max-w-[150px] sm:max-w-[170px] text-gray-300">{activeLoc.name}</span>
+                                            {/* Real Mountain Hub Switcher */}
+                                            <div className="flex items-center gap-1 font-sans">
+                                                {Object.keys(REAL_LOCATIONS).map((key) => {
+                                                    const item = REAL_LOCATIONS[key];
+                                                    const isSelected = selectedLocKey === key;
+                                                    return (
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            onClick={() => setSelectedLocKey(key)}
+                                                            className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                                                                isSelected
+                                                                    ? 'bg-[#017974] text-white shadow-sm'
+                                                                    : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white'
+                                                            }`}
+                                                        >
+                                                            {item.tag}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Illustration Visual */}
@@ -235,9 +304,9 @@ export default function NotFound() {
                                     <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-400">
                                         <span className="flex items-center gap-1.5">
                                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                                            Tripdhara Safe Route
+                                            <span>Tripdhara Geo-Verified</span>
                                         </span>
-                                        <span className="text-gray-300 font-mono">Status: Error 404</span>
+                                        <span className="text-gray-300 font-mono">Error 404 • Lost Path</span>
                                     </div>
                                 </div>
                             </div>

@@ -313,6 +313,8 @@ export default function AccommodationPage() {
                                         src={item.image.src}
                                         alt={item.image.alt}
                                         fill
+                                        priority={index === 0}
+                                        loading={index === 0 ? "eager" : "lazy"}
                                         sizes="(max-width: 1024px) 100vw, 40vw"
                                         className="object-cover hover:scale-105 transition-transform duration-500"
                                     />

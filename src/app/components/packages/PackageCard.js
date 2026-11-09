@@ -20,7 +20,7 @@ const CATEGORY_BADGE_STYLES = {
     'custom-trip': 'bg-indigo-600 text-white'
 };
 
-export default function PackageCard({ item = {} }) {
+export default function PackageCard({ item = {}, priority = false }) {
     const id = item.id || item._id;
     const title = item.title || 'Himalayan Experience';
     const categorySlug = (item.category_slug || '').toLowerCase();
@@ -50,6 +50,8 @@ export default function PackageCard({ item = {} }) {
                     src={image}
                     alt={title}
                     fill
+                    priority={priority}
+                    loading={priority ? 'eager' : 'lazy'}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                 />

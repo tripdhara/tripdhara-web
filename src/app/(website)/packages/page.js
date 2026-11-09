@@ -192,6 +192,7 @@ export default async function PackagesPage({ searchParams }) {
                             <PackageCard
                                 key={service.id || service._id || index}
                                 item={service}
+                                priority={index < 4}
                             />
                         ))}
                     </div>

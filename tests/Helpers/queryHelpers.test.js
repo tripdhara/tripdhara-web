@@ -120,10 +120,10 @@ describe('queryHelpers Data Access Layer (DAL) Tests', () => {
             expect(MockModel.findByIdAndUpdate).not.toHaveBeenCalled();
         });
 
-        it('should call findByIdAndUpdate with new: true and lean', async () => {
+        it('should call findByIdAndUpdate with returnDocument: "after" and lean', async () => {
             mockQuery.exec.mockResolvedValueOnce({ _id: 'doc_123', name: 'Updated' });
             const res = await updateById(MockModel, 'doc_123', { name: 'Updated' });
-            expect(MockModel.findByIdAndUpdate).toHaveBeenCalledWith('doc_123', { name: 'Updated' }, expect.objectContaining({ new: true }));
+            expect(MockModel.findByIdAndUpdate).toHaveBeenCalledWith('doc_123', { name: 'Updated' }, expect.objectContaining({ returnDocument: 'after' }));
             expect(mockQuery.lean).toHaveBeenCalled();
             expect(res).toEqual({ _id: 'doc_123', name: 'Updated' });
         });

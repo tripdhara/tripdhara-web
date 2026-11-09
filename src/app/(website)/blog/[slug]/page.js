@@ -113,6 +113,7 @@ export default async function BlogPostPage({ params }) {
                     alt={blog.title}
                     fill
                     priority
+                    loading="eager"
                     sizes="100vw"
                     className="object-cover opacity-20"
                 />

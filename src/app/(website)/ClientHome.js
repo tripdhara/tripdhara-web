@@ -205,6 +205,7 @@ export default function ClientHome({ categories = [] }) {
                         alt="Himalayan Mountain Range"
                         fill
                         priority
+                        loading="eager"
                         sizes="100vw"
                         className="object-cover object-[center_35%] opacity-35"
                     />
@@ -374,6 +375,8 @@ export default function ClientHome({ categories = [] }) {
                                             src={portal.image}
                                             alt={portal.title}
                                             fill
+                                            priority={idx < 2}
+                                            loading={idx < 2 ? 'eager' : 'lazy'}
                                             sizes="(max-width: 768px) 100vw, 25vw"
                                             className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                                         />

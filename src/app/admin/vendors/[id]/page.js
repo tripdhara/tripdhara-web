@@ -208,7 +208,7 @@ export default function VendorDetailsPage({ params }) {
                 <div onClick={() => setPreviewImage(null)} className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-12 cursor-zoom-out animate-in fade-in duration-300">
                     <div className="relative w-full h-full flex flex-col items-center justify-center">
                         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5">
-                            <Image src={previewImage} alt="Document Review" fill className="object-contain" priority sizes="100vw" />
+                            <Image src={previewImage} alt="Document Review" fill className="object-contain" priority loading="eager" sizes="100vw" />
                         </div>
 
                         <button className="absolute top-0 -right-2 sm:-right-8 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all border border-white/10 backdrop-blur-md">

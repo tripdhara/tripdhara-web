@@ -120,6 +120,7 @@ export default function EarnWithTripdharaPage() {
                     alt="Earn with Tripdhara"
                     fill
                     priority
+                    loading="eager"
                     sizes="100vw"
                     className="object-cover opacity-25"
                 />

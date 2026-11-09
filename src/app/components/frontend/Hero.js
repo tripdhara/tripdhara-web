@@ -17,7 +17,7 @@ export default function Hero() {
     return (
         <section className="relative h-screen min-h-[850px] flex items-center justify-center overflow-hidden">
             <motion.div style={{ y: heroY, opacity: opacity }} className="absolute inset-0 z-0">
-                <Image src="/img/background.png" alt="Himalayas Hero Background" fill sizes="100vw" className="object-cover object-[center_30%] scale-105" priority />
+                <Image src="/img/background.png" alt="Himalayas Hero Background" fill sizes="100vw" className="object-cover object-[center_30%] scale-105" priority loading="eager" />
                 <div className="absolute inset-0 bg-gradient-to-b from-gray-900/80 via-gray-900/40 to-white z-10" />
             </motion.div>
             <div className="relative z-20 max-w-7xl mx-auto px-4 w-full flex flex-col items-center text-center mt-10">

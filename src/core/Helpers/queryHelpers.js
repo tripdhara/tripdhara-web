@@ -918,7 +918,7 @@ export const countSearchLogsBy = async (conditions = {}, options = {}) => {
  */
 export const updateById = async (Model, id, updateData, options = {}) => {
     if (!id || !Model || typeof Model.findByIdAndUpdate !== 'function') return null;
-    let query = Model.findByIdAndUpdate(id, updateData, { returnDocument: 'after', new: true, ...options });
+    let query = Model.findByIdAndUpdate(id, updateData, { returnDocument: 'after', ...options });
     if (!query) return null;
     if (options.session && typeof query?.session === 'function') query = query.session(options.session) || query;
     if (options.lean !== false && typeof query?.lean === 'function') query = query.lean() || query;

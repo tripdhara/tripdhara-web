@@ -34,7 +34,8 @@ describe('Cloudinary Helper', () => {
         jest.restoreAllMocks();
     });
 
-    test('should upload file successfully', async () => {
+    test('should upload file successfully without upload_preset when CLOUDINARY_UPLOAD_PRESET is not defined', async () => {
+        delete process.env.CLOUDINARY_UPLOAD_PRESET;
         const mockFile = {
             type: 'image/jpeg',
             size: 1024,
@@ -48,6 +49,51 @@ describe('Cloudinary Helper', () => {
 
         const result = await uploadToCloudinary(mockFile, 'test-folder');
         expect(result.url).toBe('http://res.cloudinary.com/test.jpg');
+        expect(cloudinary.uploader.upload).toHaveBeenCalledWith(
+            expect.stringContaining('data:image/webp;base64,'),
+            expect.not.objectContaining({ upload_preset: expect.anything() })
+        );
+    });
+
+    test('should include upload_preset when CLOUDINARY_UPLOAD_PRESET is defined', async () => {
+        process.env.CLOUDINARY_UPLOAD_PRESET = 'custom_preset';
+        const mockFile = {
+            type: 'image/jpeg',
+            size: 1024,
+            arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8))
+        };
+
+        cloudinary.uploader.upload.mockResolvedValue({
+            secure_url: 'http://res.cloudinary.com/test.jpg',
+            public_id: 'test_id'
+        });
+
+        const result = await uploadToCloudinary(mockFile, 'test-folder');
+        expect(result.url).toBe('http://res.cloudinary.com/test.jpg');
+        expect(cloudinary.uploader.upload).toHaveBeenCalledWith(
+            expect.stringContaining('data:image/webp;base64,'),
+            expect.objectContaining({ upload_preset: 'custom_preset' })
+        );
+    });
+
+    test('should not retry on 4xx client errors from Cloudinary', async () => {
+        const mockFile = {
+            type: 'image/jpeg',
+            size: 1024,
+            arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8))
+        };
+
+        const clientError = new Error('Upload preset not found');
+        clientError.http_code = 400;
+
+        cloudinary.uploader.upload.mockRejectedValue(clientError);
+
+        await expect(uploadToCloudinary(mockFile, 'test-folder')).rejects.toMatchObject({
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+        });
+
+        // 4xx errors should not be retried, so upload is called exactly once
+        expect(cloudinary.uploader.upload).toHaveBeenCalledTimes(1);
     });
 
     test('should reject invalid file types', async () => {

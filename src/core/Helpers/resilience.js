@@ -17,7 +17,16 @@ import { getLogger } from '@/core/Lib/logger.js';
 export const withRetry = async (operation, options = {}) => {
     const maxRetries = options.maxRetries ?? 3;
     const baseDelayMs = options.baseDelayMs ?? 500;
-    const shouldRetry = options.shouldRetry ?? (() => true);
+    const defaultShouldRetry = (error) => {
+        // Do not retry 4xx client errors (e.g., 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found)
+        // Rate limiting (429) can be retried
+        const status = error?.http_code || error?.status || error?.statusCode;
+        if (typeof status === 'number' && status >= 400 && status < 500 && status !== 429) {
+            return false;
+        }
+        return true;
+    };
+    const shouldRetry = options.shouldRetry ?? defaultShouldRetry;
 
     let attempt = 0;
 

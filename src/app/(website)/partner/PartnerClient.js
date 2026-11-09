@@ -117,6 +117,7 @@ ${formData.description}
                     fill
                     sizes="100vw"
                     priority
+                    loading="eager"
                     className="object-cover opacity-25"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent"></div>

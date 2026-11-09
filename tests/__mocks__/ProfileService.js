@@ -14,14 +14,14 @@ class ProfileService {
         });
         if (data.dob) updateData.dateOfBirth = new Date(data.dob);
 
-        const updated = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true }).lean();
+        const updated = await User.findByIdAndUpdate(userId, { $set: updateData }, { returnDocument: 'after', runValidators: true }).lean();
         if (updated) delete updated.password;
         return updated;
     }
 
     async updateAvatar(userId, file) {
         const uploaded = await uploadToCloudinary(file, `avatars/${userId}`);
-        const updated = await User.findByIdAndUpdate(userId, { $set: { profileImage: uploaded.url } }, { new: true }).lean();
+        const updated = await User.findByIdAndUpdate(userId, { $set: { profileImage: uploaded.url } }, { returnDocument: 'after' }).lean();
         return updated;
     }
 }

@@ -35,14 +35,19 @@ export const uploadToCloudinary = async (file, folder = 'general') => {
         const base64Image = `data:${mimeType};base64,${buffer.toString('base64')}`;
         
         const brandFolder = process.env.CLOUDINARY_FOLDER || 'tripdhara';
-        const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET || 'tripdhara_uploads';
+        const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
+
+        const uploadOptions = { 
+            folder: `${brandFolder}/${folder}`, 
+            resource_type: 'auto' 
+        };
+
+        if (uploadPreset) {
+            uploadOptions.upload_preset = uploadPreset;
+        }
 
         const uploadResponse = await withRetry(async () => {
-            return await cloudinary.uploader.upload(base64Image, { 
-                folder: `${brandFolder}/${folder}`, 
-                upload_preset: uploadPreset, 
-                resource_type: 'auto' 
-            });
+            return await cloudinary.uploader.upload(base64Image, uploadOptions);
         }, { maxRetries: 3, baseDelayMs: 1000 });
 
         return { url: uploadResponse.secure_url, publicId: uploadResponse.public_id };

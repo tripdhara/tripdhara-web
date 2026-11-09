@@ -218,7 +218,7 @@ export default function PackageTab({ vendor, packages, setPackages, id, activeTa
                 <div onClick={() => setPreviewImage(null)} className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-4 sm:p-12 cursor-zoom-out animate-in fade-in duration-300">
                     <div className="relative w-full h-full flex flex-col items-center justify-center max-w-5xl">
                         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_0_100px_rgba(34,211,238,0.2)] border border-white/10 bg-[#0a0a0f]">
-                            <Image src={previewImage} alt="Document Review" fill sizes="100vw" className="object-contain" priority />
+                            <Image src={previewImage} alt="Document Review" fill sizes="100vw" className="object-contain" priority loading="eager" />
                         </div>
                         <button className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full border border-white/10 backdrop-blur-md">
                             <X size={20} />

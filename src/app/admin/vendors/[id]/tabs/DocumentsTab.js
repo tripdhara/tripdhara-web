@@ -60,7 +60,7 @@ export default function DocumentsTab({ vendor, setVendor, id, activeTab, setActi
         <div onClick={() => setPreviewImage(null)} className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-12 cursor-zoom-out animate-in fade-in duration-300">
           <div className="relative w-full h-full flex flex-col items-center justify-center max-w-5xl mx-auto">
             <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_0_100px_rgba(34,211,238,0.2)] border border-white/10 bg-[#0a0a0f]">
-              <Image src={previewImage?.replace(/\.pdf$/i, '.jpg')} alt="Document Review" fill className="object-contain" priority sizes="100vw" />
+              <Image src={previewImage?.replace(/\.pdf$/i, '.jpg')} alt="Document Review" fill className="object-contain" priority loading="eager" sizes="100vw" />
             </div>
             <button className="absolute -top-4 -right-4 bg-black/50 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 p-3 rounded-full transition-all border border-white/10 hover:border-rose-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>

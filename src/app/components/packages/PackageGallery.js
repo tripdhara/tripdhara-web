@@ -104,7 +104,8 @@ export default function PackageGallery({ photos = [], title = 'Himalayan Experie
                     src={galleryPhotos[activeIndex]}
                     alt={`${title} - Photo ${activeIndex + 1}`}
                     fill
-                    loading="lazy"
+                    priority
+                    loading="eager"
                     sizes="(max-width: 1024px) 100vw, 65vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />

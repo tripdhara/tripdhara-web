@@ -115,6 +115,7 @@ export default function NotFound() {
                     sizes="100vw"
                     className="object-cover opacity-15 mix-blend-luminosity scale-105"
                     priority
+                    loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-[#021312]/95 via-[#021715]/90 to-[#021312]" />
                 <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#017974]/30 rounded-full blur-[130px]" />
@@ -297,6 +298,7 @@ export default function NotFound() {
                                             sizes="(max-width: 768px) 100vw, 340px"
                                             className="object-contain drop-shadow-[0_20px_35px_rgba(1,121,116,0.35)]"
                                             priority
+                                            loading="eager"
                                         />
                                     </div>
 

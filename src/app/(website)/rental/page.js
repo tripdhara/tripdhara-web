@@ -164,6 +164,8 @@ export default function RentalPage() {
                                 src="/img/images/tripdhara_car.png"
                                 alt="Self Drive Car Rental Uttarakhand"
                                 fill
+                                priority
+                                loading="eager"
                                 sizes="(max-width: 1024px) 100vw, 40vw"
                                 className="object-cover hover:scale-105 transition-transform duration-500"
                             />

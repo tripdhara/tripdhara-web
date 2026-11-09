@@ -59,6 +59,7 @@ export default async function BlogIndexPage() {
                     alt="Himalayan Field Reports"
                     fill
                     priority
+                    loading="eager"
                     sizes="100vw"
                     className="object-cover opacity-20"
                 />
@@ -81,7 +82,7 @@ export default async function BlogIndexPage() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 {blogs.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {blogs.map((blog) => (
+                        {blogs.map((blog, idx) => (
                             <Link
                                 key={blog._id || blog.slug}
                                 href={`/blog/${blog.slug}`}
@@ -92,6 +93,8 @@ export default async function BlogIndexPage() {
                                         src={blog.coverImage || '/img/background.png'}
                                         alt={blog.title}
                                         fill
+                                        priority={idx === 0}
+                                        loading={idx === 0 ? "eager" : "lazy"}
                                         sizes="(max-width: 768px) 100vw, 33vw"
                                         className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-85"
                                     />

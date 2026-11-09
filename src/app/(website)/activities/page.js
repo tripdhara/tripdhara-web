@@ -182,6 +182,8 @@ export default function ActivitiesPage() {
                                 src="/img/images/tripdhara_rafting.png"
                                 alt="White Water River Rafting Rishikesh"
                                 fill
+                                priority
+                                loading="eager"
                                 sizes="(max-width: 1024px) 100vw, 40vw"
                                 className="object-cover hover:scale-105 transition-transform duration-500"
                             />

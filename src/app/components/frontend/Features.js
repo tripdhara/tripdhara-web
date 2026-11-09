@@ -15,7 +15,7 @@ export default function Features() {
         <section className="relative py-32 mt-16 xl:mt-24 w-full">
             {/* Background Image */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-                <Image src="/img/features.png" alt="Local Himalayan Expert" fill className="object-cover object-center transform scale-105" />
+                <Image src="/img/features.png" alt="Local Himalayan Expert" fill sizes="100vw" className="object-cover object-center transform scale-105" />
                 <div className="absolute inset-0 bg-gray-900/80"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-gray-50"></div>
             </div>

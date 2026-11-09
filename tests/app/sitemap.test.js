@@ -34,7 +34,7 @@ describe('Next.js App: sitemap.js', () => {
         jest.clearAllMocks();
     });
 
-    it('should generate static routes and dynamic routes for packages', async () => {
+    it('should generate static routes and dynamic routes for packages, categories, and blogs', async () => {
         mockPackageFind.mockReturnValue({
             lean: jest.fn().mockResolvedValue([
                 {
@@ -69,10 +69,27 @@ describe('Next.js App: sitemap.js', () => {
 
         const urls = entries.map((e) => e.url);
 
-        // Verify static routes
+        // Verify primary pillar static routes
         expect(urls).toContain('https://tripdhara.in');
         expect(urls).toContain('https://tripdhara.in/packages');
         expect(urls).toContain('https://tripdhara.in/about');
+        expect(urls).toContain('https://tripdhara.in/accommodation');
+        expect(urls).toContain('https://tripdhara.in/activities');
+        expect(urls).toContain('https://tripdhara.in/rental');
+        expect(urls).toContain('https://tripdhara.in/yatra');
+        expect(urls).toContain('https://tripdhara.in/blog');
+
+        // Verify compliance & policy routes
+        expect(urls).toContain('https://tripdhara.in/grievance');
+        expect(urls).toContain('https://tripdhara.in/cancellation');
+        expect(urls).toContain('https://tripdhara.in/privacy');
+        expect(urls).toContain('https://tripdhara.in/terms');
+
+        // Verify dynamic category routes
+        expect(urls).toContain('https://tripdhara.in/packages?category=homestay');
+
+        // Verify dynamic blog routes
+        expect(urls).toContain('https://tripdhara.in/blog/best-places-in-manali');
 
         // Verify dynamic package routes
         expect(urls).toContain('https://tripdhara.in/packages/hs_1');
@@ -86,6 +103,6 @@ describe('Next.js App: sitemap.js', () => {
 
         const entries = await sitemap();
         expect(Array.isArray(entries)).toBe(true);
-        expect(entries.length).toBeGreaterThanOrEqual(10); // Static routes
+        expect(entries.length).toBeGreaterThanOrEqual(22); // All static routes
     });
 });

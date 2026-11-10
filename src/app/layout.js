@@ -166,20 +166,16 @@ export default function RootLayout({ children }) {
                 <ToastProvider>
                     {children}
                 </ToastProvider>
-                {/* Google tag (gtag.js) */}
+                {/* Google Tag Manager (gtm.js) */}
                 <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-1L0FGXLXS3"
+                    src="https://www.googletagmanager.com/gtm.js?id=GTM-WGVP8DC2"
                     strategy="afterInteractive"
                 />
-                <Script id="google-analytics" strategy="afterInteractive">
+                <Script id="google-tag-manager" strategy="afterInteractive">
                     {`
                       window.dataLayer = window.dataLayer || [];
                       function gtag(){dataLayer.push(arguments);}
                       gtag('js', new Date());
-
-                      gtag('config', 'G-1L0FGXLXS3', {
-                          page_path: window.location.pathname,
-                      });
                     `}
                 </Script>
             </body>

@@ -81,6 +81,7 @@ export { default as locationHelper } from './location.js';
 // ============================================================================
 export * from './availability.js';
 export * from './cloudinary.js';
+export * from './r2.js';
 export * from './dateUtils.js';
 export * from './env.js';
 export * from './indexNow.js';

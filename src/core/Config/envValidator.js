@@ -16,6 +16,12 @@ const envSchema = z.object({
     UPSTASH_REDIS_REST_URL: z.union([z.string().url("UPSTASH_REDIS_REST_URL is required for rate-limiting and caching"), z.literal('')]).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.union([z.string().min(1, "UPSTASH_REDIS_REST_TOKEN is required"), z.literal('')]).optional(),
     INDEXNOW_KEY: z.string().optional(),
+    R2_BUCKET: z.string().optional(),
+    R2_ACCOUNT_ID: z.string().optional(),
+    R2_ENDPOINT: z.string().optional(),
+    R2_PUBLIC_URL: z.string().optional(),
+    R2_ACCESS_KEY_ID: z.string().optional(),
+    R2_SECRET_ACCESS_KEY: z.string().optional(),
 });
 
 export const validateEnv = () => {

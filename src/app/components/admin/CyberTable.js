@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useId } from 'react';
 import { Search, ChevronDown, ChevronUp, Download, Columns, CheckSquare, Square, ChevronRight } from 'lucide-react';
 
 export default function CyberTable({
@@ -35,8 +35,12 @@ export default function CyberTable({
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [selectedRows, setSelectedRows] = useState(new Set());
     const [hiddenColIndices, setHiddenColIndices] = useState(new Set());
-    const [showColPicker, setShowColPicker] = useState(false);
     const [expandedRows, setExpandedRows] = useState(new Set());
+
+    // Stable IDs for native Popover and Anchor Positioning
+    const rawPickerId = useId();
+    const pickerId = `col-picker-${rawPickerId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+    const anchorName = `--anchor-${pickerId}`;
 
     // Reset internal page when search query changes
     const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
@@ -208,28 +212,42 @@ export default function CyberTable({
                     )}
                     {columnVisibility && (
                         <div className="relative">
-                            <button onClick={() => setShowColPicker(!showColPicker)} className="flex items-center gap-2 px-3 py-2 bg-[#0a0a0c] border border-white/10 hover:border-indigo-500/50 rounded-lg text-slate-400 hover:text-indigo-300 transition-colors shadow-[0_0_15px_rgba(0,0,0,0.5)] text-sm font-mono">
+                            <button
+                                type="button"
+                                popoverTarget={pickerId}
+                                style={{ anchorName }}
+                                className="flex items-center gap-2 px-3 py-2 bg-[#0a0a0c] border border-white/10 hover:border-indigo-500/50 rounded-lg text-slate-400 hover:text-indigo-300 transition-colors shadow-[0_0_15px_rgba(0,0,0,0.5)] text-sm font-mono cursor-pointer"
+                                aria-label="Toggle visible table columns"
+                            >
                                 <Columns className="w-4 h-4" />
                                 <span className="hidden sm:inline">Columns</span>
                             </button>
-                            {showColPicker && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#0a0a0c] border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 overflow-hidden backdrop-blur-xl">
-                                    <div className="p-2 border-b border-white/5 bg-white/[0.02]">
-                                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Toggle Fields</span>
-                                    </div>
-                                    <div className="p-2 flex flex-col gap-1 max-h-60 overflow-y-auto custom-scrollbar">
-                                        {columns.map((col, idx) => {
-                                            if (col.exportOnly) return null;
-                                            return (
-                                                <label key={idx} className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded cursor-pointer group">
-                                                    <input type="checkbox" className="accent-indigo-500 opacity-60 group-hover:opacity-100" checked={!hiddenColIndices.has(idx)} onChange={() => toggleColumnVisibility(idx)} />
-                                                    <span className="text-xs text-slate-300 font-mono tracking-wide">{col.header}</span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
+                            <div
+                                id={pickerId}
+                                popover="auto"
+                                style={{
+                                    positionAnchor: anchorName,
+                                    positionArea: 'block-end span-inline-start',
+                                    positionTryFallbacks: 'flip-block',
+                                    inset: 'auto'
+                                }}
+                                className="w-48 bg-[#0a0a0c] border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-0 m-0 text-slate-200 mt-2"
+                            >
+                                <div className="p-2 border-b border-white/5 bg-white/[0.02]">
+                                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Toggle Fields</span>
                                 </div>
-                            )}
+                                <div className="p-2 flex flex-col gap-1 max-h-60 overflow-y-auto custom-scrollbar">
+                                    {columns.map((col, idx) => {
+                                        if (col.exportOnly) return null;
+                                        return (
+                                            <label key={idx} className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded cursor-pointer group">
+                                                <input type="checkbox" className="accent-indigo-500 opacity-60 group-hover:opacity-100" checked={!hiddenColIndices.has(idx)} onChange={() => toggleColumnVisibility(idx)} />
+                                                <span className="text-xs text-slate-300 font-mono tracking-wide">{col.header}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     )}
 

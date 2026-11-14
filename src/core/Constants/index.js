@@ -198,6 +198,26 @@ export const NOTIFICATION_TYPES = {
     MESSAGE_RECEIVED: 'MESSAGE_RECEIVED'
 };
 
+export const NOTIFICATION_CATEGORIES = {
+    BOOKING: 'booking',
+    PAYMENT: 'payment',
+    VENDOR: 'vendor',
+    PACKAGE: 'package',
+    ACCOUNT: 'account',
+    SECURITY: 'security',
+    SYSTEM: 'system',
+    CHAT: 'chat',
+    SOS: 'sos',
+    GENERAL: 'general'
+};
+
+export const NOTIFICATION_PRIORITIES = {
+    LOW: 'low',
+    MEDIUM: 'medium',
+    HIGH: 'high',
+    URGENT: 'urgent'
+};
+
 
 
 // ============================================
@@ -259,6 +279,8 @@ const CONSTANTS = {
     DISCOUNT_TYPES,
     CURRENCIES,
     NOTIFICATION_TYPES,
+    NOTIFICATION_CATEGORIES,
+    NOTIFICATION_PRIORITIES,
     NOTIFICATION_MESSAGES,
     LANGUAGES,
     PACKAGE

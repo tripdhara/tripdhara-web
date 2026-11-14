@@ -1,20 +1,19 @@
 import mongoose from 'mongoose';
-import { DEFAULTS, USER_ROLES } from '../Constants/index.js';
+import { DEFAULTS, USER_ROLES, NOTIFICATION_CATEGORIES, NOTIFICATION_PRIORITIES } from '../Constants/index.js';
 
 const NotificationSchema = new mongoose.Schema({
     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: DEFAULTS.NULL },
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: DEFAULTS.TRUE },
+    referenceId: { type: mongoose.Schema.Types.ObjectId, refPath: 'referenceModel', default: DEFAULTS.NULL },
+    referenceModel: { type: String, trim: DEFAULTS.TRUE, default: DEFAULTS.NULL },
+    referenceType: { type: String, trim: DEFAULTS.TRUE, default: DEFAULTS.NULL },
+    recipientRole: { type: String, enum: Object.values(USER_ROLES), default: DEFAULTS.USER_ROLE },
+
     title: { type: String, required: DEFAULTS.TRUE, trim: DEFAULTS.TRUE },
     message: { type: String, required: DEFAULTS.TRUE, trim: DEFAULTS.TRUE },
     type: { type: String, trim: DEFAULTS.TRUE, default: 'GENERAL', index: DEFAULTS.TRUE },
-    recipientRole: { type: String, enum: Object.values(USER_ROLES), default: DEFAULTS.USER_ROLE },
-    category: {
-        type: String,
-        enum: ['booking', 'payment', 'vendor', 'package', 'account', 'security', 'system', 'chat', 'sos', 'general'],
-        default: 'general',
-        index: DEFAULTS.TRUE
-    },
-    priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
+    category: { type: String, enum: Object.values(NOTIFICATION_CATEGORIES), default: NOTIFICATION_CATEGORIES.GENERAL, index: DEFAULTS.TRUE },
+    priority: { type: String, enum: Object.values(NOTIFICATION_PRIORITIES), default: NOTIFICATION_PRIORITIES.MEDIUM },
     groupKey: { type: String, trim: DEFAULTS.TRUE, default: DEFAULTS.NULL },
     data: { type: mongoose.Schema.Types.Mixed, default: {} },
     actionUrl: { type: String, default: DEFAULTS.NULL },
@@ -27,7 +26,8 @@ const NotificationSchema = new mongoose.Schema({
         inApp: { type: Boolean, default: DEFAULTS.TRUE },
         push: { sent: { type: Boolean, default: DEFAULTS.FALSE }, sentAt: { type: Date, default: DEFAULTS.NULL }, error: { type: String, default: DEFAULTS.NULL } },
         email: { sent: { type: Boolean, default: DEFAULTS.FALSE }, sentAt: { type: Date, default: DEFAULTS.NULL }, error: { type: String, default: DEFAULTS.NULL } },
-        sms: { sent: { type: Boolean, default: DEFAULTS.FALSE }, sentAt: { type: Date, default: DEFAULTS.NULL }, error: { type: String, default: DEFAULTS.NULL } }
+        sms: { sent: { type: Boolean, default: DEFAULTS.FALSE }, sentAt: { type: Date, default: DEFAULTS.NULL }, error: { type: String, default: DEFAULTS.NULL } },
+        whatsapp: { sent: { type: Boolean, default: DEFAULTS.FALSE }, sentAt: { type: Date, default: DEFAULTS.NULL }, error: { type: String, default: DEFAULTS.NULL } }
     },
     expiresAt: { type: Date, default: () => new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) }
 }, {
@@ -35,9 +35,11 @@ const NotificationSchema = new mongoose.Schema({
     toJSON: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE },
     toObject: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE }
 });
+
 NotificationSchema.index({ recipient: 1, isDeleted: 1, isRead: 1, createdAt: -1 });
 NotificationSchema.index({ recipient: 1, isDeleted: 1, createdAt: -1 });
-NotificationSchema.index({ groupKey: 1, recipient: 1 }, { sparse: true });
+NotificationSchema.index({ groupKey: 1, recipient: 1 }, { partialFilterExpression: { groupKey: { $type: 'string' } } });
+NotificationSchema.index({ referenceModel: 1, referenceId: 1 }, { partialFilterExpression: { referenceId: { $type: 'objectId' } } });
 NotificationSchema.index({ createdAt: -1 });
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 

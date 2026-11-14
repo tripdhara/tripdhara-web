@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import Notification from "@/core/Models/Notification.js";
-import { getNotificationsBy } from "@/core/Helpers/queryHelpers.js";
 import AppError from "../AppError.js";
-import { type } from "os";
 
 export async function getNotifications(options = {}) {
     try {
@@ -22,6 +20,8 @@ export async function getNotifications(options = {}) {
                             $project: {
                                 _id: 0,
                                 id: '$_id',
+                                referenceId: 1,
+                                referenceType: 1,
                                 title: 1,
                                 message: 1,
                                 imageUrl: 1,

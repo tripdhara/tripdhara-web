@@ -18,15 +18,20 @@ export async function register() {
                 };
             }
 
-            // 2. IncomingMessage headers prototype fix
+            // 2. IncomingMessage headers & rawHeaders prototype fix
             const origAdd = http.IncomingMessage.prototype._addHeaderLines;
             if (typeof origAdd === 'function') {
                 http.IncomingMessage.prototype._addHeaderLines = function (...args) {
                     origAdd.apply(this, args);
-                    // Ensure req.headers has Object.prototype in prototype chain so that
-                    // any internal or external call to .hasOwnProperty() never throws TypeError
+
+                    // Ensure req.headers has Object.prototype in prototype chain
                     if (this.headers && typeof this.headers.hasOwnProperty !== 'function') {
                         Object.setPrototypeOf(this.headers, Object.prototype);
+                    }
+
+                    // Ensure req.rawHeaders has Object.prototype in prototype chain as well
+                    if (this.rawHeaders && typeof this.rawHeaders.hasOwnProperty !== 'function') {
+                        Object.setPrototypeOf(this.rawHeaders, Object.prototype);
                     }
                 };
             }
@@ -35,4 +40,3 @@ export async function register() {
         }
     }
 }
-

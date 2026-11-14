@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Notification from "@/core/Models/Notification.js";
 import { getNotificationsBy } from "@/core/Helpers/queryHelpers.js";
 import AppError from "../AppError.js";
+import { type } from "os";
 
 export async function getNotifications(options = {}) {
     try {
@@ -25,7 +26,8 @@ export async function getNotifications(options = {}) {
                                 message: 1,
                                 imageUrl: 1,
                                 isRead: 1,
-                                createdAt: 1
+                                createdAt: 1,
+                                type: 1
                             }
                         }
                     ],

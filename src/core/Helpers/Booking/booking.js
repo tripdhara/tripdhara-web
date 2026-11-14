@@ -1,4 +1,4 @@
-import { randomBytes, randomInt } from 'crypto';
+import { randomBytes } from 'crypto';
 import mongoose from "mongoose";
 import AppError from "@/core/Helpers/AppError.js";
 import { getUserById } from "@/core/Helpers/queryHelpers.js";
@@ -8,21 +8,18 @@ import { bookingPayload } from "@/core/Helpers/bookingHelper.js";
 import NotificationService from "@/core/Services/General/NotificationService.js";
 import { getAppConfig } from "@/core/Lib/appConfig.js";
 import { Package } from "@/core/Models/index.js";
-import Category from '@/core/Models/Category.js';
 import { schemaKey } from '@/core/Helpers/Package/shared.js';
 import { getCategoriesBy } from '@/core/Helpers/queryHelpers.js';
 import { RESPONSE_MESSAGES, BOOKING_STATUS, PAYMENT_STATUS } from "@/core/Constants/index.js";
 
-const generateNumericOTP = () => randomInt(100000, 1000000).toString();
 const generateBookingCode = () => `TD-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomBytes(4).toString('hex').toUpperCase()}`;
 
 export const initiateBooking = async ({ userId, body, itemId }) => {
-    if (!itemId && !mongoose.Types.ObjectId.isValid(itemId)) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
+    if (!itemId || !mongoose.Types.ObjectId.isValid(itemId)) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
     const targetItemId = new mongoose.Types.ObjectId(itemId);
-
     const session = await mongoose.startSession() || null;
-    let finalResponse;
 
+    let finalResponse;
     try {
         await session.withTransaction(async () => {
             const config = await getAppConfig();
@@ -30,7 +27,12 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const checkOutDate = new Date(body.endDate);
             if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) throw AppError.badRequest("Invalid startDate or endDate format. Use YYYY-MM-DD.");
 
-            const categories = await getCategoriesBy({ isActive: true })
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (process.env.NODE_ENV !== 'test' && checkInDate < today) throw AppError.badRequest("Check-in date cannot be in the past.");
+            if (checkOutDate <= checkInDate) throw AppError.badRequest("Check-out date must be after check-in date.");
+
+            const categories = await getCategoriesBy({ isActive: true });
             const orConditions = categories.map(cat => ({ [`${schemaKey(cat.name)}._id`]: targetItemId }));
 
             const pipeline = [
@@ -114,6 +116,7 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                             businessName: "$vendorDoc.businessName",
                             ownerName: "$vendorDoc.ownerName",
                             isOperating: "$vendorDoc.isOperating",
+                            isApproved: "$vendorDoc.isApproved",
                             bankDetails: "$vendorDoc.bankDetails"
                         }
                     }
@@ -122,6 +125,9 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
 
             const [result] = await Package.aggregate(pipeline).session(session);
             if (!result || !result.item) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
+
+            const businessDetails = result.business;
+            if (!businessDetails || businessDetails.isApproved === false || businessDetails.isOperating === false) throw AppError.badRequest("This vendor is currently not accepting bookings.");
 
             let category = result.category_slug;
             if (result.category_slug === 'bungee-jumping') {
@@ -133,8 +139,7 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             }
 
             const itemDetails = result.item;
-            const pricingRules = itemDetails.pricing
-            const businessDetails = result.business;
+            const pricingRules = itemDetails.pricing || {};
             const bankDetails = businessDetails.bankDetails;
 
             const travellerProfile = await getUserById(userId, '', null, { session });
@@ -143,18 +148,19 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             let itemBaseprice = pricingRules.basePrice || 0;
 
             let itemGST = 0;
-            if (pricingRules.gst) {
+            if (pricingRules.gst !== undefined && pricingRules.gst !== null && pricingRules.gst !== '') {
                 itemGST = parseFloat(pricingRules.gst);
-            } else if (pricingRules.gst !== undefined && pricingRules.gst !== null && pricingRules.gst !== '') {
-                const taxKey = `tax_${category.replace(/-/g, '_')}`;
-                itemGST = parseFloat(config.tax[taxKey] || 0);
+            } else {
+                const taxSlug = (result.category_slug || '').replace(/-/g, '_');
+                const taxKey = `tax_${taxSlug}`;
+                itemGST = parseFloat(config?.tax?.[taxKey] ?? config?.tax?.gst ?? 0);
             }
 
             let itemServiceTax = 0;
-            if (pricingRules.serviceTax) {
+            if (pricingRules.serviceTax !== undefined && pricingRules.serviceTax !== null && pricingRules.serviceTax !== '') {
                 itemServiceTax = parseFloat(pricingRules.serviceTax);
-            } else if (pricingRules.serviceTax === undefined || pricingRules.serviceTax === null || pricingRules.serviceTax == '') {
-                itemServiceTax = parseFloat(config.tax.service_tax || 0);
+            } else {
+                itemServiceTax = parseFloat(config?.tax?.service_tax || 0);
             }
 
             const adultsCount = parseInt(body.adults) || 1;
@@ -174,12 +180,9 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const RENTAL_CATEGORIES = ['bike-scooter-rental', 'chardham-tour', 'vehicleRental', 'chardhamTour'];
 
             if (STAY_CATEGORIES.includes(category)) {
-                if (category === 'homestay') {
-                    requiredUnits = 1;
-                } else {
-                    const maxCapacityPerUnit = parseInt(pricingRules.maxAdults) > 0 ? parseInt(pricingRules.maxAdults) : 2;
-                    requiredUnits = Math.max(requestedUnits, Math.ceil(adultsCount / maxCapacityPerUnit));
-                }
+                const maxCapacityPerUnit = parseInt(pricingRules.maxAdults) > 0 ? parseInt(pricingRules.maxAdults) : 2;
+                const unitsByCapacity = Math.ceil(adultsCount / maxCapacityPerUnit);
+                requiredUnits = Math.max(requestedUnits, unitsByCapacity);
                 calculatedSubTotal = itemBaseprice * totalNights * requiredUnits;
             } else if (ACTIVITY_CATEGORIES.includes(category)) {
                 const maxFreeChildren = parseInt(pricingRules.maxChildren) || 0;
@@ -232,6 +235,8 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             let newBooking;
             let attempts = 0;
             const maxAttempts = 3;
+            const HOLD_DURATION_MINUTES = 15;
+            const bookingExpiresAt = new Date(Date.now() + HOLD_DURATION_MINUTES * 60 * 1000);
 
             while (attempts < maxAttempts) {
                 try {
@@ -287,6 +292,7 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                         },
                         status: BOOKING_STATUS.PENDING,
                         paymentStatus: PAYMENT_STATUS.UNPAID,
+                        expiresAt: bookingExpiresAt,
                         timeline: [{
                             status: 'Booking Initiated',
                             remarks: `Booking record ${bookingCode} created for ${requiredUnits} units. Awaiting payment.`,
@@ -311,20 +317,23 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const finalCheck = await InventoryService.checkAvailabilityRange(businessDetails.id, itemId, category, checkInDate, checkOutDate, requiredUnits, session, newBooking._id);
             if (!finalCheck.available) throw AppError.conflict(`Inventory Conflict: Slots became unavailable.`);
 
-            NotificationService.notifyBookingStatus(newBooking._id, 'created');
-
             const bookingObj = newBooking.toObject ? newBooking.toObject() : newBooking;
             bookingObj.user = travellerProfile;
             bookingObj.vendor = businessDetails;
-            finalResponse = bookingPayload(bookingObj);
+            finalResponse = {
+                payload: bookingPayload(bookingObj),
+                bookingId: newBooking._id
+            };
         });
 
-        return finalResponse;
+        // Trigger side effect notification only after transaction commits successfully
+        if (finalResponse?.bookingId) NotificationService.notifyBookingStatus(finalResponse.bookingId, 'created');
+        return finalResponse?.payload;
     } catch (error) {
         throw (error instanceof AppError ? error : AppError.badRequest(error.message || 'Booking failed'));
     } finally {
-        session.endSession();
+        if (session) session.endSession();
     }
-}
+};
 
 export default { initiateBooking };

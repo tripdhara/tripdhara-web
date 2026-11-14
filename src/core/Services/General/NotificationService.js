@@ -453,20 +453,11 @@ class NotificationService {
             }
             const results = await Promise.allSettled(tasks);
             results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendUpdateBusinessProfileEmail subtask failed');
+                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessOperationalStatusEmail subtask failed');
             });
             return true;
         } catch (error) {
-            getLogger().error({ err: error, email }, '[NotificationService] sendUpdateBusinessProfileEmail Error');
-            return false;
-        }
-        try {
-            const statusText = isOperating ? 'ONLINE / OPERATING' : 'OFFLINE / CLOSED';
-            const html = `<p>Dear <strong>${businessName}</strong>,</p><p>Your operational status on Tripdhara has been updated to <strong>${statusText}</strong>.</p>`;
-            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Operating Status Updated (${statusText}) - Tripdhara`, html });
-            return true;
-        } catch (error) {
-            getLogger().error({ err: error }, "[NotificationService] sendVendorOperatingStatusUpdatedEmail Error");
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessOperationalStatusEmail Error');
             return false;
         }
     }
@@ -485,12 +476,12 @@ class NotificationService {
                 BUSINESS_ADDRESS: businessProfile?.address || '',
                 BUSINESS_PHONE: businessProfile?.businessNumber || ''
             };
-            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_UPDATE, accountDetails);
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_DELETED, accountDetails);
             const tasks = [
                 this._sendEmailHelper({
                     to: email,
                     toName: accountDetails.BUSINESS_NAME,
-                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_UPDATE,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_DELETED,
                     html: html
                 })
             ];
@@ -499,19 +490,19 @@ class NotificationService {
                     fcmToken: accountDetails.FCM_TOKEN,
                     id: accountDetails.ID,
                     image: accountDetails.IMAGE_URL,
-                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_UPDATE,
-                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_UPDATE,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_UPDATE
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.ACCOUNT_DELETED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.ACCOUNT_DELETED,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.ACCOUNT_DELETED
                 };
                 tasks.push(this._sendPushNotificationPayload(payload));
             }
             const results = await Promise.allSettled(tasks);
             results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendUpdateBusinessProfileEmail subtask failed');
+                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessProfileDeletedEmail subtask failed');
             });
             return true;
         } catch (error) {
-            getLogger().error({ err: error, email }, '[NotificationService] sendUpdateBusinessProfileEmail Error');
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeletedEmail Error');
             return false;
         }
     }
@@ -554,11 +545,11 @@ class NotificationService {
             }
             const results = await Promise.allSettled(tasks);
             results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendUpdateBusinessProfileEmail subtask failed');
+                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessProfileDeactivatedEmail subtask failed');
             });
             return true;
         } catch (error) {
-            getLogger().error({ err: error, email }, '[NotificationService] sendUpdateBusinessProfileEmail Error');
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeactivatedEmail Error');
             return false;
         }
     }
@@ -795,6 +786,9 @@ class NotificationService {
                     message: travellerBody,
                     type: `BOOKING_${status.toUpperCase()}`,
                     category: 'booking',
+                    referenceId: booking._id,
+                    referenceModel: 'Booking',
+                    referenceType: `BOOKING_${status.toUpperCase()}`,
                     priority: status === 'cancelled' ? 'high' : 'medium',
                     actionUrl: `/traveller/bookings/${booking._id}`,
                     data: dataPayload,
@@ -832,6 +826,9 @@ class NotificationService {
                     message: vendorBody,
                     type: `BOOKING_${status.toUpperCase()}`,
                     category: 'booking',
+                    referenceId: booking._id,
+                    referenceModel: 'Booking',
+                    referenceType: `BOOKING_${status.toUpperCase()}`,
                     priority: status === 'cancelled' ? 'high' : 'medium',
                     actionUrl: `/vendor/bookings/${booking._id}`,
                     data: dataPayload,
@@ -1093,6 +1090,9 @@ class NotificationService {
             message: 'Your profile details have been updated successfully.',
             type: 'PROFILE_UPDATED',
             category: 'account',
+            referenceId: userId,
+            referenceModel: 'User',
+            referenceType: 'PROFILE_UPDATED',
             priority: 'low',
             actionUrl: user.role === 'admin' ? '/admin/profile' : (user.role === 'vendor' ? '/vendor/profile' : '/profile'),
             data: { updatedAt: new Date() },

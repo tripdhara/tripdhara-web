@@ -33,7 +33,6 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const categories = await getCategoriesBy({ isActive: true })
             const orConditions = categories.map(cat => ({ [`${schemaKey(cat.name)}._id`]: targetItemId }));
 
-            // Single MongoDB Aggregation Pipeline to fetch Package Item + Vendor + BankDetails
             const pipeline = [
                 { $match: { $or: orConditions } },
                 { $limit: 1 },
@@ -70,7 +69,6 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                         "items.isActive": { $ne: false }
                     }
                 },
-                // Stage 4: Lookup Vendor details + BankDetails for payout
                 {
                     $lookup: {
                         from: 'vendors',
@@ -92,7 +90,6 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                     }
                 },
                 { $unwind: "$vendorDoc" },
-                // Stage 5: Final Clean Projection
                 {
                     $project: {
                         _id: 0,

@@ -20,8 +20,10 @@ class OTPService {
         const testIdentifiersConfig = config.secrets?.test_identifiers;
         const allowedTestAccounts = new Set([
             'reviewer@tripdhara.in',
+            'tester@tripdhara.in',
             'apple@tripdhara.in',
             'google@tripdhara.in',
+            'facebook@tripdhara.in',
             'test@tripdhara.in',
             '+919999999999',
             '+918888888888',

@@ -8,18 +8,19 @@ import { bookingPayload } from "@/core/Helpers/bookingHelper.js";
 import NotificationService from "@/core/Services/General/NotificationService.js";
 import { getAppConfig } from "@/core/Lib/appConfig.js";
 import { Package } from "@/core/Models/index.js";
+import Category from '@/core/Models/Category.js';
+import { schemaKey } from '@/core/Helpers/Package/shared.js';
+import { getCategoriesBy } from '@/core/Helpers/queryHelpers.js';
 import { RESPONSE_MESSAGES, BOOKING_STATUS, PAYMENT_STATUS } from "@/core/Constants/index.js";
 
 const generateNumericOTP = () => randomInt(100000, 1000000).toString();
-const generateBookingCode = () => `PH-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomBytes(4).toString('hex').toUpperCase()}`;
+const generateBookingCode = () => `TD-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomBytes(4).toString('hex').toUpperCase()}`;
 
 export const initiateBooking = async ({ userId, body, itemId }) => {
-    if (!itemId || !mongoose.Types.ObjectId.isValid(itemId)) {
-        throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
-    }
+    if (!itemId && !mongoose.Types.ObjectId.isValid(itemId)) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
     const targetItemId = new mongoose.Types.ObjectId(itemId);
 
-    const session = await mongoose.startSession();
+    const session = await mongoose.startSession() || null;
     let finalResponse;
 
     try {
@@ -27,56 +28,46 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const config = await getAppConfig();
             const checkInDate = new Date(body.startDate);
             const checkOutDate = new Date(body.endDate);
-            if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
-                throw AppError.badRequest("Invalid startDate or endDate format. Use YYYY-MM-DD.");
-            }
+            if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) throw AppError.badRequest("Invalid startDate or endDate format. Use YYYY-MM-DD.");
 
-            // All schema keys in Package model
-            const schemaKeys = [
-                'homestay', 'hotel', 'camping', 'trekking', 'rafting',
-                'bungeeJumping', 'vehicleRental', 'chardhamTour', 'customTrip',
-                'skiing', 'paragliding'
-            ];
+            const categories = await getCategoriesBy({ isActive: true })
+            const orConditions = categories.map(cat => ({ [`${schemaKey(cat.name)}._id`]: targetItemId }));
 
             // Single MongoDB Aggregation Pipeline to fetch Package Item + Vendor + BankDetails
             const pipeline = [
-                // Stage 1: Indexed match across all categories
-                {
-                    $match: {
-                        $or: schemaKeys.map(key => ({ [`${key}._id`]: targetItemId }))
-                    }
-                },
-                // Stage 2: Extract target item and attach its category key
+                { $match: { $or: orConditions } },
+                { $limit: 1 },
                 {
                     $project: {
                         vendor: 1,
-                        matchedItem: {
-                            $concatArrays: schemaKeys.map(key => ({
-                                $map: {
-                                    input: {
-                                        $filter: {
-                                            input: { $ifNull: [`$${key}`, []] },
-                                            as: "sub",
-                                            cond: { $eq: ["$$sub._id", targetItemId] }
+                        items: {
+                            $concatArrays: categories.map(({ _id, name, slug }) => {
+                                const key = schemaKey(name);
+                                return {
+                                    $map: {
+                                        input: { $ifNull: [`$${key}`, []] },
+                                        as: "item",
+                                        in: {
+                                            $mergeObjects: [
+                                                "$$item",
+                                                {
+                                                    category_name: name,
+                                                    category_slug: slug,
+                                                    category_id: { $toString: _id }
+                                                }
+                                            ]
                                         }
-                                    },
-                                    as: "it",
-                                    in: {
-                                        $mergeObjects: [
-                                            "$$it",
-                                            { category: key }
-                                        ]
                                     }
-                                }
-                            }))
-                        }
+                                };
+                            })
+                        },
                     }
                 },
-                { $unwind: "$matchedItem" },
-                // Stage 3: Ensure item is active
+                { $unwind: "$items" },
                 {
                     $match: {
-                        "matchedItem.isActive": { $ne: false }
+                        "items._id": targetItemId,
+                        "items.isActive": { $ne: false }
                     }
                 },
                 // Stage 4: Lookup Vendor details + BankDetails for payout
@@ -105,14 +96,21 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                 {
                     $project: {
                         _id: 0,
-                        catalogId: { $toString: "$_id" },
-                        category: "$matchedItem.category",
+                        catalog_id: { $toString: "$_id" },
+                        category_id: "$items.category_id",
+                        category_slug: "$items.category_slug",
+                        category_name: "$items.category_name",
                         item: {
-                            _id: "$matchedItem._id",
-                            title: "$matchedItem.title",
-                            photos: { $ifNull: ["$matchedItem.photos", []] },
-                            pricing: "$matchedItem.pricing",
-                            isActive: "$matchedItem.isActive"
+                            id: { $toString: "$items._id" },
+                            title: "$items.title",
+                            photo: {
+                                $ifNull: [
+                                    { $arrayElemAt: ["$items.photos.url", 0] },
+                                    { $arrayElemAt: ["$items.photos", 0] }
+                                ]
+                            },
+                            pricing: "$items.pricing",
+                            isActive: "$items.isActive"
                         },
                         business: {
                             id: { $toString: "$vendorDoc._id" },
@@ -125,24 +123,26 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                 }
             ];
 
-            const [packageData] = await Package.aggregate(pipeline).session(session);
-            if (!packageData || !packageData.item) {
-                throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
+            const [result] = await Package.aggregate(pipeline).session(session);
+            if (!result || !result.item) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND);
+
+            let category = result.category_slug;
+            if (result.category_slug === 'bungee-jumping') {
+                category = 'bungeeJumping';
+            } else if (result.category_slug === 'chardham-tour') {
+                category = 'chardhamTour';
+            } else if (result.category_slug === 'bike-scooter-rental') {
+                category = 'vehicleRental';
             }
 
-            const { catalogId, category, business, item: packageItem } = packageData;
-            if (!business?.id || business.isOperating === false) {
-                throw AppError.notFound(RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            }
-            const businessId = business.id;
+            const itemDetails = result.item;
+            const pricingRules = itemDetails.pricing
+            const businessDetails = result.business;
+            const bankDetails = businessDetails.bankDetails;
 
-            // Traveller User lookup via queryHelper
             const travellerProfile = await getUserById(userId, '', null, { session });
             if (!travellerProfile) throw AppError.notFound(RESPONSE_MESSAGES.USER.NOT_FOUND);
 
-            const pricingRules = packageItem.pricing || {};
-
-            // Price logic
             let itemBaseprice = pricingRules.basePrice || 0;
 
             let itemGST = 0;
@@ -173,7 +173,7 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             let requiredUnits = requestedUnits;
 
             const STAY_CATEGORIES = ['homestay', 'hotel', 'camping'];
-            const ACTIVITY_CATEGORIES = ['trekking', 'rafting', 'bungeeJumping'];
+            const ACTIVITY_CATEGORIES = ['trekking', 'rafting', 'bungeeJumping', 'bungee-jumping'];
             const RENTAL_CATEGORIES = ['bike-scooter-rental', 'chardham-tour', 'vehicleRental', 'chardhamTour'];
 
             if (STAY_CATEGORIES.includes(category)) {
@@ -229,14 +229,8 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
             const grandTotal = Math.max(0, toCent(calculatedSubTotal + calculatedTax + appliedServiceFee - appliedDiscount - appliedCouponAmount));
 
             // Inventory check
-            const availabilityStatus = await InventoryService.checkAvailabilityRange(businessId, itemId, category, checkInDate, checkOutDate, requiredUnits);
+            const availabilityStatus = await InventoryService.checkAvailabilityRange(businessDetails.id, itemId, category, checkInDate, checkOutDate, requiredUnits);
             if (!availabilityStatus.available) throw AppError.badRequest(RESPONSE_MESSAGES.BOOKING.SLOTS_NOT_AVAILABLE);
-
-            let itemUrl = '';
-            if (Array.isArray(packageItem.photos) && packageItem.photos.length > 0) {
-                itemUrl = packageItem.photos[0].url || packageItem.photos[0] || '';
-            }
-            if (typeof itemUrl !== 'string') itemUrl = '';
 
             let newBooking;
             let attempts = 0;
@@ -248,13 +242,13 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                     const [createdBooking] = await Booking.create([{
                         bookingCode,
                         user: userId,
-                        vendor: business.id,
-                        package: catalogId,
+                        vendor: businessDetails.id,
+                        package: result.catalog_id,
                         item: {
-                            itemId: packageItem._id,
-                            itemType: category,
-                            title: packageItem.title,
-                            url: itemUrl
+                            itemId: itemDetails.id,
+                            itemType: result.category_slug,
+                            title: itemDetails.title,
+                            url: itemDetails.photo
                         },
                         traveller: {
                             name: travellerProfile.name,
@@ -284,15 +278,15 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                         payout: {
                             amount: 0,
                             bankDetails: {
-                                accountHolderName: business.bankDetails?.accountHolderName || null,
-                                accountNumber: business.bankDetails?.accountNumber || null,
-                                ifscCode: business.bankDetails?.ifscCode || null,
-                                bankName: business.bankDetails?.bankName || null,
-                                razorpayContactId: business.bankDetails?.razorpayContactId || null,
-                                razorpayFundAccountId: business.bankDetails?.razorpayFundAccountId || null
+                                accountHolderName: bankDetails?.accountHolderName || null,
+                                accountNumber: bankDetails?.accountNumber || null,
+                                ifscCode: bankDetails?.ifscCode || null,
+                                bankName: bankDetails?.bankName || null,
+                                razorpayContactId: bankDetails?.razorpayContactId || null,
+                                razorpayFundAccountId: bankDetails?.razorpayFundAccountId || null
                             },
-                            businessName: business.businessName,
-                            ownerName: business.ownerName
+                            businessName: businessDetails.businessName,
+                            ownerName: businessDetails.ownerName
                         },
                         status: BOOKING_STATUS.PENDING,
                         paymentStatus: PAYMENT_STATUS.UNPAID,
@@ -317,14 +311,14 @@ export const initiateBooking = async ({ userId, body, itemId }) => {
                 }
             }
 
-            const finalCheck = await InventoryService.checkAvailabilityRange(businessId, itemId, category, checkInDate, checkOutDate, requiredUnits, session, newBooking._id);
+            const finalCheck = await InventoryService.checkAvailabilityRange(businessDetails.id, itemId, category, checkInDate, checkOutDate, requiredUnits, session, newBooking._id);
             if (!finalCheck.available) throw AppError.conflict(`Inventory Conflict: Slots became unavailable.`);
 
             NotificationService.notifyBookingStatus(newBooking._id, 'created');
 
             const bookingObj = newBooking.toObject ? newBooking.toObject() : newBooking;
             bookingObj.user = travellerProfile;
-            bookingObj.vendor = business;
+            bookingObj.vendor = businessDetails;
             finalResponse = bookingPayload(bookingObj);
         });
 

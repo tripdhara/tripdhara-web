@@ -5,8 +5,8 @@ export const seedUsers = async () => {
     try {
         const users = [
             {
-                name: `${SEED_ACCOUNTS.SUPER_ADMIN.FIRST_NAME} ${SEED_ACCOUNTS.SUPER_ADMIN.LAST_NAME}`,
-                email: SEED_ACCOUNTS.SUPER_ADMIN.EMAIL,
+                name: `${SEED_ACCOUNTS.ADMIN.FIRST_NAME} ${SEED_ACCOUNTS.ADMIN.LAST_NAME}`,
+                email: SEED_ACCOUNTS.ADMIN.EMAIL,
                 password: 'password', // Hooks will hash this
                 role: USER_ROLES.ADMIN,
                 authProvider: AUTH_PROVIDERS.LOCAL,

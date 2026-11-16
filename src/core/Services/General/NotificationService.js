@@ -687,6 +687,217 @@ class NotificationService {
         }
     }
 
+    async sendBookingNotification(bookingId, status) {
+        try {
+            if (!bookingId) return false;
+            const [booking] = await Promise.all([
+                getBookingById(bookingId)
+            ]);
+
+            const travellerId = booking.user;
+            const businessId = booking.vendor;
+            const packageId = booking.package;
+
+            const [traveller, business] = await Promise.all([
+                getUserById(travellerId, 'fcmToken'),
+                getBusinessById(businessId, 'user')
+            ]);
+
+            const vendorId = business.user;
+            const [vendor] = await Promise.all([
+                getUserById(vendorId, 'fcmToken')
+            ]);
+
+            const payload = {
+                userId: String(booking.user),
+                businessId: String(booking.vendor),
+                packageId: String(booking.package),
+                bookingId: String(booking._id),
+                bookingCode: booking.bookingCode,
+                itemDetails: {
+                    itemId: String(booking.item.itemId),
+                    itemType: booking.item.itemType,
+                    title: booking.item.title,
+                    image: booking.item.url
+                },
+                status: booking.status,
+                paymentStatus: booking.paymentStatus
+            };
+
+            // Direct extraction from verified booking document
+            const customerName = booking.traveller.name;
+            const itemTitle = booking.item.title;
+            const bookingCode = booking.bookingCode;
+            const bookingDate = formatIST(booking.startDate, { includeTime: false });
+            const totalAmount = `₹${booking.pricing.total.toLocaleString('en-IN')}`;
+
+            const { adults, children, units } = booking.occupancy;
+            const guestCount = children > 0 ? `${adults} Adults, ${children} Children (${units} Units)` : `${adults} Adults (${units} Units)`;
+
+            let travellerTitle = '';
+            let travellerBody = '';
+            let travellerType = `BOOKING_${status.toUpperCase()}`;
+
+            let vendorTitle = '';
+            let vendorBody = '';
+            let vendorType = `BOOKING_${status.toUpperCase()}`;
+
+            switch (status) {
+                case 'created':
+                    travellerTitle = 'Booking Initiated – Action Required';
+                    travellerBody = `Your booking for "${itemTitle}" (${guestCount}) has been initiated. Please complete the payment of ${totalAmount}.`;
+                    travellerType = 'BOOKING_INITIATED';
+
+                    vendorTitle = `New Booking Request #${bookingCode}`;
+                    vendorBody = `${customerName} has initiated a booking for "${itemTitle}" on ${bookingDate} for ${guestCount} (${totalAmount}). Awaiting payment.`;
+                    vendorType = 'BOOKING_INITIATED';
+                    break;
+
+                case 'confirmed':
+                    travellerTitle = 'Booking Confirmed!';
+                    travellerBody = `Your booking for "${itemTitle}" (${guestCount}) is confirmed for ${bookingDate}. Get ready for a wonderful adventure!`;
+                    travellerType = 'BOOKING_CONFIRMED';
+
+                    vendorTitle = `🎉 New Confirmed Order #${bookingCode}`;
+                    vendorBody = `New booking confirmed! ${customerName} booked "${itemTitle}" for ${bookingDate} (${guestCount}) with a total value of ${totalAmount}. Please prepare arrangements.`;
+                    vendorType = 'NEW_BOOKING';
+                    break;
+
+                case 'ongoing':
+                    travellerTitle = 'Trip Underway – Have Fun!';
+                    travellerBody = `Your trip for "${itemTitle}" (${guestCount}) has officially started. Wishing you a safe and thrilling experience!`;
+                    travellerType = 'BOOKING_ONGOING';
+
+                    vendorTitle = `Activity In Progress #${bookingCode}`;
+                    vendorBody = `${customerName} (${guestCount}) has checked in for "${itemTitle}". Please ensure all safety measures and services are delivered smoothly.`;
+                    vendorType = 'BOOKING_ONGOING';
+                    break;
+
+                case 'completed':
+                    travellerTitle = 'Trip Completed – Rate Your Experience';
+                    travellerBody = `We hope you and your group (${guestCount}) had an amazing time at "${itemTitle}"! Please take a moment to share your review.`;
+                    travellerType = 'BOOKING_COMPLETED';
+
+                    vendorTitle = `Booking Completed #${bookingCode}`;
+                    vendorBody = `Booking #${bookingCode} for "${itemTitle}" (${guestCount}) with ${customerName} has been marked completed. Payout will be processed as per schedule.`;
+                    vendorType = 'BOOKING_COMPLETED';
+                    break;
+
+                case 'cancelled':
+                    travellerTitle = `Booking Cancelled #${bookingCode}`;
+                    travellerBody = `Your booking for "${itemTitle}" (${guestCount}) has been cancelled. Any applicable refund of ${totalAmount} will be credited per policy.`;
+                    travellerType = 'BOOKING_CANCELLED';
+
+                    vendorTitle = `⚠️ Booking Cancelled #${bookingCode}`;
+                    vendorBody = `Booking #${bookingCode} for "${itemTitle}" on ${bookingDate} (${guestCount}) was cancelled by ${customerName}. Dates/slots have been restored to your inventory.`;
+                    vendorType = 'BOOKING_CANCELLED';
+                    break;
+
+                case 'otp_sent':
+                    travellerTitle = 'Check-in Verification OTP';
+                    travellerBody = `Your check-in OTP for "${itemTitle}" (${guestCount}) is ready. Please share this code with the operator upon arrival.`;
+                    travellerType = 'BOOKING_OTP_SENT';
+
+                    vendorTitle = `🔑 Verify Check-in OTP #${bookingCode}`;
+                    vendorBody = `Customer ${customerName} (${guestCount}) has arrived for "${itemTitle}". Please collect and verify their check-in OTP on your portal to begin.`;
+                    vendorType = 'BOOKING_OTP_SENT';
+                    break;
+            }
+
+            // Dispatch in-app and push notifications to Traveller and Vendor in parallel
+            const pushDispatches = [];
+
+            if (travellerTitle && travellerBody && travellerId) {
+                // Save in-app notification to DB
+                this.createInAppNotification({
+                    recipient: travellerId,
+                    recipientRole: 'traveller',
+                    title: travellerTitle,
+                    message: travellerBody,
+                    type: `BOOKING_${status.toUpperCase()}`,
+                    category: 'booking',
+                    referenceId: booking._id,
+                    referenceModel: 'Booking',
+                    referenceType: `BOOKING_${status.toUpperCase()}`,
+                    priority: status === 'cancelled' ? 'high' : 'medium',
+                    actionUrl: `/traveller/bookings/${booking._id}`,
+                    data: dataPayload,
+                    groupKey: `booking_${booking._id}`,
+                    deliveryStatus: {
+                        inApp: true,
+                        push: {
+                            sent: Boolean(travellerUser && travellerUser.fcmToken),
+                            sentAt: (travellerUser && travellerUser.fcmToken) ? new Date() : null
+                        }
+                    }
+                });
+
+                getLogger().info({ travellerId, title: travellerTitle }, '[Push Notification INTENDED for Traveller]');
+                if (travellerUser && travellerUser.fcmToken) {
+                    getLogger().info({ fcmToken: travellerUser.fcmToken.substring(0, 15) }, '=> Enqueueing Push Notification to Traveller');
+                    pushDispatches.push(
+                        enqueuePushNotification(
+                            travellerUser.fcmToken,
+                            { title: travellerTitle, body: travellerBody },
+                            dataPayload
+                        )
+                    );
+                } else {
+                    getLogger().warn('=> Skipped sending Push Notification to Traveller: FCM Token not found in user profile');
+                }
+            }
+
+            if (vendorUserId && vendorTitle && vendorBody) {
+                // Save in-app notification to DB
+                this.createInAppNotification({
+                    recipient: vendorUserId,
+                    recipientRole: 'vendor',
+                    title: vendorTitle,
+                    message: vendorBody,
+                    type: `BOOKING_${status.toUpperCase()}`,
+                    category: 'booking',
+                    referenceId: booking._id,
+                    referenceModel: 'Booking',
+                    referenceType: `BOOKING_${status.toUpperCase()}`,
+                    priority: status === 'cancelled' ? 'high' : 'medium',
+                    actionUrl: `/vendor/bookings/${booking._id}`,
+                    data: dataPayload,
+                    groupKey: `booking_${booking._id}`,
+                    deliveryStatus: {
+                        inApp: true,
+                        push: {
+                            sent: Boolean(vendorUser && vendorUser.fcmToken),
+                            sentAt: (vendorUser && vendorUser.fcmToken) ? new Date() : null
+                        }
+                    }
+                });
+
+                getLogger().info({ vendorUserId, title: vendorTitle }, '[Push Notification INTENDED for Vendor]');
+                if (vendorUser && vendorUser.fcmToken) {
+                    getLogger().info({ fcmToken: vendorUser.fcmToken.substring(0, 15) }, '=> Enqueueing Push Notification to Vendor');
+                    pushDispatches.push(
+                        enqueuePushNotification(
+                            vendorUser.fcmToken,
+                            { title: vendorTitle, body: vendorBody },
+                            dataPayload
+                        )
+                    );
+                } else {
+                    getLogger().warn('=> Skipped sending Push Notification to Vendor: FCM Token not found in vendor profile');
+                }
+            }
+
+            if (pushDispatches.length > 0) {
+                await Promise.allSettled(pushDispatches);
+            }
+
+            return true;
+        } catch (error) {
+            getLogger().error({ err: error }, '[NotificationService] notifyBookingStatus Error');
+            return false;
+        }
+    }
+
     /**
      * Send welcome email for newsletter subscription
      */
@@ -713,6 +924,9 @@ class NotificationService {
             }
             if (!booking) return false;
 
+            console.log('booking', booking);
+
+
             const travellerId = booking.user;
 
             // Parallel lookup of traveller User and vendor doc
@@ -720,6 +934,8 @@ class NotificationService {
                 travellerId ? getUserById(travellerId, 'fcmToken') : Promise.resolve(null),
                 booking.vendor ? getBusinessById(booking.vendor, 'user') : Promise.resolve(null)
             ]);
+
+            console.log('vendorDoc', vendorDoc);
 
             const vendorUserId = vendorDoc ? vendorDoc.user : null;
             const vendorUser = vendorUserId

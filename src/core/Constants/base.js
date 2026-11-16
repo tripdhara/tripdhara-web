@@ -113,12 +113,6 @@ export const UPLOAD_PATHS = {
 };
 
 export const SEED_ACCOUNTS = {
-    SUPER_ADMIN: {
-        EMAIL: 'superadmin@tripdhara.in',
-        USERNAME: 'superadmin',
-        FIRST_NAME: 'Super',
-        LAST_NAME: 'Admin'
-    },
     ADMIN: {
         EMAIL: 'admin@tripdhara.in',
         USERNAME: 'admin',

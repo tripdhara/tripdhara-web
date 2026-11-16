@@ -22,6 +22,9 @@ export const getR2Client = () => {
             accessKeyId,
             secretAccessKey,
         },
+        forcePathStyle: true,
+        requestChecksumCalculation: 'WHEN_REQUIRED',
+        responseChecksumValidation: 'WHEN_REQUIRED',
     });
 };
 

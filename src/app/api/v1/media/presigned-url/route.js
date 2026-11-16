@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getPresignedUploadUrl, getMultiplePresignedUploadUrls } from '@/core/Helpers/r2.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import { getLogger } from '@/core/Lib/logger.js';
+import authMiddleware from '@/core/Http/Middleware/auth.js';
 
 const ALLOWED_MIME_TYPES = [
     'image/jpeg',
@@ -11,28 +12,67 @@ const ALLOWED_MIME_TYPES = [
     'application/pdf',
 ];
 
-const ALLOWED_FOLDERS = [
-    'profiles',
-    'travellers',
-    'vendors',
-    'vendor_documents',
-    'packages',
-    'homestays',
-    'cabs',
-    'blogs',
-    'reviews',
-    'general',
-];
-
 const MAX_BATCH_FILES = 25;
 
-const sanitizeFolder = (folder) => {
-    if (!folder || typeof folder !== 'string') return 'general';
-    return ALLOWED_FOLDERS.some((f) => folder.startsWith(f)) ? folder : 'general';
+/**
+ * Builds standard hierarchical R2 directory per User ID:
+ * - User Profile:                {userId}
+ * - Business Profile:            {userId}/business
+ * - Business Documents:          {userId}/business/document
+ * - Business Category Documents: {userId}/business/{category}
+ * - Packages Images:             {userId}/business/package
+ */
+const buildUserPath = (userId, options = {}) => {
+    const rawFolder = (options.folder || options.type || '').trim().toLowerCase();
+    const rawCategory = (options.category || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+
+    // 1. User Profile: {userId}
+    if (['profile', 'profiles', 'user', 'user_profile', 'avatar'].includes(rawFolder)) return userId;
+
+    // 2. Business Profile: {userId}/business
+    if (['business', 'business_profile', 'vendor', 'vendors'].includes(rawFolder)) return `${userId}/business`;
+
+    // 3. Business Document: {userId}/business/document
+    if (['business/document', 'business/documents', 'document', 'documents', 'business_document', 'vendor_documents'].includes(rawFolder)) return `${userId}/business/documents`;
+
+    // 4. Packages: {userId}/business/package
+    if (['business/package', 'business/packages', 'package', 'packages'].includes(rawFolder)) return `${userId}/business/package`;
+
+    // 5. Business Category: {userId}/business/{category}
+    if (rawCategory) return `${userId}/business/${rawCategory}`;
+
+    if (rawFolder.startsWith('business/')) {
+        const parts = rawFolder.split('/').filter(Boolean);
+        if (parts.length >= 2) {
+            const sub = parts.slice(1).join('/').replace(/[^a-z0-9_/-]/g, '');
+            return `${userId}/business/${sub}`;
+        }
+        return `${userId}/business`;
+    }
+
+    const knownCategories = ['homestays', 'homestay', 'cabs', 'cab', 'trekking', 'rafting', 'camping', 'paragliding', 'bike_rental'];
+    if (knownCategories.includes(rawFolder)) {
+        return `${userId}/business/${rawFolder}`;
+    }
+
+    // Fallback: clean custom subfolder scoped under userId
+    const sanitized = rawFolder.replace(/[^a-z0-9_/-]/g, '').replace(/^\/+|\/+$/g, '');
+    return sanitized ? `${userId}/${sanitized}` : `${userId}/general`;
 };
 
 export async function POST(request) {
     try {
+        // Authenticate request - Token is required
+        const auth = await authMiddleware(request);
+        if (!auth.authorized) {
+            return NextResponse.json(
+                { success: false, message: RESPONSE_MESSAGES.ERROR.UNAUTHORIZED },
+                { status: HTTP_STATUS.UNAUTHORIZED }
+            );
+        }
+
+        const userId = auth.user.id;
+
         let body;
         try {
             body = await request.json();
@@ -43,7 +83,7 @@ export async function POST(request) {
             );
         }
 
-        const { files, fileName, fileType, folder = 'general' } = body || {};
+        const { files, fileName, fileType, folder, type, category } = body || {};
 
         // 1. MULTIPLE FILES BATCH CASE
         if (Array.isArray(files)) {
@@ -90,7 +130,11 @@ export async function POST(request) {
             const sanitizedFiles = files.map((item) => ({
                 fileName: item.fileName,
                 fileType: item.fileType.toLowerCase(),
-                folder: sanitizeFolder(item.folder || folder),
+                folder: buildUserPath(userId, {
+                    folder: item.folder || folder,
+                    type: item.type || type,
+                    category: item.category || category,
+                }),
             }));
 
             const presignedData = await getMultiplePresignedUploadUrls(sanitizedFiles);
@@ -126,7 +170,7 @@ export async function POST(request) {
             );
         }
 
-        const targetFolder = sanitizeFolder(folder);
+        const targetFolder = buildUserPath(userId, { folder, type, category });
         const presignedData = await getPresignedUploadUrl({
             fileName,
             fileType: fileType.toLowerCase(),

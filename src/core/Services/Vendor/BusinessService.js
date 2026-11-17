@@ -67,6 +67,7 @@ class BusinessService {
             delete updateData.businessCategory;
         }
         if (updateData.address) mapToGeoJSON(updateData.address, 'location');
+        if (updateData.profile_image) updateData['profileImage'] = profileData.profile_image;
 
         const vendor = await Vendor.findOneAndUpdate(
             { user: userId },
@@ -79,7 +80,7 @@ class BusinessService {
             { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true, runValidators: true }
         );
         const userUpdate = { vendorProfile: vendor._id };
-        if (vendor.ownerName) userUpdate.name = vendor.ownerName;
+        // if (vendor.ownerName) userUpdate.name = vendor.ownerName;
         const user = await User.findByIdAndUpdate(userId, userUpdate, { returnDocument: 'after' });
 
         await this.invalidateVendorCaches(userId, vendor._id);

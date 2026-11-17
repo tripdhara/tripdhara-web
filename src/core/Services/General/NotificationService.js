@@ -132,7 +132,19 @@ class NotificationService {
             throw error;
         }
     }
+    /*
+    const payload = {
+        fcmToken: accountDetails.FCM_TOKEN,
+        id: accountDetails.ID, // Business Profile Id
 
+        title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_CREATED, // Business profile created
+        body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_CREATED, // Your business profile has been created successfully
+        image: accountDetails.IMAGE_URL, // Business Profile Image
+        
+        type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_CREATED // business_profile_create
+        role: 
+    };
+    */
     async _sendPushNotificationPayload(details) {
         if (details?.fcmToken) {
             await PushNotificationService.sendToDevice(
@@ -143,8 +155,9 @@ class NotificationService {
                     ...(details?.image && { image: details?.image }),
                 },
                 {
-                    type: details?.type,
-                    ...(details?.id && { id: details?.id }),
+                    referenceId: details?.id,
+                    referenceType: details?.type,
+                    role: details?.role
                 }
             );
         }
@@ -319,14 +332,17 @@ class NotificationService {
             const businessProfile = details?.businessProfile || {};
             const businessName = businessProfile?.businessName || 'Partner';
 
+            console.log(businessProfile);
             const accountDetails = {
                 // USER INFO
                 USER_NAME: details?.name || '',
+                USER_ROLE: details?.role,
                 FCM_TOKEN: details?.fcmToken,
-                ID: String(details?.id || ''),
+
+                ID: String(businessProfile?.id), // Business Profile Id
 
                 // IMAGE INFO
-                IMAGE_URL: String(businessProfile?.profileImage || details?.profileImage || null),
+                IMAGE_URL: String(businessProfile?.profileImage || null), // Business Profile Image
 
                 // BUSINESS INFO
                 BUSINESS_NAME: businessName,
@@ -348,11 +364,14 @@ class NotificationService {
             if (accountDetails.FCM_TOKEN) {
                 const payload = {
                     fcmToken: accountDetails.FCM_TOKEN,
-                    id: accountDetails.ID,
-                    image: accountDetails.IMAGE_URL,
-                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.WELCOME,
-                    body: NOTIFICATION.PUSH.BUSINESS.BODY.WELCOME,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.WELCOME
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_CREATED, // Business profile created
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_CREATED, // Your business profile has been created successfully
+                    image: accountDetails.IMAGE_URL, // Business Profile Image
+
+                    id: accountDetails.ID, // Business Profile Id
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_CREATED, // business_profile_create
+                    role: accountDetails.USER_ROLE, // User Role
                 };
                 tasks.push(this._sendPushNotificationPayload(payload));
             }

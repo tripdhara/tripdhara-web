@@ -39,11 +39,10 @@ class BusinessController extends Controller {
     // POST /vendor/business/profile/create
     async createProfile(req) {
         try {
+            const body = req.payload;
             const userId = req.user.id;
             const existingProfile = await getBusinessByUserId(userId);
-            if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
-
-            const body = await this._prepareProfileBody(req);
+            // if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
             const result = await BusinessService.syncBusinessProfile(userId, body);
             if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);

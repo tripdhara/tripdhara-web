@@ -85,10 +85,7 @@ export const BasePackageFields = {
         }
     },
 
-    photos: [{
-        url: { type: String, default: DEFAULTS.NULL },
-        type: { type: String, default: DEFAULTS.NULL }
-    }],
+    photos: [{ url: { type: String, default: DEFAULTS.NULL } }],
 };
 
 export const AccommodationPricing = {

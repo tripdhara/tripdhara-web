@@ -11,10 +11,10 @@ const VendorEvents = new EventEmitter();
 //                                                                    //
 // ================================================================== //
 const registerEmailListener = (eventKey, handlerFn) => {
-    VendorEvents.on(eventKey, async ({ identifier, details, businessName }) => {
+    VendorEvents.on(eventKey, async ({ identifier, details, businessName = {} }) => {
         try {
             if (identifier && identifier.includes('@')) {
-                await handlerFn(identifier, details || businessName);
+                await handlerFn(identifier, details, businessName);
             }
         } catch (error) {
             getLogger().error({ err: error }, `[VendorEvents] Error handling ${eventKey}`);

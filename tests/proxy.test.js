@@ -72,4 +72,38 @@ describe('Industry Standard: Edge Proxy (src/proxy.js)', () => {
         expect(res.status).toBe(204);
         expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://admin.tripdhara.in');
     });
+
+    it('should redirect unauthenticated requests on protected routes to /login', () => {
+        const req = new Request('https://tripdhara.in/admin', {
+            method: 'GET',
+            headers: new Headers(),
+        });
+
+        const res = proxy(req);
+        expect(res.status).toBe(307);
+        expect(res.headers.get('location')).toBe('https://tripdhara.in/login?redirect=%2Fadmin');
+    });
+
+    it('should allow protected route request when token cookie is present', () => {
+        const req = new Request('https://tripdhara.in/admin', {
+            method: 'GET',
+            headers: new Headers({
+                cookie: 'token=mock_jwt_token',
+            }),
+        });
+
+        const res = proxy(req);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Frame-Options')).toBe('DENY');
+    });
+
+    it('should not redirect API routes to login even without token (handled by API auth middleware)', () => {
+        const req = new Request('https://tripdhara.in/api/admin/packages', {
+            method: 'GET',
+            headers: new Headers(),
+        });
+
+        const res = proxy(req);
+        expect(res.status).toBe(200);
+    });
 });

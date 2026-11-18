@@ -1,5 +1,7 @@
 import adminApi from '@/core/Api/index.js';
 import DashboardClientWrapper from './DashboardClientWrapper.js';
+import { getServerToken } from '@/app/utils/authUtils.js';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
     title: 'Admin Dashboard | Tripdhara',
@@ -7,6 +9,10 @@ export const metadata = {
 };
 
 export default async function AdminDashboard() {
+    const token = await getServerToken();
+    if (!token) {
+        redirect('/login');
+    }
 
     let rawStats = null;
     let rawPackages = null;

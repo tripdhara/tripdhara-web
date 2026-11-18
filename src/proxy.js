@@ -21,6 +21,36 @@ export function proxy(request) {
         });
     }
 
+    // Protected UI routes check - redirect unauthenticated users to /login immediately
+    const PROTECTED_ROUTES = ['/admin', '/vendor', '/traveller'];
+    const isProtectedRoute = PROTECTED_ROUTES.some(route =>
+        url.pathname === route || url.pathname.startsWith(`${route}/`)
+    );
+
+    if (isProtectedRoute) {
+        let token = null;
+
+        // 1. Check cookies via NextRequest cookies API
+        if (request.cookies && typeof request.cookies.get === 'function') {
+            token = request.cookies.get('token')?.value;
+        }
+
+        // 2. Fallback to standard cookie header
+        if (!token && request.headers && typeof request.headers.get === 'function') {
+            const cookieHeader = request.headers.get('cookie') || '';
+            const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+            if (match) {
+                token = decodeURIComponent(match[1]);
+            }
+        }
+
+        if (!token) {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('redirect', url.pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+    }
+
     const requestHeaders = new Headers(request.headers);
     const existingRequestId = request.headers.get('x-request-id');
     const requestId = existingRequestId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);

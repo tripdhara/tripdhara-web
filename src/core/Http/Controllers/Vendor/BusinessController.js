@@ -54,7 +54,7 @@ class BusinessController extends Controller {
     // PATCH /vendor/business/profile/update/:id
     async updateProfile(req) {
         try {
-            const body = await this._prepareProfileBody(req);
+            const body = req.payload;
             const result = await BusinessService.syncBusinessProfile(req.user.id, body);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });

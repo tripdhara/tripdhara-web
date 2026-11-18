@@ -126,7 +126,7 @@ export const NOTIFICATION = {
             },
             BODY: {
                 WELCOME: 'Welcome to Tripdhara',
-                PROFILE_CREATED: 'Your business profile has been updated successfully',
+                PROFILE_CREATED: 'Your business profile has been created successfully',
                 PROFILE_UPDATE: 'Your business profile has been updated successfully',
                 PROFILE_DEACTIVATED: 'Your business profile has been deactivated',
                 BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
@@ -143,13 +143,16 @@ export const NOTIFICATION = {
             },
             TYPE: {
                 WELCOME: 'welcome',
+
                 PROFILE_CREATED: 'business_profile_create',
-                PROFILE_UPDATE: 'profile_update',
+                DOCUMENT_UPLOADED: 'business_document_uploaded',
+
+                PROFILE_UPDATE: 'business_profile_update',
+
                 PROFILE_DEACTIVATED: 'profile_deactivated',
                 BANK_DETAILS_UPDATED: "bank_details_update",
                 OPERATING_STATUS_UPDATED: "operating_status_update",
 
-                DOCUMENT_UPLOADED: 'document_uploaded',
                 ACCOUNT_DELETED: 'account_deleted',
                 CATEGORY_ASSIGNED: 'category_assigned',
                 CATEGORY_REMOVED: 'category_removed',

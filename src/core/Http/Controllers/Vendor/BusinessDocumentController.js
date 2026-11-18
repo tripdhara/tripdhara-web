@@ -24,6 +24,8 @@ class BusinessDocumentController extends Controller {
     // POST /vendor/business/documents/upload
     async uploadDocuments(req) {
         try {
+            const body = req.payload;
+            console.log('body', body);
             const vendor = await BusinessService.getBusinessByUserId(req.user.id);
             if (!vendor) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             await DocumentService.uploadVerificationFiles(req.user.id, req.payload);

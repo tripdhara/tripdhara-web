@@ -161,6 +161,7 @@ class NotificationService {
                 }
             );
         }
+        console.log("details", details);
         return true;
     }
 
@@ -332,7 +333,7 @@ class NotificationService {
             const businessProfile = details?.businessProfile || {};
             const businessName = businessProfile?.businessName || 'Partner';
 
-            console.log(businessProfile);
+            // console.log(businessProfile);
             const accountDetails = {
                 // USER INFO
                 USER_NAME: details?.name || '',
@@ -340,8 +341,6 @@ class NotificationService {
                 FCM_TOKEN: details?.fcmToken,
 
                 ID: String(businessProfile?.id), // Business Profile Id
-
-                // IMAGE INFO
                 IMAGE_URL: String(businessProfile?.profileImage || null), // Business Profile Image
 
                 // BUSINESS INFO
@@ -395,9 +394,12 @@ class NotificationService {
             const businessName = businessProfile?.businessName || 'Partner';
             const accountDetails = {
                 USER_NAME: details?.name,
+                USER_ROLE: details?.role,
                 FCM_TOKEN: details?.fcmToken,
-                IMAGE_URL: businessProfile?.profileImage || details?.profileImage || null,
-                ID: businessProfile?.id || details?.id || '',
+
+                ID: businessProfile?.id,
+                IMAGE_URL: businessProfile?.profileImage || null,
+
                 BUSINESS_NAME: businessName,
                 BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
                 BUSINESS_ADDRESS: businessProfile?.address || '',
@@ -415,11 +417,14 @@ class NotificationService {
             if (accountDetails.FCM_TOKEN) {
                 const payload = {
                     fcmToken: accountDetails.FCM_TOKEN,
-                    id: accountDetails.ID,
-                    image: accountDetails.IMAGE_URL,
-                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_UPDATE,
-                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_UPDATE,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_UPDATE
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_UPDATE, // Business profile created
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_UPDATE, // Your business profile has been created successfully
+                    image: accountDetails.IMAGE_URL, // Business Profile Image
+
+                    id: accountDetails.ID, // Business Profile Id
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_UPDATE, // business_profile_create
+                    role: accountDetails.USER_ROLE, // User Role
                 };
                 tasks.push(this._sendPushNotificationPayload(payload));
             }

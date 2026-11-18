@@ -22,17 +22,14 @@ export class PushNotificationService {
      */
     static async sendToDevice(token, notification, data = {}) {
         const logger = getLogger();
-        if (!token) {
-            logger.warn('[PushNotificationService] Skipped: No FCM registration token provided');
-            return { success: false, error: 'No FCM registration token provided' };
-        }
+        if (!token) return { success: false, error: 'No FCM registration token provided' };
 
         try {
             const messaging = await getMessaging();
             if (!messaging) return { success: false, error: 'Firebase not initialized' };
 
             const sanitizedData = sanitizeDataPayload(data);
-            sanitizedData.click_action = sanitizedData.click_action || 'FLUTTER_NOTIFICATION_CLICK';
+            // sanitizedData.click_action = sanitizedData.click_action || 'FLUTTER_NOTIFICATION_CLICK';
 
             const payload = {
                 token,
@@ -43,22 +40,22 @@ export class PushNotificationService {
                 },
                 data: sanitizedData,
                 // Android specific settings for high priority
-                android: {
-                    priority: 'high',
-                    notification: {
-                        sound: 'default',
-                        channelId: 'tripdhara_channel'
-                    }
-                },
+                // android: {
+                //     priority: 'high',
+                //     notification: {
+                //         sound: 'default',
+                //         channelId: 'tripdhara_channel'
+                //     }
+                // },
                 // iOS specific settings
-                apns: {
-                    headers: { 'apns-priority': '10' },
-                    payload: {
-                        aps: {
-                            sound: 'default'
-                        }
-                    }
-                }
+                // apns: {
+                //     headers: { 'apns-priority': '10' },
+                //     payload: {
+                //         aps: {
+                //             sound: 'default'
+                //         }
+                //     }
+                // }
             };
             const response = await messaging.send(payload);
             return { success: true, messageId: response };

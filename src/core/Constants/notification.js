@@ -84,6 +84,7 @@ export const NOTIFICATION = {
         },
         BUSINESS: {
             WELCOME: 'Welcome To Tripdhara',
+            PROFILE_CREATED: 'Business Profile Created',
             PROFILE_UPDATE: 'Business Profile Updated',
             PROFILE_DEACTIVATED: 'Business Profile Deactivated',
             BANK_DETAILS_UPDATED: "Bank Details Update",
@@ -106,14 +107,33 @@ export const NOTIFICATION = {
     },
 
     PUSH: {
+        USER: {
+            TITLE: {
+                WELCOME: 'Welcome to Tripdhara',
+                PROFILE_UPDATE: 'Profile updated',
+
+            },
+            BODY: {
+                WELCOME: 'Welcome to Tripdharal. Explore the best of tourism with our platform.',
+                PROFILE_UPDATE: 'Your profile has been updated successfully',
+
+            },
+            TYPE: {
+                WELCOME: 'user_welcome',
+                PROFILE_UPDATE: 'profile_updated',
+
+            }
+        },
         BUSINESS: {
             TITLE: {
                 WELCOME: 'Welcome to Tripdhara',
                 PROFILE_CREATED: 'Business profile created',
                 PROFILE_UPDATE: 'Business profile updated',
-                PROFILE_DEACTIVATED: 'Business profile deactivated',
-                BANK_DETAILS_UPDATED: "Bank Details Update",
+
                 OPERATING_STATUS_UPDATED: "Business Profile Operational Status Update",
+                PROFILE_DEACTIVATED: 'Business profile deactivated',
+
+                BANK_DETAILS_UPDATED: "Bank Details Update",
 
                 DOCUMENT_UPLOADED: 'Document uploaded',
                 ACCOUNT_DELETED: 'Account deleted',
@@ -128,9 +148,11 @@ export const NOTIFICATION = {
                 WELCOME: 'Welcome to Tripdhara',
                 PROFILE_CREATED: 'Your business profile has been created successfully',
                 PROFILE_UPDATE: 'Your business profile has been updated successfully',
-                PROFILE_DEACTIVATED: 'Your business profile has been deactivated',
-                BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
+
                 OPERATING_STATUS_UPDATED: "Your business profile operational status has been updated successfully",
+                PROFILE_DEACTIVATED: 'Your business profile has been deactivated',
+
+                BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
 
                 DOCUMENT_UPLOADED: 'Your document has been uploaded successfully',
                 ACCOUNT_DELETED: 'Your account has been deleted successfully',
@@ -145,13 +167,14 @@ export const NOTIFICATION = {
                 WELCOME: 'welcome',
 
                 PROFILE_CREATED: 'business_profile_create',
-                DOCUMENT_UPLOADED: 'business_document_uploaded',
-
                 PROFILE_UPDATE: 'business_profile_update',
 
-                PROFILE_DEACTIVATED: 'profile_deactivated',
-                BANK_DETAILS_UPDATED: "bank_details_update",
                 OPERATING_STATUS_UPDATED: "operating_status_update",
+                PROFILE_DEACTIVATED: 'profile_deactivated',
+
+                DOCUMENT_UPLOADED: 'business_document_uploaded',
+
+                BANK_DETAILS_UPDATED: "bank_details_update",
 
                 ACCOUNT_DELETED: 'account_deleted',
                 CATEGORY_ASSIGNED: 'category_assigned',

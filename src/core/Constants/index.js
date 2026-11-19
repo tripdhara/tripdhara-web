@@ -199,16 +199,24 @@ export const NOTIFICATION_TYPES = {
 };
 
 export const NOTIFICATION_CATEGORIES = {
-    BOOKING: 'booking',
-    PAYMENT: 'payment',
-    VENDOR: 'vendor',
-    PACKAGE: 'package',
     ACCOUNT: 'account',
-    SECURITY: 'security',
-    SYSTEM: 'system',
+    AUTH: 'auth',
+    BOOKING: 'booking',
+    BUSINESS: 'business',
+    CATEGORY: 'category',
     CHAT: 'chat',
+    DISPUTE: 'dispute',
+    GENERAL: 'general',
+    INQUIRY: 'inquiry',
+    MARKETING: 'marketing',
+    PACKAGE: 'package',
+    PAYMENT: 'payment',
+    REVIEW: 'review',
+    SECURITY: 'security',
     SOS: 'sos',
-    GENERAL: 'general'
+    SYSTEM: 'system',
+    USER: 'user',
+    VENDOR: 'vendor',
 };
 
 export const NOTIFICATION_PRIORITIES = {

@@ -30,12 +30,15 @@ export const NOTIFICATION = {
             ACCOUNT_DELETED: 'Emails/vendor/account-deleted.html',
             CATEGORY_ASSIGNED: 'Emails/vendor/category-assigned.html',
             CATEGORY_REMOVED: 'Emails/vendor/category-removed.html',
-            CATEGORY_DOCUMENT_UPLOADED: 'Emails/vendor/category-document-uploaded.html',
-            CATEGORY_DOCUMENT_REMOVED: 'Emails/vendor/category-document-removed.html',
+
             PROFILE_CREATED: 'Emails/vendor/profile-created.html',
             PROFILE_UPDATED: 'Emails/vendor/profile-updated.html',
             PROFILE_DELETED: 'Emails/vendor/profile-deleted.html',
             DOCUMENT_UPLOADED: 'Emails/vendor/document-uploaded.html',
+        },
+        CATEGORY: {
+            CATEGORY_DOCUMENT_UPLOADED: 'Emails/Category/upload.html',
+            CATEGORY_DOCUMENT_REMOVED: 'Emails/vendor/category-document-removed.html',
         },
         PACKAGE: {
             CREATE: 'Emails/Package/create.html',
@@ -98,13 +101,15 @@ export const NOTIFICATION = {
                 DELETED: 'vendor.deleted',
             },
 
+            CATEGORY_DOCUMENT_UPLOADED: 'vendor.category_document_uploaded',
+            CATEGORY_DOCUMENT_REMOVED: 'vendor.category_document_removed',
+
             DOCUMENT_UPLOADED: 'vendor.document_uploaded',
             PROFILE_UPDATE: 'vendor.profile_update',
             ACCOUNT_DELETED: 'vendor.account_deleted',
+
             CATEGORY_ASSIGNED: 'vendor.category_assigned',
             CATEGORY_REMOVED: 'vendor.category_removed',
-            CATEGORY_DOCUMENT_UPLOADED: 'vendor.category_document_uploaded',
-            CATEGORY_DOCUMENT_REMOVED: 'vendor.category_document_removed',
         }
     },
     SUBJECT: {
@@ -129,12 +134,12 @@ export const NOTIFICATION = {
                 BANK_DETAILS_REMOVED: 'Bank Details Removed From You',
             },
 
+            CATEGORY_DOCUMENT_UPLOADED: 'Category Document Uploaded To You',
+            CATEGORY_DOCUMENT_REMOVED: 'Category Document Removed From You',
 
             ACCOUNT_DELETED: 'Your Account Has Been Deleted',
             CATEGORY_ASSIGNED: 'Category Assigned To You',
             CATEGORY_REMOVED: 'Category Removed From You',
-            CATEGORY_DOCUMENT_UPLOADED: 'Category Document Uploaded To You',
-            CATEGORY_DOCUMENT_REMOVED: 'Category Document Removed From You',
             PROFILE_CREATED: 'Profile Created Successfully',
             PROFILE_UPDATED: 'Profile Updated Successfully',
             PROFILE_DELETED: 'Profile Deleted Successfully',
@@ -177,12 +182,13 @@ export const NOTIFICATION = {
                 BANK_DETAILS_UPDATED: "Bank Details Update",
                 BANK_DETAILS_REMOVED: 'Bank Details Removed',
 
+                CATEGORY_DOCUMENT_UPLOADED: 'Category document uploaded',
+                CATEGORY_DOCUMENT_REMOVED: 'Category document removed',
+
                 DOCUMENT_UPLOADED: 'Document uploaded',
                 ACCOUNT_DELETED: 'Account deleted',
                 CATEGORY_ASSIGNED: 'Category assigned',
                 CATEGORY_REMOVED: 'Category removed',
-                CATEGORY_DOCUMENT_UPLOADED: 'Category document uploaded',
-                CATEGORY_DOCUMENT_REMOVED: 'Category document removed',
             },
             BODY: {
                 WELCOME: 'Welcome to Tripdhara',
@@ -199,11 +205,12 @@ export const NOTIFICATION = {
                 BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
                 BANK_DETAILS_REMOVED: 'Your bank details has been removed successfully',
 
-                DOCUMENT_UPLOADED: 'Your document has been uploaded successfully',
+                DOCUMENT_UPLOADED: 'documents has been uploaded successfully',
                 ACCOUNT_DELETED: 'Your account has been deleted successfully',
                 CATEGORY_ASSIGNED: 'Your category has been assigned successfully',
                 CATEGORY_REMOVED: 'Your category has been removed successfully',
-                CATEGORY_DOCUMENT_UPLOADED: 'Your category document has been uploaded successfully',
+
+                CATEGORY_DOCUMENT_UPLOADED: 'documents has been uploaded successfully',
                 CATEGORY_DOCUMENT_REMOVED: 'Your category document has been removed successfully',
             },
             TYPE: {

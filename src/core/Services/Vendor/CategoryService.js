@@ -120,58 +120,32 @@ class CategoryService {
 
     // Submit/Upload documents for a specific category
     async uploadDocuments(userId, categorySlug, req) {
-        const vendor = await getBusinessByUserId(userId, '_id category');
-        const isAssigned = vendor?.category?.some(c => c.slug === categorySlug);
-        if (!isAssigned) {
-            throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.NOT_ASSIGNED);
-        }
+        const vendor = await getBusinessByUserId(userId, '_id');
+        const { document_slug = [], image = [], issue_date = [], expiry_date = [] } = req.payload;
 
-        const payload = req.payload;
-        const documentSlugs = Array.isArray(payload.document_slug) ? payload.document_slug : (payload.document_slug ? [payload.document_slug] : []);
-        const images = Array.isArray(payload.image) ? payload.image : (payload.image ? [payload.image] : []);
-        const issueDates = Array.isArray(payload.issue_date) ? payload.issue_date : (payload.issue_date ? [payload.issue_date] : []);
-        const expiryDates = Array.isArray(payload.expiry_date) ? payload.expiry_date : (payload.expiry_date ? [payload.expiry_date] : []);
-
-        if (documentSlugs.length === 0 || images.length === 0 || documentSlugs.length !== images.length) {
-            throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.DOC_MISMATCH);
-        }
-
-        const uploadPromises = documentSlugs.map(async (docSlug, index) => {
-            const imageFile = images[index];
-            const issueDate = issueDates[index];
-            const expiryDate = expiryDates[index];
-            if (!imageFile) return null;
-
-            const currentIssueDate = issueDate ? new Date(issueDate) : null;
-            const currentExpiryDate = expiryDate ? new Date(expiryDate) : null;
-
-            // 1. Upload to Cloudinary
-            const uploadResult = await uploadToCloudinary(imageFile, `vendor/docs/${userId}/${categorySlug}`);
-
-            // 2. Persist to VendorDocument (Identify by Vendor + Category + Doc Slug)
-            return await VendorDocument.findOneAndUpdate(
+        const uploadPromises = document_slug.map((docSlug, index) =>
+            VendorDocument.findOneAndUpdate(
                 {
                     user: userId,
                     vendor: vendor._id,
+                    category_slug: categorySlug,
                     document_slug: docSlug,
-                    category_slug: categorySlug,
                 },
                 {
-                    user: userId,
-                    vendor: vendor._id,
-                    category_slug: categorySlug,
-                    url: uploadResult.url,
-                    issue_date: currentIssueDate,
-                    expiry_date: currentExpiryDate,
-                    status: VERIFICATION_STATUS.PENDING
+                    $set: {
+                        url: image[index],
+                        issue_date: issue_date[index] || null,
+                        expiry_date: expiry_date[index] || null,
+                        status: VERIFICATION_STATUS.PENDING
+                    }
                 },
-                { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
-            );
-        });
+                { upsert: true, returnDocument: 'after' }
+            )
+        );
 
         const results = await Promise.all(uploadPromises);
         await this.invalidateVendorCaches(userId, vendor._id);
-        return results.filter(Boolean);
+        return results;
     }
 
     // Get list of all documents already uploaded by the vendor across all categories

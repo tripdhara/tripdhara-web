@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import NotificationService from '@/core/Services/General/NotificationService.js';
+import UserNotificationService from '@/core/Services/Notifications/domains/UserNotificationService.js';
 import { getLogger } from '@/core/Lib/logger.js';
 import { NOTIFICATION } from '../Constants/notification.js';
 
@@ -17,7 +17,7 @@ const userEmailListener = (eventKey, handlerFn) => {
     });
 };
 
-userEmailListener(NOTIFICATION.KEY.USER.PROFILE.UPDATED, (id, data) => NotificationService.sendProfileUpdateEmail(id, data));
+userEmailListener(NOTIFICATION.KEY.USER.PROFILE.UPDATED, (id, data) => UserNotificationService.sendProfileUpdateEmail(id, data));
 
 UserEvents.emitAsync = async function (event, data) {
     const listeners = this.listeners(event);

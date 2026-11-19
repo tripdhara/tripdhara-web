@@ -13,7 +13,7 @@ jest.unstable_mockModule('@/core/Services/Vendor/BankService.js', () => ({
     }
 }));
 
-jest.unstable_mockModule('@/core/Events/VendorEvents.js', () => ({
+jest.unstable_mockModule('@/core/Events/BusinessEvents.js', () => ({
     default: {
         emit: jest.fn()
     }
@@ -22,7 +22,7 @@ jest.unstable_mockModule('@/core/Events/VendorEvents.js', () => ({
 const { default: BankController } = await import('@/core/Http/Controllers/Vendor/BankController.js');
 const { default: BusinessService } = await import('@/core/Services/Vendor/BusinessService.js');
 const { default: BankService } = await import('@/core/Services/Vendor/BankService.js');
-const { default: VendorEvents } = await import('@/core/Events/VendorEvents.js');
+const { default: BusinessEvents } = await import('@/events/BusinessEvents.js');
 const { HTTP_STATUS } = await import('@/core/Constants/index.js');
 const { createMockReq } = await import('../../../Helpers/testUtils.js');
 
@@ -62,10 +62,10 @@ describe('Vendor BankController', () => {
             BankService.syncBankDetails.mockResolvedValue({});
 
             const response = await BankController.createBankDetails(mockReq);
-            
+
             expect(response.status).toBe(HTTP_STATUS.CREATED);
             expect(BankService.syncBankDetails).toHaveBeenCalledWith('u1', { accountNumber: '123' });
-            expect(VendorEvents.emit).toHaveBeenCalledWith('vendor.bank_added', expect.any(Object));
+            expect(BusinessEvents.emit).toHaveBeenCalledWith('vendor.bank_added', expect.any(Object));
         });
 
         it('should pass cancelledChequeFile if present in formData', async () => {

@@ -2,7 +2,7 @@ import DocumentService from '@/core/Services/Vendor/DocumentService.js';
 import BusinessService from '@/core/Services/Vendor/BusinessService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
-import VendorEvents from '@/core/Events/VendorEvents.js';
+import BusinessEvents from '@/events/BusinessEvents.js';
 
 /**
  * BusinessDocumentController (Vendor Role) - Specialized management of
@@ -29,7 +29,7 @@ class BusinessDocumentController extends Controller {
             const vendor = await BusinessService.getBusinessByUserId(req.user.id);
             if (!vendor) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             await DocumentService.uploadVerificationFiles(req.user.id, req.payload);
-            if (vendor?.user?.email) VendorEvents.emit('vendor.documents_uploaded', { identifier: vendor.user.email, businessName: vendor?.businessName });
+            if (vendor?.user?.email) BusinessEvents.emit('vendor.documents_uploaded', { identifier: vendor.user.email, businessName: vendor?.businessName });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.DOCUMENTS_UPLOADED);
         } catch (error) {
             return this.error(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);

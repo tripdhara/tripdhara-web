@@ -204,12 +204,7 @@ export class NotificationDispatcher {
         const results = await Promise.allSettled(tasks);
 
         results.forEach((res, index) => {
-            if (res.status === 'rejected') {
-                getLogger().error(
-                    { err: res.reason, channel: channels[index], context: contextName },
-                    `[NotificationDispatcher] ${contextName} failed on channel: ${channels[index]}`
-                );
-            }
+            if (res.status === 'rejected') getLogger().error({ err: res.reason, channel: channels[index], context: contextName }, `[NotificationDispatcher] ${contextName} failed on channel: ${channels[index]}`);
         });
 
         return results;

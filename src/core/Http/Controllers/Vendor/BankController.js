@@ -2,7 +2,7 @@ import BusinessService from '@/core/Services/Vendor/BusinessService.js';
 import BankService from '@/core/Services/Vendor/BankService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
-import VendorEvents from '@/core/Events/VendorEvents.js';
+import BusinessEvents from '@/events/BusinessEvents.js';
 
 /**
  * BankController (Vendor Role) - Specialized management of
@@ -30,7 +30,7 @@ class BankController extends Controller {
                 body.cancelledChequeFile = req.formDataBody.get('cancelledCheque');
             }
             const vendor = await BankService.syncBankDetails(req.user.id, body);
-            if (business?.user?.email) VendorEvents.emit('vendor.bank_added', { identifier: business.user.email, businessName: business?.businessName });
+            if (business?.user?.email) BusinessEvents.emit('vendor.bank_added', { identifier: business.user.email, businessName: business?.businessName });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.BANK_CREATED);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);

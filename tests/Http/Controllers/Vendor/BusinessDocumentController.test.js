@@ -1,7 +1,7 @@
 import BusinessDocumentController from '@/controllers/Vendor/BusinessDocumentController';
 import DocumentService from '@/core/Services/Vendor/DocumentService.js';
 import BusinessService from '@/core/Services/Vendor/BusinessService.js';
-import VendorEvents from '@/core/Events/VendorEvents.js';
+import BusinessEvents from '@/events/BusinessEvents.js';
 import { createMockReq } from '../../../Helpers/testUtils.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/constants/index.js';
 import { jest } from '@jest/globals';
@@ -21,7 +21,7 @@ jest.unstable_mockModule('@/core/Services/Vendor/BusinessService.js', () => ({
     }
 }));
 
-jest.unstable_mockModule('@/core/Events/VendorEvents.js', () => ({
+jest.unstable_mockModule('@/core/Events/BusinessEvents.js', () => ({
     default: {
         emit: jest.fn()
     }
@@ -67,17 +67,17 @@ describe('Industry Standard: BusinessDocumentController API Controller', () => {
             const mockVendor = { user: { email: 'vendor@test.com' }, businessName: 'Test Biz' };
             BusinessService.getBusinessByUserId = jest.fn().mockResolvedValue(mockVendor);
             DocumentService.uploadVerificationFiles = jest.fn().mockResolvedValue(true);
-            VendorEvents.emit = jest.fn();
+            BusinessEvents.emit = jest.fn();
 
             const req = createMockReq({ user: { id: 'user123' } });
             req.payload = { file: 'data' };
-            
+
             const response = await MockedBusinessDocumentController.uploadDocuments(req);
             const body = await response.json();
 
             expect(BusinessService.getBusinessByUserId).toHaveBeenCalledWith('user123');
             expect(DocumentService.uploadVerificationFiles).toHaveBeenCalledWith('user123', { file: 'data' });
-            expect(VendorEvents.emit).toHaveBeenCalledWith('vendor.documents_uploaded', { identifier: 'vendor@test.com', businessName: 'Test Biz' });
+            expect(BusinessEvents.emit).toHaveBeenCalledWith('vendor.documents_uploaded', { identifier: 'vendor@test.com', businessName: 'Test Biz' });
             expect(response.status).toBe(HTTP_STATUS.OK);
             expect(body.message).toBe(RESPONSE_MESSAGES.VENDOR.DOCUMENTS_UPLOADED);
         });

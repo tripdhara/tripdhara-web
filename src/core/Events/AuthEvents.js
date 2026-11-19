@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import NotificationService from '@/core/Services/General/NotificationService.js';
+import AuthNotificationService from '@/core/Services/Notifications/domains/AuthNotificationService.js';
 import { getLogger } from '@/core/Lib/logger.js';
 import { NOTIFICATION } from '../Constants/notification.js';
 
@@ -21,9 +21,9 @@ const authEmailListener = (eventKey, handlerFn) => {
     });
 };
 
-authEmailListener(NOTIFICATION.KEY.USER.OTP, (id, data) => NotificationService.sendSecureCodeEmail(id, data));
-authEmailListener(NOTIFICATION.KEY.USER.WELCOME, (id, data) => NotificationService.sendWelcomeEmail(id, data));
-authEmailListener(NOTIFICATION.KEY.USER.ALERT, (id, data, metadata = {}) => NotificationService.sendAlertEmail(id, data, metadata));
+authEmailListener(NOTIFICATION.KEY.USER.OTP, (id, data) => AuthNotificationService.sendSecureCodeEmail(id, data));
+authEmailListener(NOTIFICATION.KEY.USER.WELCOME, (id, data) => AuthNotificationService.sendWelcomeEmail(id, data));
+authEmailListener(NOTIFICATION.KEY.USER.ALERT, (id, data, metadata = {}) => AuthNotificationService.sendAlertEmail(id, data, metadata));
 
 /**
  * Asynchronously emit an event and wait for all registered listeners to complete.

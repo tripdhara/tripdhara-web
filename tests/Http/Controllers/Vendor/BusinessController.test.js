@@ -27,7 +27,7 @@ jest.unstable_mockModule('@/core/Helpers/cloudinary.js', () => ({
     handleFormDataImageUpload: jest.fn()
 }));
 
-jest.unstable_mockModule('@/core/Events/VendorEvents.js', () => ({
+jest.unstable_mockModule('@/core/Events/BusinessEvents.js', () => ({
     default: {
         emit: jest.fn(),
         emitAsync: jest.fn().mockResolvedValue([])
@@ -39,7 +39,7 @@ const { default: BusinessService } = await import('@/core/Services/Vendor/Busine
 const { getBusinessByUserId, getBusinessById } = await import('@/core/Helpers/queryHelpers.js');
 const { userBusinessProfileById } = await import('@/core/Helpers/userProfileHelper.js');
 const { uploadToCloudinary, handleFormDataImageUpload } = await import('@/core/Helpers/cloudinary.js');
-const { default: VendorEvents } = await import('@/core/Events/VendorEvents.js');
+const { default: BusinessEvents } = await import('@/events/BusinessEvents.js');
 const { HTTP_STATUS } = await import('@/core/Constants/index.js');
 const { createMockReq } = await import('../../../Helpers/testUtils.js');
 
@@ -91,7 +91,7 @@ describe('Vendor BusinessController', () => {
 
             expect(response.status).toBe(HTTP_STATUS.CREATED);
             expect(body.data.id || body.data._id).toBe('v1');
-            const emitFn = VendorEvents.emitAsync || VendorEvents.emit;
+            const emitFn = BusinessEvents.emitAsync || BusinessEvents.emit;
             expect(emitFn).toHaveBeenCalled();
         });
 

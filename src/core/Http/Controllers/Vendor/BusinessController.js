@@ -5,7 +5,7 @@ import { handleFormDataImageUpload } from '@/core/Helpers/cloudinary.js';
 import { businessAuthResponse, businessDetailsFormat } from '@/core/Helpers/businessHelper.js';
 import { userBusinessProfileById } from '@/core/Helpers/userProfileHelper.js';
 import Controller from '@/core/Controllers/Controller.js';
-import VendorEvents from '@/core/Events/VendorEvents.js';
+import BusinessEvents from '@/events/BusinessEvents.js';
 import { NOTIFICATION } from '@/core/Constants/notification.js';
 
 /**
@@ -44,7 +44,7 @@ class BusinessController extends Controller {
             const existingProfile = await getBusinessByUserId(userId);
             // if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
             const result = await BusinessService.syncBusinessProfile(userId, body);
-            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
@@ -57,7 +57,7 @@ class BusinessController extends Controller {
             const body = req.payload;
             const result = await BusinessService.syncBusinessProfile(req.user.id, body);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_UPDATED, result);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
@@ -74,7 +74,7 @@ class BusinessController extends Controller {
             const result = await BusinessService.updateBusinessStatus(req.user.id, params.id, status);
             const statusType = result?.businessProfile?.status === STATUS.ACTIVE ? NOTIFICATION.KEY.BUSINESS.PROFILE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PROFILE_DEACTIVATED;
             if (statusType) {
-                VendorEvents.emitAsync(statusType, { identifier: result.email, details: result });
+                BusinessEvents.emitAsync(statusType, { identifier: result.email, details: result });
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.STATUS_UPDATED);
         } catch (error) {
@@ -88,7 +88,7 @@ class BusinessController extends Controller {
         try {
             const result = await BusinessService.removeBusinessProfile(req.user.id, params?.id);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            if (result.email) VendorEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_DELETED);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
@@ -102,7 +102,7 @@ class BusinessController extends Controller {
             const user = await BusinessService.toggleOperatingStatus(req.user.id, isOperating, params?.id);
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            if (user.email) VendorEvents.emit(NOTIFICATION.KEY.VENDOR.OPERATING_STATUS_UPDATED, { identifier: user.email, businessName: user.businessDetails?.businessName, isOperating });
+            if (user.email) BusinessEvents.emit(NOTIFICATION.KEY.VENDOR.OPERATING_STATUS_UPDATED, { identifier: user.email, businessName: user.businessDetails?.businessName, isOperating });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED, user);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

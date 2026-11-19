@@ -1,22 +1,19 @@
 export const NOTIFICATION = {
     TEMPLATE: {
-        USER: {
-            OTP: 'Emails/otp.html',
-            WELCOME: 'Emails/welcome.html',
-            ALERT: 'Emails/alert.html',
-
-            OFFER: 'Emails/offer.html',
-            AD: 'Emails/ad.html',
-            NEWSLETTER: 'Emails/newsletter.html',
-
-            PROFILE: {
-                CREATED: 'Emails/profile-created.html',
-                UPDATED: 'Emails/Profile/profile-updated.html',
-                DELETED: 'Emails/profile-deleted.html',
-            },
+        AUTHANTICATION: {
+            OTP: 'Emails/Authentication/otp.html',
+            WELCOME: 'Emails/Authentication/welcome.html',
+            ALERT: 'Emails/Authentication/alert.html',
+        },
+        BOOKING: {
 
         },
         BUSINESS: {
+            CREATE: 'Emails/Business/create.html',
+            UPDATE: 'Emails/Business/update.html',
+            DEACTIVATE: 'Emails/Business/deactivate.html',
+            OPERATING_STATUS: 'Emails/Business/status.html',
+
             WELCOME: 'Emails/vendor/welcome.html',
             PROFILE_UPDATE: 'Emails/vendor/profile-update.html',
             PROFILE_DEACTIVATED: 'Emails/vendor/profile-deactivated.html',
@@ -34,6 +31,34 @@ export const NOTIFICATION = {
             PROFILE_UPDATED: 'Emails/vendor/profile-updated.html',
             PROFILE_DELETED: 'Emails/vendor/profile-deleted.html',
             DOCUMENT_UPLOADED: 'Emails/vendor/document-uploaded.html',
+        },
+        PACKAGE: {
+            CREATE: 'Emails/Package/create.html',
+            UPDATE: 'Emails/Package/update.html',
+            DELETE: 'Emails/Package/delete.html',
+        },
+        SYSTEM: {
+
+        },
+        USER: {
+            CREATE: 'Emails/User/create.html',
+            UPDATE: 'Emails/User/update.html',
+            DELETE: 'Emails/User/delete.html',
+
+            OTP: 'Emails/otp.html',
+            WELCOME: 'Emails/welcome.html',
+            ALERT: 'Emails/alert.html',
+
+            OFFER: 'Emails/offer.html',
+            AD: 'Emails/ad.html',
+            NEWSLETTER: 'Emails/newsletter.html',
+
+            PROFILE: {
+                CREATED: 'Emails/profile-created.html',
+                UPDATED: 'Emails/Profile/profile-updated.html',
+                DELETED: 'Emails/profile-deleted.html',
+            },
+
         }
     },
     KEY: {

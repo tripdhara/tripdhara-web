@@ -25,8 +25,11 @@ const registerEmailListener = (eventKey, handlerFn) => {
 // Business Profile Emails
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, (id, data) => BusinessNotificationService.sendBusinessWelcomeEmail(id, data));
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, (id, data) => BusinessNotificationService.sendBusinessProfileUpdateEmail(id, data));
+
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_ACTIVATED, (id, data) => BusinessNotificationService.sendBusinessProfileActivatedEmail(id, data));
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_DEACTIVATED, (id, data) => BusinessNotificationService.sendBusinessProfileDeactivatedEmail(id, data));
+registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_APPROVED, (id, data) => BusinessNotificationService.sendBusinessProfileApprovedEmail(id, data));
+
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, (id, data) => BusinessNotificationService.sendBusinessOperationalStatusEmail(id, data));
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, (id, data) => BusinessNotificationService.sendBusinessProfileDeletedEmail(id, data));
 

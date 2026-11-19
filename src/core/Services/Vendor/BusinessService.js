@@ -183,16 +183,31 @@ class BusinessService {
         return userAuthResponse(user);
     }
 
-    // Toggle Operational/Availability status
-    async toggleOperatingStatus(userId, isOperating, businessId = null) {
-        const filter = { user: userId, deletedAt: null };
-        if (businessId) filter._id = businessId;
-        const vendor = await Vendor.findOneAndUpdate(filter, { isOperating: isOperating }, { returnDocument: 'after' });
+    // Business Approved
+    async businessApproveStatus(userId, vendorId, status) {
+        const vendor = await Vendor.findOneAndUpdate(
+            { user: userId, _id: vendorId, deletedAt: null },
+            { isApproved: status },
+            { returnDocument: 'after' }
+        );
         if (vendor) {
             await this.invalidateVendorCaches(userId, vendor._id);
-            return await userAuthResponse(user);
         }
-        return null;
+        const user = await User.findById(userId);
+        return userAuthResponse(user);
+    }
+
+    // Toggle Operational/Availability status
+    async toggleOperatingStatus(userId, isOperating, businessId = null) {
+        const vendor = await Vendor.findOneAndUpdate(
+            { user: userId, _id: businessId, deletedAt: null },
+            { isOperating: isOperating },
+            { returnDocument: 'after' });
+        if (vendor) {
+            await this.invalidateVendorCaches(userId, vendor._id);
+        }
+        const user = await User.findById(userId);
+        return userAuthResponse(user);
     }
 
     async getBusinessById(id, select = '', populate = { path: 'user', select: 'email phone role' }) {

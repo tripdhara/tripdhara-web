@@ -98,13 +98,17 @@ class BusinessController extends Controller {
     // PATCH /vendor/business/profile/status/:id
     async updateOperatingStatus(req, { params }) {
         try {
-            const isOperating = req.payload?.isOperating === true || req.payload?.isOperating === 'true';
-            const user = await BusinessService.toggleOperatingStatus(req.user.id, isOperating, params?.id);
-            if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            const body = req.payload;
+            const businessId = params.id;
+            const userId = req.user.id;
+            const isOperating = body.isOperating === true || body.isOperating === 'true';
+            const result = await BusinessService.toggleOperatingStatus(userId, isOperating, businessId);
+            if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            if (user.email) BusinessEvents.emit(NOTIFICATION.KEY.VENDOR.OPERATING_STATUS_UPDATED, { identifier: user.email, businessName: user.businessDetails?.businessName, isOperating });
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED, user);
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, { identifier: result.email, details: result });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED, result);
         } catch (error) {
+            console.log(error);
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

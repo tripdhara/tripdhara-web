@@ -27,7 +27,7 @@ export class BusinessNotificationService {
             };
 
             const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.WELCOME, account);
-            await this._dispatchNotification({
+            await NotificationDispatcher.dispatch({
                 contextName: 'businessProfilCreated',
                 email: (account.EMAIL) ? {
                     to: email,
@@ -74,7 +74,7 @@ export class BusinessNotificationService {
                 BUSINESS_PHONE: businessProfile?.businessNumber || ''
             };
             const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_UPDATE, account);
-            await this._dispatchNotification({
+            await NotificationDispatcher.dispatch({
                 contextName: 'businessProfilUpdated',
                 email: (account.EMAIL) ? {
                     to: email,
@@ -103,6 +103,151 @@ export class BusinessNotificationService {
         }
     }
 
+    async sendBusinessProfileActivatedEmail(email, details) {
+        try {
+            const businessProfile = details?.businessProfile || {};
+            const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
+
+                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
+                BUSINESS_ADDRESS: businessProfile?.address || '',
+                BUSINESS_PHONE: businessProfile?.businessNumber || '',
+                ACTIVATION_DATE: businessProfile?.deletedAt,
+                STATUS: businessProfile?.status
+            };
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_ACTIVATED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessProfileActivate',
+                email: (account.EMAIL) ? {
+                    to: email,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_ACTIVATED,
+                    html: html
+                } : null,
+
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_ACTIVATED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_ACTIVATED,
+                    image: account.IMAGE_URL,
+
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_ACTIVATED,
+                    role: account.ROLE,
+
+                } : null
+            });
+            return true;
+        } catch (error) {
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeactivatedEmail Error');
+            return false;
+        }
+    }
+
+    async sendBusinessProfileDeactivatedEmail(email, details) {
+        try {
+            const businessProfile = details?.businessProfile || {};
+            const businessName = businessProfile?.businessName || 'Partner';
+            const accountDetails = {
+                USER_NAME: details?.name,
+                FCM_TOKEN: details?.fcmToken,
+                IMAGE_URL: businessProfile?.profileImage || details?.profileImage || null,
+                ID: businessProfile?.id || details?.id || '',
+                BUSINESS_NAME: businessName,
+                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
+                BUSINESS_ADDRESS: businessProfile?.address || '',
+                BUSINESS_PHONE: businessProfile?.businessNumber || '',
+                DEACTIVATION_DATE: businessProfile?.updatedAt,
+                STATUS: businessProfile?.status
+            };
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_DEACTIVATED, accountDetails);
+            const tasks = [
+                this._sendEmailHelper({
+                    to: email,
+                    toName: accountDetails.BUSINESS_NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_DEACTIVATED,
+                    html: html
+                })
+            ];
+            if (accountDetails.FCM_TOKEN) {
+                const payload = {
+                    fcmToken: accountDetails.FCM_TOKEN,
+                    id: accountDetails.ID,
+                    image: accountDetails.IMAGE_URL,
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_DEACTIVATED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_DEACTIVATED,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_DEACTIVATED
+                };
+                tasks.push(this._sendPushNotificationPayload(payload));
+            }
+            const results = await Promise.allSettled(tasks);
+            results.forEach((res, index) => {
+                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessProfileDeactivatedEmail subtask failed');
+            });
+            return true;
+        } catch (error) {
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeactivatedEmail Error');
+            return false;
+        }
+    }
+
+    async sendBusinessProfileApprovedEmail(email, details) {
+        try {
+            const businessProfile = details?.businessProfile || {};
+            const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
+
+                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
+                BUSINESS_ADDRESS: businessProfile?.address || '',
+                BUSINESS_PHONE: businessProfile?.businessNumber || '',
+                ACTIVATION_DATE: businessProfile?.deletedAt,
+                STATUS: businessProfile?.status
+            };
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_APPROVED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessProfileActivate',
+                email: (account.EMAIL) ? {
+                    to: email,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_APPROVED,
+                    html: html
+                } : null,
+
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_APPROVED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_APPROVED,
+                    image: account.IMAGE_URL,
+
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_APPROVED,
+                    role: account.ROLE,
+
+                } : null
+            });
+            return true;
+        } catch (error) {
+            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeactivatedEmail Error');
+            return false;
+        }
+    }
+
     async sendBusinessOperationalStatusEmail(email, details) {
         try {
             const businessProfile = details?.businessProfile || {};
@@ -123,7 +268,7 @@ export class BusinessNotificationService {
                 STATUS: businessProfile?.status
             };
             const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.OPERATING_STATUS_UPDATED, account);
-            await this._dispatchNotification({
+            await NotificationDispatcher.dispatch({
                 contextName: 'businessProfilOperatingStatus',
                 email: (account.EMAIL) ? {
                     to: email,
@@ -193,53 +338,6 @@ export class BusinessNotificationService {
             return true;
         } catch (error) {
             getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeletedEmail Error');
-            return false;
-        }
-    }
-
-    async sendBusinessProfileDeactivatedEmail(email, details) {
-        try {
-            const businessProfile = details?.businessProfile || {};
-            const businessName = businessProfile?.businessName || 'Partner';
-            const accountDetails = {
-                USER_NAME: details?.name,
-                FCM_TOKEN: details?.fcmToken,
-                IMAGE_URL: businessProfile?.profileImage || details?.profileImage || null,
-                ID: businessProfile?.id || details?.id || '',
-                BUSINESS_NAME: businessName,
-                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
-                BUSINESS_ADDRESS: businessProfile?.address || '',
-                BUSINESS_PHONE: businessProfile?.businessNumber || '',
-                DEACTIVATION_DATE: businessProfile?.updatedAt,
-                STATUS: businessProfile?.status
-            };
-            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.PROFILE_DEACTIVATED, accountDetails);
-            const tasks = [
-                this._sendEmailHelper({
-                    to: email,
-                    toName: accountDetails.BUSINESS_NAME,
-                    subject: NOTIFICATION.SUBJECT.BUSINESS.PROFILE_DEACTIVATED,
-                    html: html
-                })
-            ];
-            if (accountDetails.FCM_TOKEN) {
-                const payload = {
-                    fcmToken: accountDetails.FCM_TOKEN,
-                    id: accountDetails.ID,
-                    image: accountDetails.IMAGE_URL,
-                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.PROFILE_DEACTIVATED,
-                    body: NOTIFICATION.PUSH.BUSINESS.BODY.PROFILE_DEACTIVATED,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.PROFILE_DEACTIVATED
-                };
-                tasks.push(this._sendPushNotificationPayload(payload));
-            }
-            const results = await Promise.allSettled(tasks);
-            results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessProfileDeactivatedEmail subtask failed');
-            });
-            return true;
-        } catch (error) {
-            getLogger().error({ err: error, email }, '[NotificationService] sendBusinessProfileDeactivatedEmail Error');
             return false;
         }
     }

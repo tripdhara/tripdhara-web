@@ -5,6 +5,8 @@ import RazorpayService from '@/core/Services/General/RazorpayService.js';
 import CacheService from '@/core/Services/CacheService.js';
 import AppError from '@/core/Helpers/AppError.js';
 import { getBusinessByUserId } from '@/core/Helpers/queryHelpers.js';
+import User from '@/core/Models/User.js';
+import { userAuthResponse } from '@/core/Helpers';
 
 class BankService {
     async invalidateVendorCaches(userId, vendorId = null) {
@@ -22,37 +24,45 @@ class BankService {
     // Update Bank Details
     // Synchronize and update payout credentials
     async updateBankDetails(userId, bankData) {
-        const vendor = await getBusinessByUserId(userId, '', { path: 'user' });
+        const vendor = await getBusinessByUserId(userId);
         if (!vendor) throw new AppError(RESPONSE_MESSAGES.VENDOR.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+        const businessId = vendor._id.toString();
+
         const updatePayload = { ...vendor.bankDetails };
         if (bankData.accountHolderName) updatePayload.accountHolderName = bankData.accountHolderName;
         if (bankData.accountNumber) updatePayload.accountNumber = bankData.accountNumber;
         if (bankData.ifscCode) updatePayload.ifscCode = bankData.ifscCode;
         if (bankData.bankName) updatePayload.bankName = bankData.bankName;
+        if (bankData.cancelledCheque) {
+            updatePayload.cancelledCheque = {
+                ...updatePayload.cancelledCheque,
+                url: bankData.cancelledCheque
+            };
+        }
 
         // Create RazorpayX Contact and Fund Account if basic details exist
         if (updatePayload.accountHolderName && updatePayload.accountNumber && updatePayload.ifscCode) {
             const contactName = updatePayload.accountHolderName || vendor.ownerName || vendor.businessName;
             const contactPhone = vendor.businessNumber || vendor.personalNumber || vendor.user?.phone;
-            const contactEmail = vendor.businessEmail || vendor.user?.email || `vendor_${vendor._id}@tripdhara.in`;
+            const contactEmail = vendor.businessEmail || vendor.user?.email || `vendor_${businessId}@tripdhara.in`;
 
-            if (!contactName || !contactPhone) {
-                throw new AppError("Vendor owner name and contact number are required to register bank details.", HTTP_STATUS.UNPROCESSABLE_ENTITY);
-            }
-
+            if (!contactName || !contactPhone) throw new AppError("Vendor owner name and contact number are required to register bank details.", HTTP_STATUS.UNPROCESSABLE_ENTITY);
             try {
-                const contactData = {
-                    name: contactName,
-                    email: contactEmail,
-                    contact: contactPhone,
-                    type: 'vendor',
-                    reference_id: vendor._id.toString()
-                };
-                const contact = await RazorpayService.createContact(contactData);
-                updatePayload.razorpayContactId = contact.id;
-
+                let contactId = updatePayload.razorpayContactId;
+                if (!contactId) {
+                    const contactData = {
+                        name: contactName,
+                        email: contactEmail,
+                        contact: contactPhone,
+                        type: 'vendor',
+                        reference_id: businessId
+                    };
+                    const contact = await RazorpayService.createContact(contactData);
+                    contactId = contact.id;
+                    updatePayload.razorpayContactId = contactId;
+                }
                 const fundAccountData = {
-                    contact_id: contact.id,
+                    contact_id: contactId,
                     account_type: 'bank_account',
                     bank_account: {
                         name: updatePayload.accountHolderName,
@@ -63,18 +73,8 @@ class BankService {
                 const fundAccount = await RazorpayService.createFundAccount(fundAccountData);
                 updatePayload.razorpayFundAccountId = fundAccount.id;
             } catch (err) {
-                throw new AppError("Failed to register bank details with payment gateway: " + err.message, HTTP_STATUS.BAD_REQUEST);
+                throw new AppError("Failed to register bank details with payment gateway", HTTP_STATUS.BAD_REQUEST);
             }
-        }
-
-        const fileUpload = bankData.cancelledChequeFile || (bankData.cancelledCheque && typeof bankData.cancelledCheque === 'object' && bankData.cancelledCheque.size ? bankData.cancelledCheque : null);
-        if (fileUpload) {
-            const res = await uploadToCloudinary(fileUpload, `vendor_bank/${userId}`);
-            updatePayload.cancelledCheque = {
-                url: res.url,
-                publicId: res.publicId,
-                status: 'pending'
-            };
         }
         const updatedVendor = await Vendor.findOneAndUpdate(
             { _id: vendor._id },
@@ -82,7 +82,8 @@ class BankService {
             { returnDocument: 'after' }
         );
         await this.invalidateVendorCaches(userId, vendor._id);
-        return updatedVendor.bankDetails;
+        const user = await User.findById(userId);
+        return userAuthResponse(user);
     }
 
     // Delete Bank Details
@@ -96,7 +97,8 @@ class BankService {
         if (vendor) {
             await this.invalidateVendorCaches(userId, vendor._id);
         }
-        return vendor;
+        const user = await User.findById(userId);
+        return userAuthResponse(user);
     }
 
     // --- INDUSTRY STANDARD ALIASES ---

@@ -37,7 +37,9 @@ registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, (id, data) => B
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.DOCUMENT_UPLOADED, (id, data) => BusinessNotificationService.sendVendorDocumentsReceivedEmail(id, data));
 
 // Business Bank Details Emails
-registerEmailListener(NOTIFICATION.KEY.BUSINESS.BANK_DETAILS_ADDED, (id, data) => BusinessNotificationService.sendVendorBankAddedEmail(id, data));
+registerEmailListener(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, (id, data) => BusinessNotificationService.sendBusinessBankDetailsCreatedEmail(id, data));
+registerEmailListener(NOTIFICATION.KEY.BUSINESS.BANK.UPDATED, (id, data) => BusinessNotificationService.sendBusinessBankDetailsUpdatedEmail(id, data));
+registerEmailListener(NOTIFICATION.KEY.BUSINESS.BANK.DELETED, (id, data) => BusinessNotificationService.sendBusinessBankDetailsDeletedEmail(id, data));
 
 BusinessEvents.emitAsync = async function (event, data) {
     const listeners = this.listeners(event);

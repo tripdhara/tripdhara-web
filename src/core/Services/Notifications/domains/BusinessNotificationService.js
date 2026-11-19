@@ -347,52 +347,45 @@ export class BusinessNotificationService {
         try {
             const businessProfile = details?.businessProfile || {};
             const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
 
-            const accountDetails = {
-                // USER INFO
-                USER_NAME: details?.name || '',
-                FCM_TOKEN: details?.fcmToken,
-                ID: String(details?.id || ''),
-
-                // IMAGE INFO
-                IMAGE_URL: String(businessProfile?.profileImage || details?.profileImage || null),
-
-                // BUSINESS INFO
-                BUSINESS_NAME: businessName,
                 BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
                 BUSINESS_ADDRESS: businessProfile?.address || '',
                 BUSINESS_PHONE: businessProfile?.businessNumber || ''
             };
-
-            const html = await renderTemplate('Emails/vendor/bank.html', accountDetails);
-            const tasks = [
-                this._sendEmailHelper({
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.BANK_DETAILS_CREATED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessBankDetailsCreated',
+                email: (account.EMAIL) ? {
                     to: email,
-                    toName: accountDetails.BUSINESS_NAME,
-                    subject: NOTIFICATION.SUBJECT.BUSINESS.BANK_DETAILS_UPDATED,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.BANK.BANK_DETAILS_CREATED,
                     html: html
-                })
-            ];
+                } : null,
 
-            if (accountDetails.FCM_TOKEN) {
-                const payload = {
-                    fcmToken: accountDetails.FCM_TOKEN,
-                    id: accountDetails.ID,
-                    image: accountDetails.IMAGE_URL,
-                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.BANK_DETAILS_UPDATED,
-                    body: NOTIFICATION.PUSH.BUSINESS.BODY.BANK_DETAILS_UPDATED,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.BANK_DETAILS_UPDATED
-                };
-                tasks.push(this._sendPushNotificationPayload(payload));
-            }
-            const results = await Promise.allSettled(tasks);
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
 
-            results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessBankDetailsUpdatedEmail subtask failed');
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.BANK_DETAILS_CREATED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.BANK_DETAILS_CREATED,
+                    image: account.IMAGE_URL,
+
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.BANK_DETAILS_CREATED,
+                    role: account.ROLE,
+
+                } : null
             });
             return true;
         } catch (error) {
-            getLogger().error({ err: error }, "[NotificationService] sendBusinessBankDetailsUpdatedEmail Error");
+            getLogger().error({ err: error }, "[NotificationService] Business Bank Details Created Email Error");
             return false;
         }
     }
@@ -401,52 +394,92 @@ export class BusinessNotificationService {
         try {
             const businessProfile = details?.businessProfile || {};
             const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
 
-            const accountDetails = {
-                // USER INFO
-                USER_NAME: details?.name || '',
-                FCM_TOKEN: details?.fcmToken,
-                ID: String(details?.id || ''),
-
-                // IMAGE INFO
-                IMAGE_URL: String(businessProfile?.profileImage || details?.profileImage || null),
-
-                // BUSINESS INFO
-                BUSINESS_NAME: businessName,
                 BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
                 BUSINESS_ADDRESS: businessProfile?.address || '',
                 BUSINESS_PHONE: businessProfile?.businessNumber || ''
             };
-
-            const html = await renderTemplate('Emails/vendor/bank.html', accountDetails);
-            const tasks = [
-                this._sendEmailHelper({
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.BANK_DETAILS_UPDATED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessBankDetailsUpdated',
+                email: (account.EMAIL) ? {
                     to: email,
-                    toName: accountDetails.BUSINESS_NAME,
-                    subject: NOTIFICATION.SUBJECT.BUSINESS.BANK_DETAILS_UPDATED,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.BANK.BANK_DETAILS_UPDATED,
                     html: html
-                })
-            ];
+                } : null,
 
-            if (accountDetails.FCM_TOKEN) {
-                const payload = {
-                    fcmToken: accountDetails.FCM_TOKEN,
-                    id: accountDetails.ID,
-                    image: accountDetails.IMAGE_URL,
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
+
                     title: NOTIFICATION.PUSH.BUSINESS.TITLE.BANK_DETAILS_UPDATED,
                     body: NOTIFICATION.PUSH.BUSINESS.BODY.BANK_DETAILS_UPDATED,
-                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.BANK_DETAILS_UPDATED
-                };
-                tasks.push(this._sendPushNotificationPayload(payload));
-            }
-            const results = await Promise.allSettled(tasks);
+                    image: account.IMAGE_URL,
 
-            results.forEach((res, index) => {
-                if (res.status === 'rejected') getLogger().error({ err: res.reason, task: index === 0 ? 'Email' : 'PushNotification', email }, '[NotificationService] sendBusinessBankDetailsUpdatedEmail subtask failed');
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.BANK_DETAILS_UPDATED,
+                    role: account.ROLE,
+
+                } : null
             });
             return true;
         } catch (error) {
-            getLogger().error({ err: error }, "[NotificationService] sendBusinessBankDetailsUpdatedEmail Error");
+            getLogger().error({ err: error }, "[NotificationService] Business Bank Details Updated Email Error");
+            return false;
+        }
+    }
+
+    async sendBusinessBankDetailsDeletedEmail(email, details) {
+        try {
+            const businessProfile = details?.businessProfile || {};
+            const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
+
+                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
+                BUSINESS_ADDRESS: businessProfile?.address || '',
+                BUSINESS_PHONE: businessProfile?.businessNumber || ''
+            };
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.BANK_DETAILS_REMOVED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessBankDetailsUpdated',
+                email: (account.EMAIL) ? {
+                    to: email,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.BANK.BANK_DETAILS_REMOVED,
+                    html: html
+                } : null,
+
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.BANK_DETAILS_REMOVED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.BANK_DETAILS_REMOVED,
+                    image: account.IMAGE_URL,
+
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.BANK_DETAILS_REMOVED,
+                    role: account.ROLE,
+
+                } : null
+            });
+            return true;
+        } catch (error) {
+            getLogger().error({ err: error }, "[NotificationService] Business Bank Details Updated Email Error");
             return false;
         }
     }

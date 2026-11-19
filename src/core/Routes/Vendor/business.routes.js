@@ -52,6 +52,6 @@ export default [
         { method: 'GET', path: '/', handler: wrap(() => BankController, 'getBankDetails') },
         { method: 'POST', path: '/create', schema: schemas.bankDetails, handler: wrap(() => BankController, 'createBankDetails') },
         { method: 'PATCH', path: '/update', schema: schemas.bankDetails, handler: wrap(() => BankController, 'updateBankDetails') },
-        { method: 'DELETE', path: '/delete', schema: schemas.accountDelete, handler: wrap(() => BankController, 'deleteBankDetails') },
+        { method: 'DELETE', path: '/delete', handler: wrap(() => BankController, 'deleteBankDetails') },
     ]),
 ];

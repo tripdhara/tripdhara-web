@@ -23,13 +23,15 @@ export const NOTIFICATION = {
             PROFILE_APPROVED: 'Emails/vendor/profile-approved.html',
             OPERATING_STATUS_UPDATED: 'Emails/vendor/profile-operational.html',
 
+            BANK_DETAILS_CREATED: 'Emails/vendor/bank.html',
+            BANK_DETAILS_UPDATED: 'Emails/vendor/bank.html',
+            BANK_DETAILS_REMOVED: 'Emails/vendor/bank.html',
+
             ACCOUNT_DELETED: 'Emails/vendor/account-deleted.html',
             CATEGORY_ASSIGNED: 'Emails/vendor/category-assigned.html',
             CATEGORY_REMOVED: 'Emails/vendor/category-removed.html',
             CATEGORY_DOCUMENT_UPLOADED: 'Emails/vendor/category-document-uploaded.html',
             CATEGORY_DOCUMENT_REMOVED: 'Emails/vendor/category-document-removed.html',
-            BANK_DETAILS_ADDED: 'Emails/vendor/bank-details-added.html',
-            BANK_DETAILS_REMOVED: 'Emails/vendor/bank-details-removed.html',
             PROFILE_CREATED: 'Emails/vendor/profile-created.html',
             PROFILE_UPDATED: 'Emails/vendor/profile-updated.html',
             PROFILE_DELETED: 'Emails/vendor/profile-deleted.html',
@@ -90,8 +92,11 @@ export const NOTIFICATION = {
 
             OPERATING_STATUS_UPDATED: 'vendor.operating_status_updated',
 
-            BANK_DETAILS_ADDED: 'vendor.bank_details_added',
-            BANK_DETAILS_REMOVED: 'vendor.bank_details_removed',
+            BANK: {
+                CREATED: 'vendor.created',
+                UPDATED: 'vendor.updated',
+                DELETED: 'vendor.deleted',
+            },
 
             DOCUMENT_UPLOADED: 'vendor.document_uploaded',
             PROFILE_UPDATE: 'vendor.profile_update',
@@ -118,7 +123,11 @@ export const NOTIFICATION = {
             PROFILE_DEACTIVATED: 'Business Profile Deactivated',
             PROFILE_ACTIVATED: 'Business Profile Activated',
             PROFILE_APPROVED: 'Business Profile Approved',
-            BANK_DETAILS_UPDATED: "Bank Details Update",
+            BANK: {
+                BANK_DETAILS_CREATED: 'Bank Details Added To You',
+                BANK_DETAILS_UPDATED: "Bank Details Update",
+                BANK_DETAILS_REMOVED: 'Bank Details Removed From You',
+            },
 
 
             ACCOUNT_DELETED: 'Your Account Has Been Deleted',
@@ -126,8 +135,6 @@ export const NOTIFICATION = {
             CATEGORY_REMOVED: 'Category Removed From You',
             CATEGORY_DOCUMENT_UPLOADED: 'Category Document Uploaded To You',
             CATEGORY_DOCUMENT_REMOVED: 'Category Document Removed From You',
-            BANK_DETAILS_ADDED: 'Bank Details Added To You',
-            BANK_DETAILS_REMOVED: 'Bank Details Removed From You',
             PROFILE_CREATED: 'Profile Created Successfully',
             PROFILE_UPDATED: 'Profile Updated Successfully',
             PROFILE_DELETED: 'Profile Deleted Successfully',
@@ -164,10 +171,11 @@ export const NOTIFICATION = {
                 PROFILE_DEACTIVATED: 'Business profile deactivated',
                 PROFILE_APPROVED: 'Business Profile Approved',
 
-
                 OPERATING_STATUS_UPDATED: "Business Profile Operational Status Update",
 
+                BANK_DETAILS_CREATED: 'Bank Details Added',
                 BANK_DETAILS_UPDATED: "Bank Details Update",
+                BANK_DETAILS_REMOVED: 'Bank Details Removed',
 
                 DOCUMENT_UPLOADED: 'Document uploaded',
                 ACCOUNT_DELETED: 'Account deleted',
@@ -175,8 +183,6 @@ export const NOTIFICATION = {
                 CATEGORY_REMOVED: 'Category removed',
                 CATEGORY_DOCUMENT_UPLOADED: 'Category document uploaded',
                 CATEGORY_DOCUMENT_REMOVED: 'Category document removed',
-                BANK_DETAILS_ADDED: 'Bank details added',
-                BANK_DETAILS_REMOVED: 'Bank details removed',
             },
             BODY: {
                 WELCOME: 'Welcome to Tripdhara',
@@ -189,7 +195,9 @@ export const NOTIFICATION = {
 
                 OPERATING_STATUS_UPDATED: "Your business profile operational status has been updated successfully",
 
+                BANK_DETAILS_CREATED: 'Your bank details has been added successfully',
                 BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
+                BANK_DETAILS_REMOVED: 'Your bank details has been removed successfully',
 
                 DOCUMENT_UPLOADED: 'Your document has been uploaded successfully',
                 ACCOUNT_DELETED: 'Your account has been deleted successfully',
@@ -197,8 +205,6 @@ export const NOTIFICATION = {
                 CATEGORY_REMOVED: 'Your category has been removed successfully',
                 CATEGORY_DOCUMENT_UPLOADED: 'Your category document has been uploaded successfully',
                 CATEGORY_DOCUMENT_REMOVED: 'Your category document has been removed successfully',
-                BANK_DETAILS_ADDED: 'Your bank details has been added successfully',
-                BANK_DETAILS_REMOVED: 'Your bank details has been removed successfully',
             },
             TYPE: {
                 WELCOME: 'welcome',
@@ -214,15 +220,17 @@ export const NOTIFICATION = {
 
                 DOCUMENT_UPLOADED: 'business_document_uploaded',
 
-                BANK_DETAILS_UPDATED: "bank_details_update",
+                BANK_DETAILS_CREATED: 'business_bank_details_created',
+                BANK_DETAILS_UPDATED: "business_bank_details_updated",
+                BANK_DETAILS_REMOVED: 'business_bank_details_Removed',
 
                 ACCOUNT_DELETED: 'account_deleted',
+
                 CATEGORY_ASSIGNED: 'category_assigned',
                 CATEGORY_REMOVED: 'category_removed',
+
                 CATEGORY_DOCUMENT_UPLOADED: 'category_document_uploaded',
                 CATEGORY_DOCUMENT_REMOVED: 'category_document_removed',
-                BANK_DETAILS_ADDED: 'bank_details_added',
-                BANK_DETAILS_REMOVED: 'bank_details_removed',
             }
         }
     }

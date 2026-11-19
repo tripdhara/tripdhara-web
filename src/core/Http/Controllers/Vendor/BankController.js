@@ -3,6 +3,10 @@ import BankService from '@/core/Services/Vendor/BankService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
 import BusinessEvents from '@/events/BusinessEvents.js';
+import { getLogger } from '@/core/Lib/logger';
+import { getBusinessByUserId } from '@/core/Helpers/queryHelpers';
+import console from 'console';
+import { NOTIFICATION } from '@/core/Constants/notification';
 
 /**
  * BankController (Vendor Role) - Specialized management of
@@ -13,10 +17,12 @@ class BankController extends Controller {
     // GET /vendor/bank/
     async getBankDetails(req) {
         try {
-            const vendor = await BusinessService.getBusinessByUserId(req.user.id);
+            const userId = req.user.id;
+            const vendor = await getBusinessByUserId(userId);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_FETCHED, vendor.bankDetails);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+            getLogger().error({ err: error });
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 
@@ -24,16 +30,13 @@ class BankController extends Controller {
     async createBankDetails(req) {
         try {
             const body = req.payload;
-            const business = await BusinessService.getBusinessByUserId(req.user.id);
-
-            if (req.formDataBody?.has('cancelledCheque')) {
-                body.cancelledChequeFile = req.formDataBody.get('cancelledCheque');
-            }
-            const vendor = await BankService.syncBankDetails(req.user.id, body);
-            if (business?.user?.email) BusinessEvents.emit('vendor.bank_added', { identifier: business.user.email, businessName: business?.businessName });
+            const userId = req.user.id;
+            const result = await BankService.syncBankDetails(userId, body);
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.BANK_CREATED);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+            getLogger().error({ err: error });
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 
@@ -41,23 +44,24 @@ class BankController extends Controller {
     async updateBankDetails(req) {
         try {
             const body = req.payload;
-            if (req.formDataBody?.has('cancelledCheque')) {
-                body.cancelledChequeFile = req.formDataBody.get('cancelledCheque');
-            }
-            const vendor = await BankService.syncBankDetails(req.user.id, body);
+            const result = await BankService.syncBankDetails(req.user.id, body);
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_UPDATED);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+            getLogger().error({ err: error });
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 
     // DELETE /vendor/bank/delete
     async deleteBankDetails(req) {
         try {
-            const vendor = await BankService.removeBankDetails(req.user.id);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_DELETED, vendor.bankDetails || {});
+            const result = await BankService.removeBankDetails(req.user.id);
+            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.DELETED, { identifier: result.email, details: result });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_DELETED);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+            getLogger().error({ err: error });
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 }

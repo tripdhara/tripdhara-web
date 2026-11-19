@@ -7,6 +7,7 @@ import { userBusinessProfileById } from '@/core/Helpers/userProfileHelper.js';
 import Controller from '@/core/Controllers/Controller.js';
 import BusinessEvents from '@/events/BusinessEvents.js';
 import { NOTIFICATION } from '@/core/Constants/notification.js';
+import { getLogger } from '@/core/Lib/logger';
 
 /**
  * BusinessController (Vendor Role) - Specialized management of
@@ -32,6 +33,7 @@ class BusinessController extends Controller {
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.USER.NOT_FOUND);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.FETCHED, user);
         } catch (error) {
+            getLogger().error({ err: error }, 'Get Business Profile Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -47,6 +49,7 @@ class BusinessController extends Controller {
             if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);
         } catch (error) {
+            getLogger().error({ err: error }, 'Create Business Profile Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -60,13 +63,13 @@ class BusinessController extends Controller {
             if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_UPDATED, result);
         } catch (error) {
+            getLogger().error({ err: error }, 'Update Business Profile Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 
     // PATCH /vendor/business/profile/deactivate/:id
     // PATCH /vendor/business/profile/activate/:id
-
     async updateBusinessProfileStatus(req, { params }) {
         try {
             const { status } = req.payload;
@@ -78,10 +81,10 @@ class BusinessController extends Controller {
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.STATUS_UPDATED);
         } catch (error) {
+            getLogger().error({ err: error }, 'Update Business Profile Status Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
-
 
     // DELETE /vendor/business/profile/delete/:id
     async deleteProfile(req, { params }) {
@@ -91,6 +94,7 @@ class BusinessController extends Controller {
             if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_DELETED);
         } catch (error) {
+            getLogger().error({ err: error }, 'Delete Business Profile Status Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -106,9 +110,9 @@ class BusinessController extends Controller {
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
             if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, { identifier: result.email, details: result });
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED, result);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED);
         } catch (error) {
-            console.log(error);
+            getLogger().error({ err: error }, 'Update Business Profile Operational Status Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

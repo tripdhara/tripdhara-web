@@ -44,8 +44,12 @@ const buildUserPath = (userId, options = {}) => {
     if (rawFolder.startsWith('business/')) {
         const parts = rawFolder.split('/').filter(Boolean);
         if (parts.length >= 2) {
-            const sub = parts.slice(1).join('/').replace(/[^a-z0-9_/-]/g, '');
-            return `${userId}/business/${sub}`;
+            const sub = parts
+                .slice(1)
+                .map(part => part.replace(/[^a-z0-9_-]/g, ''))
+                .filter(Boolean)
+                .join('/');
+            return sub ? `${userId}/business/${sub}` : `${userId}/business`;
         }
         return `${userId}/business`;
     }
@@ -55,8 +59,12 @@ const buildUserPath = (userId, options = {}) => {
         return `${userId}/business/${rawFolder}`;
     }
 
-    // Fallback: clean custom subfolder scoped under userId
-    const sanitized = rawFolder.replace(/[^a-z0-9_/-]/g, '').replace(/^\/+|\/+$/g, '');
+    // Fallback: clean custom subfolder scoped under userId (ReDoS-safe)
+    const sanitized = rawFolder
+        .split('/')
+        .map(part => part.replace(/[^a-z0-9_-]/g, ''))
+        .filter(Boolean)
+        .join('/');
     return sanitized ? `${userId}/${sanitized}` : `${userId}/general`;
 };
 

@@ -23,6 +23,8 @@ export const NOTIFICATION = {
             PROFILE_APPROVED: 'Emails/vendor/profile-approved.html',
             OPERATING_STATUS_UPDATED: 'Emails/vendor/profile-operational.html',
 
+            DOCUMENT_UPLOADED: 'Emails/vendor/documents.html',
+
             BANK_DETAILS_CREATED: 'Emails/vendor/bank.html',
             BANK_DETAILS_UPDATED: 'Emails/vendor/bank.html',
             BANK_DETAILS_REMOVED: 'Emails/vendor/bank.html',
@@ -31,10 +33,10 @@ export const NOTIFICATION = {
             CATEGORY_ASSIGNED: 'Emails/vendor/category-assigned.html',
             CATEGORY_REMOVED: 'Emails/vendor/category-removed.html',
 
+
             PROFILE_CREATED: 'Emails/vendor/profile-created.html',
             PROFILE_UPDATED: 'Emails/vendor/profile-updated.html',
             PROFILE_DELETED: 'Emails/vendor/profile-deleted.html',
-            DOCUMENT_UPLOADED: 'Emails/vendor/document-uploaded.html',
         },
         CATEGORY: {
             CATEGORY_DOCUMENT_UPLOADED: 'Emails/Category/upload.html',
@@ -128,6 +130,9 @@ export const NOTIFICATION = {
             PROFILE_DEACTIVATED: 'Business Profile Deactivated',
             PROFILE_ACTIVATED: 'Business Profile Activated',
             PROFILE_APPROVED: 'Business Profile Approved',
+
+            DOCUMENT_UPLOADED: 'Document Uploaded Successfully',
+
             BANK: {
                 BANK_DETAILS_CREATED: 'Bank Details Added To You',
                 BANK_DETAILS_UPDATED: "Bank Details Update",
@@ -144,7 +149,6 @@ export const NOTIFICATION = {
             PROFILE_UPDATED: 'Profile Updated Successfully',
             PROFILE_DELETED: 'Profile Deleted Successfully',
             OPERATING_STATUS_UPDATED: 'Operating Status Updated Successfully',
-            DOCUMENT_UPLOADED: 'Document Uploaded Successfully',
             ACCOUNT_DELETED: 'Account Deleted Successfully',
         }
     },

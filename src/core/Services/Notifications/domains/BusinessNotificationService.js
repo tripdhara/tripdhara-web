@@ -485,10 +485,46 @@ export class BusinessNotificationService {
     }
 
     // Business Document Uploaded
-    async sendBusinessDocumentsEmail(email, businessName) {
+    async sendBusinessDocumentsEmail(email, details) {
         try {
-            const html = await renderTemplate('Emails/vendor/documents.html', { BUSINESS_NAME: businessName });
-            await this._sendEmailHelper({ to: email, toName: businessName, subject: `Documents Received - Tripdhara`, html: html });
+            const businessProfile = details?.businessProfile || {};
+            const businessName = businessProfile?.businessName || 'Partner';
+            const account = {
+                ID: businessProfile.id,
+                NAME: businessName,
+                EMAIL: details.email || '',
+                PHONE: details.phone || '',
+                IMAGE_URL: businessProfile?.profileImage || 'https://media.tripdhara.com/tripdhara_icon_wordmark.png',
+                ROLE: details.role,
+                FCM_TOKEN: details.fcmToken,
+
+                BUSINESS_OWNER_NAME: businessProfile?.ownerName || '',
+                BUSINESS_ADDRESS: businessProfile?.address || '',
+                BUSINESS_PHONE: businessProfile?.businessNumber || ''
+            };
+            const html = await renderTemplate(NOTIFICATION.TEMPLATE.BUSINESS.DOCUMENT_UPLOADED, account);
+            await NotificationDispatcher.dispatch({
+                contextName: 'businessDocumentUpdated',
+                email: (account.EMAIL) ? {
+                    to: email,
+                    toName: account.NAME,
+                    subject: NOTIFICATION.SUBJECT.BUSINESS.DOCUMENT_UPLOADED,
+                    html: html
+                } : null,
+
+                push: (account.FCM_TOKEN) ? {
+                    fcmToken: account.FCM_TOKEN,
+
+                    title: NOTIFICATION.PUSH.BUSINESS.TITLE.DOCUMENT_UPLOADED,
+                    body: NOTIFICATION.PUSH.BUSINESS.BODY.DOCUMENT_UPLOADED,
+                    image: account.IMAGE_URL,
+
+                    id: account.ID,
+                    type: NOTIFICATION.PUSH.BUSINESS.TYPE.DOCUMENT_UPLOADED,
+                    role: account.ROLE,
+
+                } : null
+            });
             return true;
         } catch (error) {
             getLogger().error({ err: error }, "[NotificationService] sendVendorDocumentsReceivedEmail Error");

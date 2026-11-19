@@ -1,9 +1,11 @@
 import { uploadToCloudinary } from '@/core/Helpers/cloudinary.js';
-import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
+import { RESPONSE_MESSAGES, VERIFICATION_STATUS } from '@/core/Constants/index.js';
 import Vendor from '@/core/Models/Vendor.js';
+import User from '@/core/Models/User.js';
 import CacheService from '@/core/Services/CacheService.js';
 import { AppError } from '@/core/Errors/AppError.js';
 import { getBusinessByUserId } from '@/core/Helpers/queryHelpers.js';
+import { userAuthResponse } from '@/core/Helpers/userProfileHelper.js';
 
 class DocumentService {
     async invalidateVendorCaches(userId, vendorId = null) {
@@ -18,68 +20,38 @@ class DocumentService {
         }
     }
 
-    /**
-     * Upload and synchronize business verification documents
-     */
-    async uploadVerificationFiles(userId, files) {
+    async uploadVerificationFiles(userId, payload) {
         const vendor = await getBusinessByUserId(userId, '_id');
         if (!vendor) throw AppError.notFound(RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
         const updatePayload = {};
-        const uploadTasks = [];
+        if (payload.aadharCard) {
+            updatePayload['documents.aadharCard'] = payload.aadharCard.map(url => ({
+                url,
+                status: VERIFICATION_STATUS.PENDING
+            }));
+        }
 
-        // Parallel upload for Aadhar card files
-        if (files.aadharCard) {
-            const aadharFiles = Array.isArray(files.aadharCard) ? files.aadharCard : [files.aadharCard];
-            const validAadharFiles = aadharFiles.filter(f => typeof f === 'object' && f?.size);
-            if (validAadharFiles.length > 0) {
-                uploadTasks.push(
-                    Promise.all(
-                        validAadharFiles.map(async (file) => {
-                            const res = await uploadToCloudinary(file, `vendor_documents/aadhar/${userId}`);
-                            return { url: res.url, publicId: res.publicId };
-                        })
-                    ).then((results) => {
-                        if (results.length > 0) {
-                            updatePayload['documents.aadharCard'] = results;
-                        }
-                    })
-                );
+        const singleDocs = ['panCard', 'businessRegistration', 'gstRegistration'];
+        for (const key of singleDocs) {
+            if (payload[key]) {
+                updatePayload[`documents.${key}`] = {
+                    url: payload[key],
+                    status: VERIFICATION_STATUS.PENDING
+                };
             }
         }
 
-        // Parallel upload for single documents (PAN, Business Registration, GST)
-        const singleDocs = [
-            { key: 'panCard', folder: 'pan' },
-            { key: 'businessRegistration', folder: 'registration' },
-            { key: 'gstRegistration', folder: 'gst' }
-        ];
-
-        for (const { key, folder } of singleDocs) {
-            if (files[key] && typeof files[key] === 'object' && files[key]?.size) {
-                uploadTasks.push(
-                    uploadToCloudinary(files[key], `vendor_documents/${folder}/${userId}`).then((res) => {
-                        updatePayload[`documents.${key}`] = { url: res.url, publicId: res.publicId };
-                    })
-                );
-            }
-        }
-
-        if (uploadTasks.length > 0) {
-            await Promise.all(uploadTasks);
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
-            const updatedVendor = await Vendor.findOneAndUpdate(
-                { _id: vendor._id },
-                { $set: updatePayload },
-                { returnDocument: 'after' }
-            );
+        const updatedVendor = await Vendor.findOneAndUpdate(
+            { _id: vendor._id },
+            { $set: updatePayload },
+            { returnDocument: 'after' }
+        );
+        if (updatedVendor) {
             await this.invalidateVendorCaches(userId, vendor._id);
-            return updatedVendor.documents;
         }
-
-        return vendor.documents;
+        const user = await User.findById(userId);
+        return userAuthResponse(user);
     }
 
     /**

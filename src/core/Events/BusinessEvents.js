@@ -34,7 +34,7 @@ registerEmailListener(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, (id, d
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, (id, data) => BusinessNotificationService.sendBusinessProfileDeletedEmail(id, data));
 
 // Business Document Emails
-registerEmailListener(NOTIFICATION.KEY.BUSINESS.DOCUMENT_UPLOADED, (id, data) => BusinessNotificationService.sendVendorDocumentsReceivedEmail(id, data));
+registerEmailListener(NOTIFICATION.KEY.BUSINESS.DOCUMENT_UPLOADED, (id, data) => BusinessNotificationService.sendBusinessDocumentsEmail(id, data));
 
 // Business Bank Details Emails
 registerEmailListener(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, (id, data) => BusinessNotificationService.sendBusinessBankDetailsCreatedEmail(id, data));

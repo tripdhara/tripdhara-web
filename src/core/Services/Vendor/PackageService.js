@@ -160,22 +160,22 @@ class PackageService {
     }
 
     // Add Item
-    async addItem(userId, businessId, category, itemData) {
-        return await item(userId, businessId, category, itemData);
+    async addItem(userId, category, data) {
+        return await item(userId, category, data);
     }
 
     // Update Item
-    async updateItem(userId, businessId, category, itemId, updates) {
-        return await item(userId, businessId, category, updates, itemId);
+    async updateItem(userId, category, data, itemId) {
+        return await item(userId, category, data, itemId);
     }
 
     // Aliases for Service Item calls
-    async addServiceItem(userId, vendorId, category, itemData) {
-        return await this.addItem(userId, vendorId, category, itemData);
+    async addServiceItem(userId, category, data) {
+        return await this.addItem(userId, category, data);
     }
 
-    async updateServiceItem(userId, vendorId, category, itemId, updates) {
-        return await this.updateItem(userId, vendorId, category, itemId, updates);
+    async updateServiceItem(userId, category, data, itemId) {
+        return await this.updateItem(userId, category, data, itemId);
     }
 
     // Remove Item

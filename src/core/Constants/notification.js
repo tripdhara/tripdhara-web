@@ -107,6 +107,11 @@ export const NOTIFICATION = {
             CATEGORY_DOCUMENT_REMOVED: 'vendor.category_document_removed',
 
             DOCUMENT_UPLOADED: 'vendor.document_uploaded',
+
+            PACKAGE_CREATED: 'vendor.package_created',
+            PACKAGE_UPDATED: 'vendor.package_updated',
+            PACKAGE_DELETED: 'vendor.package_deleted',
+
             PROFILE_UPDATE: 'vendor.profile_update',
             ACCOUNT_DELETED: 'vendor.account_deleted',
 

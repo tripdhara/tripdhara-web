@@ -11,7 +11,7 @@ import AppError from '@/core/Helpers/AppError.js';
 import { notifyIndexNow } from './indexNow.js';
 import { getLocationPoint } from './addressHelper.js';
 import { getLogger } from '@/core/Lib/logger.js';
-import { getPackageBy, getBusinessById } from './queryHelpers.js';
+import { getPackageBy, getBusinessById, getBusinessByUserId } from './queryHelpers.js';
 
 /**
  * Recursively flattens nested objects into dot notation for partial Mongoose subdocument updates.
@@ -90,60 +90,38 @@ export async function findOrCreateCatalog(userId, vendorId, lean = false) {
  * @param {string|null} itemId - Item ID (null for creation, string for updates)
  * @returns {Promise<Object>} Formatted saved item
  */
-export async function item(userId, businessId, category, itemDataOrUpdates, itemId = null) {
-    // 1. Validate vendor authorization for category
-    const business = await getBusinessById(businessId, 'category');
+
+export async function item(userId, category, payload, itemId = null) {
+    const business = await getBusinessByUserId(userId, 'category');
     if (!business) throw AppError.notFound(RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-    const allowed = new Set();
-    (business.category || []).forEach(c => {
-        if (!c.slug) return;
-        const slug = c.slug.toLowerCase();
-        allowed.add(slug);
-        if (CATEGORY_MAP[slug]) allowed.add(CATEGORY_MAP[slug]);
-    });
-    const allowedCategories = Array.from(allowed);
-    if (!allowedCategories.includes(category)) throw AppError.forbidden(`Vendor not authorized to operate in category: ${category}`);
+    const vendorCategory = business.category?.find(c => c.slug === category);
+    if (!vendorCategory) throw AppError.forbidden(RESPONSE_MESSAGES.VENDOR.UNAUTHORIZED_CATEGORY);
 
-    // 2. Find or create package catalog
-    const pkg = await findOrCreateCatalog(userId, businessId);
+    const businessId = business._id.toString();
 
-    const schemaKey = CATEGORY_MAP[category] || category;
-    if (pkg[schemaKey] === undefined) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
+    const schemaKey = CATEGORY_MAP[category];
+    if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
 
-    // 3. Process and upload photos
-    if (itemDataOrUpdates.photos) {
-        const uploadResults = await processItemPhotos(itemDataOrUpdates.photos, `packages/${businessId}/${category}`);
-        if (uploadResults.length > 0) {
-            itemDataOrUpdates.photos = uploadResults;
-        } else if (!itemId) {
-            delete itemDataOrUpdates.photos;
-        }
-    }
+    let pkg = await getPackageBy({ user: userId, vendor: businessId }, '', null, { lean: false });
+    if (!pkg) pkg = await Package.create({ user: userId, vendor: businessId });
 
-    // 4. Pre-process and calculate Pricing BEFORE subdocument mutation
+    if (payload.photos) payload.photos = payload.photos.map(p => p.url ? p : { url: p });
+
     let itemDoc;
-    const pricingInput = itemDataOrUpdates.pricing;
 
     if (itemId) {
-        // Update path: Find subdocument first
         itemDoc = pkg[schemaKey].id(itemId);
         if (!itemDoc) throw AppError.notFound(RESPONSE_MESSAGES.ITEM.NOT_FOUND);
 
-        if (pricingInput && typeof pricingInput === 'object') {
-            const currentPricing = itemDoc.pricing?.toObject?.() || itemDoc.pricing || {};
-            itemDataOrUpdates.pricing = await sellingPrice(pricingInput, category, currentPricing);
-        }
+        if (payload.pricing) payload.pricing = await sellingPrice(payload.pricing, category, itemDoc.pricing);
 
-        const flatUpdates = flattenObject(itemDataOrUpdates);
-        Object.keys(flatUpdates).forEach(key => itemDoc.set(key, flatUpdates[key]));
-
+        const flatUpdates = flattenObject(payload);
+        Object.entries(flatUpdates).forEach(([key, val]) => itemDoc.set(key, val));
     } else {
-        // Add path: Map pricingInput into structured pricing object
-        if (pricingInput && typeof pricingInput === 'object') itemDataOrUpdates.pricing = await sellingPrice(pricingInput, category);
-
-        const index = pkg[schemaKey].push(itemDataOrUpdates) - 1;
-        itemDoc = pkg[schemaKey][index];
+        if (payload.pricing) payload.pricing = await sellingPrice(payload.pricing, category);
+        itemDoc = pkg[schemaKey].create(payload);
+        pkg[schemaKey].push(itemDoc);
     }
 
     // 5. Apply Pre-save Formatting
@@ -152,74 +130,52 @@ export async function item(userId, businessId, category, itemDataOrUpdates, item
     if (itemDoc.details && itemDoc.details.startPoint) mapToGeoJSON(itemDoc.details.startPoint);
     if (itemDoc.details && itemDoc.details.endPoint) mapToGeoJSON(itemDoc.details.endPoint);
 
-    // 6. Save Catalog
-    const saved = await pkg.save();
+    await pkg.save();
 
-    // Retrieve the final saved subdocument
-    const savedItem = itemId ? saved[schemaKey].id(itemId) : saved[schemaKey][saved[schemaKey].length - 1];
+    const savedItem = pkg[schemaKey].id(itemDoc._id);
 
-    // 7. Initialize inventory for new items
-    if (!itemId && savedItem && savedItem._id) {
-        try {
-            await InventoryService.initializeFromItem(businessId, savedItem._id, schemaKey);
-        } catch (invError) {
-            getLogger().error({ err: invError }, 'Inventory Initialization Failed');
-        }
-    }
+    if (!itemId && savedItem) await InventoryService.initializeFromItem(businessId, savedItem._id, schemaKey);
 
-    // 8. Auto-notify IndexNow for Search Engine Indexation
-    if (savedItem && savedItem._id) notifyIndexNow([`https://tripdhara.in/packages/${savedItem._id}`]).catch(() => { });
-
-    // 9. Format and return the result using normalizePackageItem
+    notifyIndexNow([`https://tripdhara.in/packages/${savedItem._id}`]).catch(() => { });
     const base = normalizePackageItem(savedItem);
-    const categoryObj = (business.category || []).find(c => c.slug === category) || { name: category, _id: "" };
-
     return {
-        id: base.id,
-        title: base.title,
-        slug: base.slug,
-        isActive: base.isActive,
-        availability: base.itemObj.availability || {},
-        pricing: base.pricing,
-        address: base.address,
-        location: base.location,
-        photos: base.image,
-        category_name: categoryObj.name || "",
-        category_slug: category,
-        category_id: categoryObj._id?.toString() || ""
+        ...base,
+        availability: savedItem.availability,
+        category_id: vendorCategory._id.toString(),
+        category_name: vendorCategory.name,
+        category_slug: vendorCategory.slug
     };
 }
 
 /**
  * Core helper to normalize common package item properties (DRY single source of truth).
  */
+
 export function normalizePackageItem(item, reviews = []) {
     if (!item) return null;
-    const itemObj = item.toObject ? item.toObject() : item;
-    const reviewList = Array.isArray(reviews) && reviews.length > 0 ? reviews : (Array.isArray(itemObj.reviews) ? itemObj.reviews : []);
-
-    let rating = itemObj.rating || { average: 0, count: 0 };
-    if (reviewList.length > 0) {
-        const totalRating = reviewList.reduce((acc, r) => acc + (parseFloat(r.rating) || 0), 0);
-        const count = reviewList.length;
-        const average = Math.round((totalRating / count) * 10) / 10;
-        rating = { average, count };
+    const reviewList = reviews.length ? reviews : (item.reviews ?? []);
+    let rating = item.rating ?? { average: 0, count: 0 };
+    if (reviewList.length) {
+        const totalRating = reviewList.reduce((acc, r) => acc + Number(r.rating), 0);
+        rating = {
+            average: Math.round((totalRating / reviewList.length) * 10) / 10,
+            count: reviewList.length
+        };
     }
 
     return {
-        itemObj,
-        id: (itemObj.id || itemObj._id)?.toString() || '',
-        title: itemObj.title || '',
-        slug: itemObj.slug || '',
-        isActive: Boolean(itemObj.isActive),
+        id: item._id?.toString(),
+        title: item.title,
+        slug: item.slug,
+        isActive: Boolean(item.isActive),
         pricing: {
-            basePrice: itemObj.pricing?.basePrice || 0,
-            gst: itemObj.pricing?.gst || 0,
-            sellingPrice: itemObj.pricing?.sellingPrice || 0
+            basePrice: item.pricing?.basePrice,
+            gst: item.pricing?.gst,
+            sellingPrice: item.pricing?.sellingPrice
         },
-        address: itemObj.location?.address || '',
-        location: getLocationPoint(itemObj.location),
-        image: itemObj.photos?.[0]?.url || itemObj.photos?.[0] || '',
+        address: item.location?.address,
+        location: getLocationPoint(item.location),
+        image: item.photos?.[0]?.url,
         rating,
         reviews: reviewList
     };
@@ -316,4 +272,3 @@ export function vendorPackageItem(item, reviews = []) {
         reviews: reviewList
     };
 }
-

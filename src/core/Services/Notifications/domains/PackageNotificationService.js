@@ -6,7 +6,17 @@ import NotificationDispatcher from '@/core/Helpers/Notifications/NotificationDis
 
 export class PackageNotificationService {
 
-    //
+    async sendPackageCreatedEmail(email, details) {
+
+    }
+
+    async sendPackageUpdatedEmail(email, details) {
+
+    }
+
+    async sendPackageDeletedEmail(email, details) {
+
+    }
 
 }
 

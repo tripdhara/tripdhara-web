@@ -207,6 +207,7 @@ export const RESPONSE_MESSAGES = {
         INVENTORY_FETCHED: 'Service inventory retrieved successfully.',
         INVENTORY_ITEM_FETCHED: 'Inventory item details retrieved.',
         INVENTORY_UPDATED: 'Inventory stock/status updated.',
+        UNAUTHORIZED_CATEGORY: 'Vendor not authorized to operate in this category.',
     },
     CLOSURE: {
         FETCHED: 'Business closure periods retrieved.',

@@ -6,6 +6,9 @@ import { getBusinessByUserId, getReviewsByItemId } from '@/core/Helpers/queryHel
 import { vendorPackageItem } from '@/core/Helpers/package.js';
 import { getVendorPackages, getVendorPackageItemById } from '@/core/Helpers/Package/vendorPackage.js';
 import { parseQuery } from '@/core/Helpers/search.js';
+import User from '@/core/Models/User';
+import { userAuthResponse } from '@/core/Helpers/userProfileHelper';
+import { NOTIFICATION } from '@/core/Constants/notification';
 
 /**
  * PackageController (Vendor Role) - Comprehensive management of vendor catalogs and service items.
@@ -129,26 +132,42 @@ class PackageController extends Controller {
     // Unified package saving controller logic (both addition and update)
     async savePackageItem(req, { params = {}, isUpdate } = {}) {
         try {
-            const body = req.payload || {};
+            const body = req.payload;
             const category = body.category;
             if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
+            const userId = req.user.id;
             const itemId = isUpdate ? (params?.itemId || body.itemId) : null;
+            if (isUpdate && !itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
+
+            let result;
+            let status = HTTP_STATUS.CREATED;
+            let message = RESPONSE_MESSAGES.ITEM.ADDED;
+            let eventName = NOTIFICATION.KEY.BUSINESS.PACKAGE_CREATED;
             if (isUpdate) {
-                await PackageService.updateItem(req.user.id, vendorId, category, itemId, body);
-                return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.ITEM.UPDATED);
+                result = await PackageService.updateItem(userId, category, body, itemId);
+                status = HTTP_STATUS.OK;
+                message = RESPONSE_MESSAGES.ITEM.UPDATED;
+                eventName = NOTIFICATION.KEY.BUSINESS.PACKAGE_UPDATED;
             } else {
-                await PackageService.addItem(req.user.id, vendorId, category, body);
-                return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.ITEM.ADDED);
+                result = await PackageService.addItem(userId, category, body);
             }
+            // 2. Full Business/User Profile fetch karein taaki account object ban sake
+            const user = await User.findById(req.user.id);
+            const profile = await userAuthResponse(user);
+            // 3. Event emit karein
+            if (profile?.email) {
+                PackageEvents.emitAsync(eventName, {
+                    identifier: profile.email,
+                    details: {
+                        ...profile,
+                        package: result
+                    }
+                });
+            }
+            return this.success(status, message, result);
         } catch (error) {
-            if (error.name === 'ValidationError') {
-                return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
-            }
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 

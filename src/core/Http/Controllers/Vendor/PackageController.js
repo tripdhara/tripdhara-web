@@ -9,6 +9,7 @@ import { parseQuery } from '@/core/Helpers/search.js';
 import User from '@/core/Models/User';
 import { userAuthResponse } from '@/core/Helpers/userProfileHelper';
 import { NOTIFICATION } from '@/core/Constants/notification';
+import PackageEvents from '@/events/PackageEvents';
 
 /**
  * PackageController (Vendor Role) - Comprehensive management of vendor catalogs and service items.
@@ -167,6 +168,7 @@ class PackageController extends Controller {
             }
             return this.success(status, message, result);
         } catch (error) {
+            console.log(error);
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

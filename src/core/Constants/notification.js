@@ -46,6 +46,7 @@ export const NOTIFICATION = {
             CREATE: 'Emails/Package/create.html',
             UPDATE: 'Emails/Package/update.html',
             DELETE: 'Emails/Package/delete.html',
+            STATUS: 'Emails/Package/status.html',
         },
         SYSTEM: {
 

@@ -23,9 +23,9 @@ const packageEmailListener = (eventKey, handlerFn) => {
 };
 
 // Business Profile Emails
-packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_CREATED, (id, data) => NotificationService.sendPackageCreatedEmail(id, data));
-packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_UPDATED, (id, data) => NotificationService.sendPackageUpdatedEmail(id, data));
-packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, (id, data) => NotificationService.sendPackageDeletedEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_CREATED, (id, data) => PackageNotificationService.sendPackageCreatedEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_UPDATED, (id, data) => PackageNotificationService.sendPackageUpdatedEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, (id, data) => PackageNotificationService.sendPackageDeletedEmail(id, data));
 
 PackageEvents.emitAsync = async function (event, data) {
     const listeners = this.listeners(event);

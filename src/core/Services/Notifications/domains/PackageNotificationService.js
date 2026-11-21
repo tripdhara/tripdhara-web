@@ -47,8 +47,8 @@ export class PackageNotificationService {
         try {
             const account = this._formatPackageAccount(email, details);
             const html = await renderTemplate(config.template, account);
-            const subject = typeof config.subject === 'function' ? config.subject(account) : config.subject;
-            const message = typeof config.message === 'function' ? config.message(account) : config.message;
+            const subject = config.subject;
+            const message = config.message;
 
             await NotificationDispatcher.dispatch({
                 contextName: config.contextName,
@@ -107,10 +107,10 @@ export class PackageNotificationService {
         return this._notify(email, details, {
             contextName: 'PackageCreated',
             template: NOTIFICATION.TEMPLATE.PACKAGE.CREATE,
-            subject: (acc) => `New Listing Created: ${acc.ITEM_TITLE} - Tripdhara`,
-            title: 'New Package Item Added',
-            message: (acc) => `Your listing "${acc.ITEM_TITLE}" has been created successfully.`,
-            type: 'package_created',
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_CREATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_CREATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_CREATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_CREATED,
             priority: NOTIFICATION_PRIORITIES.MEDIUM
         });
     }
@@ -118,12 +118,11 @@ export class PackageNotificationService {
     sendPackageUpdatedEmail(email, details) {
         return this._notify(email, details, {
             contextName: 'PackageUpdated',
-            template: NOTIFICATION.TEMPLATE.PACKAGE.UPDATE,
-            subject: (acc) => `Listing Updated: ${acc.ITEM_TITLE} - Tripdhara`,
-            title: 'Package Item Updated',
-            message: (acc) => `Your listing "${acc.ITEM_TITLE}" has been updated successfully.`,
-            type: 'package_updated',
-            priority: NOTIFICATION_PRIORITIES.LOW
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_UPDATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_UPDATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_UPDATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_UPDATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
         });
     }
 
@@ -131,10 +130,10 @@ export class PackageNotificationService {
         return this._notify(email, details, {
             contextName: 'PackageDeleted',
             template: NOTIFICATION.TEMPLATE.PACKAGE.DELETE,
-            subject: (acc) => `Listing Removed: ${acc.ITEM_TITLE} - Tripdhara`,
-            title: 'Package Listing Removed',
-            message: (acc) => `Your listing "${acc.ITEM_TITLE}" has been removed from catalog.`,
-            type: 'package_deleted',
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_DELETED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_DELETED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_DELETED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_DELETED,
             priority: NOTIFICATION_PRIORITIES.MEDIUM
         });
     }
@@ -143,11 +142,11 @@ export class PackageNotificationService {
         return this._notify(email, details, {
             contextName: 'PackageStatusUpdated',
             template: NOTIFICATION.TEMPLATE.PACKAGE.STATUS,
-            subject: (acc) => `Listing Status Changed: ${acc.ITEM_TITLE} (${acc.STATUS}) - Tripdhara`,
-            title: 'Listing Status Updated',
-            message: (acc) => `Your listing "${acc.ITEM_TITLE}" is now ${acc.STATUS}.`,
-            type: 'package_status_updated',
-            priority: NOTIFICATION_PRIORITIES.LOW
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_STATUS_UPDATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_STATUS_UPDATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_STATUS_UPDATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_STATUS_UPDATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
         });
     }
 }

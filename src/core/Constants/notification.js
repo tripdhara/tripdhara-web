@@ -33,7 +33,6 @@ export const NOTIFICATION = {
             CATEGORY_ASSIGNED: 'Emails/vendor/category-assigned.html',
             CATEGORY_REMOVED: 'Emails/vendor/category-removed.html',
 
-
             PROFILE_CREATED: 'Emails/vendor/profile-created.html',
             PROFILE_UPDATED: 'Emails/vendor/profile-updated.html',
             PROFILE_DELETED: 'Emails/vendor/profile-deleted.html',
@@ -148,6 +147,12 @@ export const NOTIFICATION = {
             CATEGORY_DOCUMENT_UPLOADED: 'Category Document Uploaded To You',
             CATEGORY_DOCUMENT_REMOVED: 'Category Document Removed From You',
 
+            PACKAGE_CREATED: 'New Package Item Created',
+            PACKAGE_UPDATED: 'Package Item Updated',
+            PACKAGE_DELETED: 'Package Item Status Updated',
+            PACKAGE_STATUS_UPDATED: 'Package Item Status Updated',
+
+
             ACCOUNT_DELETED: 'Your Account Has Been Deleted',
             CATEGORY_ASSIGNED: 'Category Assigned To You',
             CATEGORY_REMOVED: 'Category Removed From You',
@@ -195,6 +200,11 @@ export const NOTIFICATION = {
                 CATEGORY_DOCUMENT_UPLOADED: 'Category document uploaded',
                 CATEGORY_DOCUMENT_REMOVED: 'Category document removed',
 
+                PACKAGE_CREATED: 'Package Created',
+                PACKAGE_UPDATED: 'Package Updated',
+                PACKAGE_DELETED: 'Package Deleted',
+                PACKAGE_STATUS_UPDATED: 'Package Status Updated',
+
                 DOCUMENT_UPLOADED: 'Document uploaded',
                 ACCOUNT_DELETED: 'Account deleted',
                 CATEGORY_ASSIGNED: 'Category assigned',
@@ -214,6 +224,11 @@ export const NOTIFICATION = {
                 BANK_DETAILS_CREATED: 'Your bank details has been added successfully',
                 BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
                 BANK_DETAILS_REMOVED: 'Your bank details has been removed successfully',
+
+                PACKAGE_CREATED: 'Your listing has been created successfully.',
+                PACKAGE_UPDATED: 'Your listing has been updated successfully.',
+                PACKAGE_DELETED: 'Your listing has been deleted successfully.',
+                PACKAGE_STATUS_UPDATED: 'Your listing status has been updated successfully.',
 
                 DOCUMENT_UPLOADED: 'documents has been uploaded successfully',
                 ACCOUNT_DELETED: 'Your account has been deleted successfully',
@@ -240,6 +255,11 @@ export const NOTIFICATION = {
                 BANK_DETAILS_CREATED: 'business_bank_details_created',
                 BANK_DETAILS_UPDATED: "business_bank_details_updated",
                 BANK_DETAILS_REMOVED: 'business_bank_details_Removed',
+
+                PACKAGE_CREATED: 'package_created',
+                PACKAGE_UPDATED: 'package_updated',
+                PACKAGE_DELETED: 'package_deleted',
+                PACKAGE_STATUS_UPDATED: 'package_status_updated',
 
                 ACCOUNT_DELETED: 'account_deleted',
 

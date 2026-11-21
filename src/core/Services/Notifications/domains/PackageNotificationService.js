@@ -118,6 +118,7 @@ export class PackageNotificationService {
     sendPackageUpdatedEmail(email, details) {
         return this._notify(email, details, {
             contextName: 'PackageUpdated',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.UPDATE,
             subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_UPDATED,
             title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_UPDATED,
             message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_UPDATED,

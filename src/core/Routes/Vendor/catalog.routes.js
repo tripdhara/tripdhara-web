@@ -6,19 +6,25 @@ import { schemas } from '@/core/Helpers/validation.js';
 
 export default [
     { method: 'GET', path: '/packages', handler: wrap(() => PackageController, 'getPackages') },
-    { method: 'POST', path: '/create-package', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'createPackage') },
+    // { method: 'POST', path: '/create-package', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'createPackage') },
     ...Router.group({ prefix: '/package' }, [
-        { method: 'GET', path: '/item/:category/:itemId', handler: wrap(() => PackageController, 'getPackageItem') },
         { method: 'POST', path: '/add-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'addPackageItem') },
-        { method: 'POST', path: '/toggle-item', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'togglePackageItemStatus') },
-        { method: 'POST', path: '/toggle-category', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'toggleCategoryStatus') },
         { method: ['POST', 'PUT', 'PATCH'], path: '/update-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'updatePackageItem') },
+        { method: 'GET', path: '/item/:category/:itemId', handler: wrap(() => PackageController, 'getPackageItem') },
+
+        // Bulk Status Update According to Category
+        { method: ['POST', 'PATCH'], path: '/:category/toggle-item', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'bulkPackageStatusByCategory') },
+
+        { method: 'POST', path: '/toggle-category', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'toggleCategoryStatus') },
         { method: ['POST', 'PUT', 'DELETE'], path: '/delete-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'removePackageItem') },
         ...Router.group({ prefix: '/:itemId' }, [
-            { method: 'POST', path: '/toggle-item', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'togglePackageItemStatus') },
             { method: ['POST', 'PUT', 'PATCH'], path: '/update-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'updatePackageItem') },
+            { method: ['POST', 'PATCH'], path: '/toggle-item', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'updatePackageStatus') },
+
+
             { method: ['POST', 'PUT', 'DELETE'], path: '/delete-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'removePackageItem') },
         ]),
+
     ]),
     ...Router.group({ prefix: '/category' }, [
         { method: 'GET', path: '/', handler: wrap(() => CategoryController, 'getCategories') },

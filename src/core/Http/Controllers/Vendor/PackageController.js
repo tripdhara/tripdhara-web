@@ -10,6 +10,9 @@ import User from '@/core/Models/User';
 import { userAuthResponse } from '@/core/Helpers/userProfileHelper';
 import { NOTIFICATION } from '@/core/Constants/notification';
 import PackageEvents from '@/events/PackageEvents';
+import mongoose from 'mongoose';
+import AppError from '@/core/Helpers/AppError';
+import { Package } from '@/core/Models/index';
 
 /**
  * PackageController (Vendor Role) - Comprehensive management of vendor catalogs and service items.
@@ -30,7 +33,7 @@ class PackageController extends Controller {
             const options = parseQuery(req.url);
             const result = await getVendorPackages({ userId, ...options });
             const isEmpty = !result || (Array.isArray(result.items || result.data) && result.items.length === 0);
-            const message = isEmpty ? RESPONSE_MESSAGES.WISHLIST.EMPTY : RESPONSE_MESSAGES.WISHLIST.FETCHED;
+            const message = isEmpty ? RESPONSE_MESSAGES.PACKAGE.EMPTY : RESPONSE_MESSAGES.PACKAGE.FETCHED;
 
             if (result && result.pagination) return this.paginatedSuccess(HTTP_STATUS.OK, message, result.items || result.data, result.pagination);
             return this.success(HTTP_STATUS.OK, message, result);
@@ -118,14 +121,14 @@ class PackageController extends Controller {
         }
     }
 
-    // --- ITEM/SERVICE ACTIONS (Adding specific homestays, hotel rooms, etc) ---
+    // November 21, 2026
 
     // POST /vendor/package/add-item
     async addPackageItem(req, { params } = {}) {
         return this.savePackageItem(req, { params, isUpdate: false });
     }
 
-    // PATCH /vendor/package/update-item (Modify service item details)
+    // PATCH /vendor/package/update-item && PUT vendor/package/:itemId/update-item
     async updatePackageItem(req, { params } = {}) {
         return this.savePackageItem(req, { params, isUpdate: true });
     }
@@ -143,12 +146,12 @@ class PackageController extends Controller {
 
             let result;
             let status = HTTP_STATUS.CREATED;
-            let message = RESPONSE_MESSAGES.ITEM.ADDED;
+            let message = RESPONSE_MESSAGES.PACKAGE.CREATED;
             let eventName = NOTIFICATION.KEY.BUSINESS.PACKAGE_CREATED;
             if (isUpdate) {
                 result = await PackageService.updateItem(userId, category, body, itemId);
                 status = HTTP_STATUS.OK;
-                message = RESPONSE_MESSAGES.ITEM.UPDATED;
+                message = RESPONSE_MESSAGES.PACKAGE.UPDATED;
                 eventName = NOTIFICATION.KEY.BUSINESS.PACKAGE_UPDATED;
             } else {
                 result = await PackageService.addItem(userId, category, body);
@@ -166,10 +169,39 @@ class PackageController extends Controller {
                     }
                 });
             }
-            return this.success(status, message, result);
+            return this.success(status, message);
         } catch (error) {
             console.log(error);
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // POST /vendor/package/toggle-item
+    async updatePackageStatus(req, { params } = {}) {
+        try {
+            const body = req.payload || {};
+            const userId = req.user.id;
+
+            const itemId = params.itemId || body.itemId;
+            if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
+            if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
+
+            const { category } = body;
+            if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
+
+            const isActive = String(body.isActive).trim().toLowerCase() === 'true';
+            const schemaKey = CATEGORY_MAP[category];
+            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            const updated = await Package.updateOne(
+                { user: userId, [`${schemaKey}._id`]: itemId },
+                { $set: { [`${schemaKey}.$.isActive`]: isActive } }
+            );
+            if (updated.matchedCount === 0) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
+            return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.PACKAGE_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.PACKAGE_DEACTIVATED);
+        } catch (error) {
+            const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
+            return this.error(status, error.message);
         }
     }
 
@@ -191,34 +223,22 @@ class PackageController extends Controller {
         }
     }
 
-    // POST /vendor/package/toggle-item
-    async togglePackageItemStatus(req, { params } = {}) {
+    // POST /vendor/package/:category/toggle-item
+    async bulkPackageStatusByCategory(req, { params } = {}) {
         try {
+            const category = params.category.trim();
             const body = req.payload || {};
+            const isActive = String(body.isActive).trim().toLowerCase() === 'true';
+            const schemaKey = CATEGORY_MAP[category];
+            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            pkg[schemaKey].forEach(item => {
+                item.isActive = isActive;
+            });
+
             const vendorId = await this._getVendorId(req.user.id);
             if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            const itemId = params.itemId || body.itemId;
-            const category = (body.category || '').trim();
-            let isActive = body.isActive;
-            if (typeof isActive === 'string') isActive = isActive.trim().toLowerCase() === 'true';
-            const result = await PackageService.toggleItemStatus(req.user.id, vendorId, category, itemId, isActive);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.ITEM.STATUS_UPDATED, result);
-        } catch (error) {
-            const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
-            return this.error(status, error.message);
-        }
-    }
-
-    // POST /vendor/package/toggle-category
-    async toggleCategoryStatus(req) {
-        try {
-            const body = req.payload || {};
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            const category = (body.category || '').trim();
-            const { isActive } = body;
 
             await PackageService.toggleCategoryStatus(req.user.id, vendorId, category, isActive);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_UPDATED);

@@ -159,6 +159,7 @@ class PackageService {
         return vendorPackagePayload(item, categorySlug, vendorCategories);
     }
 
+    // November 21, 2026
     // Add Item
     async addItem(userId, category, data) {
         return await item(userId, category, data);
@@ -169,7 +170,8 @@ class PackageService {
         return await item(userId, category, data, itemId);
     }
 
-    // Aliases for Service Item calls
+
+    // Vendor Package November 21, 2026
     async addServiceItem(userId, category, data) {
         return await this.addItem(userId, category, data);
     }
@@ -193,11 +195,6 @@ class PackageService {
         pkg[schemaKey].pull({ _id: itemId });
         await pkg.save();
         return { itemId, deleted: true };
-    }
-
-    // Toggle Item Status
-    async toggleItemStatus(userId, vendorId, category, itemId, isActive) {
-        return await this.updateItem(userId, vendorId, category, itemId, { isActive });
     }
 
     // Update range (Vendor Management)

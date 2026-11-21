@@ -59,7 +59,7 @@ export const BasePackageFields = {
     slug: { type: String, trim: DEFAULTS.TRUE, default: DEFAULTS.NULL, required: DEFAULTS.TRUE },
     description: { type: String, default: DEFAULTS.NULL },
     isActive: { type: Boolean, default: DEFAULTS.TRUE },
-
+    deletedAt: { type: Date, default: null },
     availability: {
         total: { type: Number, default: DEFAULTS.COUNTS.ZERO },
         available: { type: Number, default: DEFAULTS.COUNTS.ZERO },

@@ -22,7 +22,8 @@ const VendorPackageSchema = new mongoose.Schema({
     vehicleRental: [VehicleRentalSchema],
     chardhamTour: [ChardhamTourSchema],
     customTrip: [CustomTripSchema],
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    deletedAt: { type: Date, default: null }
 }, {
     collection: 'packages',
     timestamps: DEFAULTS.TRUE,

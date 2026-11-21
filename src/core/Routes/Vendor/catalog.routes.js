@@ -13,9 +13,9 @@ export default [
         { method: 'GET', path: '/item/:category/:itemId', handler: wrap(() => PackageController, 'getPackageItem') },
 
         // Bulk Status Update According to Category
-        { method: ['POST', 'PATCH'], path: '/:category/toggle-item', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'bulkPackageStatusByCategory') },
+        { method: ['POST', 'PATCH'], path: '/:category/toggle', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'bulkPackageStatusByCategory') },
 
-        { method: 'POST', path: '/toggle-category', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'toggleCategoryStatus') },
+        // { method: 'POST', path: '/toggle-category', schema: schemas.packageStatus, handler: wrap(() => PackageController, 'toggleCategoryStatus') },
         { method: ['POST', 'PUT', 'DELETE'], path: '/delete-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'removePackageItem') },
         ...Router.group({ prefix: '/:itemId' }, [
             { method: ['POST', 'PUT', 'PATCH'], path: '/update-item', schema: schemas.packageMutation, handler: wrap(() => PackageController, 'updatePackageItem') },

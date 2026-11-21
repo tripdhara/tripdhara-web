@@ -205,6 +205,29 @@ class PackageController extends Controller {
         }
     }
 
+    // POST /vendor/package/:category/toggle
+    async bulkPackageStatusByCategory(req, { params } = {}) {
+        try {
+            const { category } = params;
+
+            const schemaKey = CATEGORY_MAP[category];
+            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            const body = req.payload || {};
+            const userId = req.user.id;
+
+            const isActive = String(body.isActive).trim().toLowerCase() === 'true';
+
+            await Package.updateOne(
+                { user: userId },
+                { $set: { [`${schemaKey}.$[].isActive`]: isActive } }
+            );
+            return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_DEACTIVATED);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
     // DELETE /vendor/package/delete-item
     async removePackageItem(req, { params } = {}) {
         try {
@@ -220,30 +243,6 @@ class PackageController extends Controller {
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.error(status, error.message);
-        }
-    }
-
-    // POST /vendor/package/:category/toggle-item
-    async bulkPackageStatusByCategory(req, { params } = {}) {
-        try {
-            const category = params.category.trim();
-            const body = req.payload || {};
-            const isActive = String(body.isActive).trim().toLowerCase() === 'true';
-            const schemaKey = CATEGORY_MAP[category];
-            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
-
-            pkg[schemaKey].forEach(item => {
-                item.isActive = isActive;
-            });
-
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-
-            await PackageService.toggleCategoryStatus(req.user.id, vendorId, category, isActive);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_UPDATED);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 }

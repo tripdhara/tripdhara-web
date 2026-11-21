@@ -143,7 +143,8 @@ export const RESPONSE_MESSAGES = {
 
         CATALOG_FETCHED: 'Package catalog retrieved successfully.',
         NEARBY_FETCHED: 'Nearby packages retrieved successfully.',
-        CATEGORY_STATUS_UPDATED: 'Category status has been updated successfully.',
+        CATEGORY_STATUS_ACTIVATED: 'All package activated successfully.',
+        CATEGORY_STATUS_DEACTIVATED: 'All package deactivated successfully.',
         CATALOG_NOT_FOUND: 'Package catalog not found.',
         CATALOG_UNAUTHORIZED: 'Access denied to this package catalog.',
     },

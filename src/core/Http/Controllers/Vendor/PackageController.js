@@ -14,17 +14,7 @@ import mongoose from 'mongoose';
 import AppError from '@/core/Helpers/AppError';
 import { Package } from '@/core/Models/index';
 
-/**
- * PackageController (Vendor Role) - Comprehensive management of vendor catalogs and service items.
- * Fully synchronized with modular route hubs for enterprise-grade inventory management.
- */
 class PackageController extends Controller {
-
-    // Helper: Resolves Vendor ID for logged-in user using queryHelpers
-    async _getVendorId(userId) {
-        const vendor = await getBusinessByUserId(userId, '_id');
-        return vendor?._id ? vendor._id.toString() : null;
-    }
 
     // GET /vendor/packages
     async getPackages(req) {
@@ -54,74 +44,6 @@ class PackageController extends Controller {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
-
-    // POST /vendor/packages
-    async createPackage(req) {
-        try {
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            const pkg = await PackageService.initializeVendorPackage(req.user.id, vendorId);
-            return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.PACKAGE.CREATED, pkg);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
-        }
-    }
-
-    // GET /vendor/packages/:id
-    async getPackageById(req, { params }) {
-        try {
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            const pkg = await PackageService.getPackageById(params.id);
-            if (!pkg || pkg.vendor.toString() !== vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.PACKAGE.NOT_FOUND_OR_UNAUTHORIZED);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, pkg);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
-        }
-    }
-
-    // PUT /vendor/packages/:id
-    async updatePackage(req, { params }) {
-        try {
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            const pkg = await PackageService.updatePackage(params.id, req.user.id, vendorId, req.payload);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.UPDATED, pkg);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
-        }
-    }
-
-    // DELETE /vendor/packages/:id
-    async deletePackage(req, { params }) {
-        try {
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            await PackageService.deletePackage(params.id, req.user.id, vendorId);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.DELETED);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
-        }
-    }
-
-    // PUT /vendor/packages/:id/status
-    async togglePackageStatus(req, { params }) {
-        try {
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-
-            const pkg = await PackageService.updatePackageStatus(params.id, req.user.id, vendorId, req.payload?.isActive);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.STATUS_UPDATED, pkg);
-        } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
-        }
-    }
-
-    // November 21, 2026
 
     // POST /vendor/package/add-item
     async addPackageItem(req, { params } = {}) {
@@ -156,10 +78,8 @@ class PackageController extends Controller {
             } else {
                 result = await PackageService.addItem(userId, category, body);
             }
-            // 2. Full Business/User Profile fetch karein taaki account object ban sake
             const user = await User.findById(req.user.id);
             const profile = await userAuthResponse(user);
-            // 3. Event emit karein
             if (profile?.email) {
                 PackageEvents.emitAsync(eventName, {
                     identifier: profile.email,

@@ -91,7 +91,7 @@ class CategoryController extends Controller {
             const profile = await userAuthResponse(user);
             // 3. Event emit karein
             if (profile?.email) {
-                CategoryEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.CATEGORY_DOCUMENT_UPLOADED, {
+                await CategoryEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.CATEGORY_DOCUMENT_UPLOADED, {
                     identifier: profile.email,
                     details: {
                         ...profile,

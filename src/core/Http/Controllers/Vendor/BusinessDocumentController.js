@@ -28,7 +28,7 @@ class BusinessDocumentController extends Controller {
             const body = req.payload;
             const userId = req.user.id;
             const result = await DocumentService.uploadVerificationFiles(userId, body);
-            if (result?.email) BusinessEvents.emit(NOTIFICATION.KEY.BUSINESS.DOCUMENT_UPLOADED, { identifier: result.email, details: result });
+            if (result?.email) await BusinessEvents.emit(NOTIFICATION.KEY.BUSINESS.DOCUMENT_UPLOADED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.DOCUMENTS_UPLOADED, result);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

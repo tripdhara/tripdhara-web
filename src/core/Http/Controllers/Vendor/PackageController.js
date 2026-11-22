@@ -151,24 +151,24 @@ class PackageController extends Controller {
     // DELETE /vendor/package/:itemId/delete-item
     async removePackageItem(req, { params } = {}) {
         try {
-            const body = req.payload || {};
-            const userId = req.user.id;
+            // const body = req.payload || {};
+            // const userId = req.user.id;
 
-            const itemId = params.itemId || body.itemId;
-            if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
-            if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
+            // const itemId = params.itemId || body.itemId;
+            // if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
+            // if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
 
-            const { category } = body;
-            if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
+            // const { category } = body;
+            // if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            // const vendorId = await this._getVendorId(req.user.id);
+            // if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            const itemId = params.itemId || body.itemId;
-            const category = (body.category || params.category || '').trim();
+            // const itemId = params.itemId || body.itemId;
+            // const category = (body.category || params.category || '').trim();
 
-            await PackageService.removeItem(req.user.id, vendorId, category, itemId);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
+            // await PackageService.removeItem(req.user.id, vendorId, category, itemId);
+            // return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.error(status, error.message);
@@ -178,15 +178,15 @@ class PackageController extends Controller {
     // DELETE /vendor/package/:category/delete
     async bulkPackageRemoveByCategory(req, { params } = {}) {
         try {
-            const body = req.payload || {};
-            const vendorId = await this._getVendorId(req.user.id);
-            if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            // const body = req.payload || {};
+            // const vendorId = await this._getVendorId(req.user.id);
+            // if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            const itemId = params.itemId || body.itemId;
-            const category = (body.category || params.category || '').trim();
+            // const itemId = params.itemId || body.itemId;
+            // const category = (body.category || params.category || '').trim();
 
-            await PackageService.removeItem(req.user.id, vendorId, category, itemId);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
+            // await PackageService.removeItem(req.user.id, vendorId, category, itemId);
+            // return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.error(status, error.message);

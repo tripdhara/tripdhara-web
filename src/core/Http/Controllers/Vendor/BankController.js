@@ -32,7 +32,7 @@ class BankController extends Controller {
             const body = req.payload;
             const userId = req.user.id;
             const result = await BankService.syncBankDetails(userId, body);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.BANK_CREATED);
         } catch (error) {
             getLogger().error({ err: error });
@@ -45,7 +45,7 @@ class BankController extends Controller {
         try {
             const body = req.payload;
             const result = await BankService.syncBankDetails(req.user.id, body);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.UPDATED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_UPDATED);
         } catch (error) {
             getLogger().error({ err: error });
@@ -57,7 +57,7 @@ class BankController extends Controller {
     async deleteBankDetails(req) {
         try {
             const result = await BankService.removeBankDetails(req.user.id);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.DELETED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.DELETED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_DELETED);
         } catch (error) {
             getLogger().error({ err: error });

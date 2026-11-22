@@ -21,7 +21,7 @@ const authMiddleware = async (req) => {
             try {
                 const url = new URL(req.url, 'http://localhost');
                 token = url.searchParams.get('token') || url.searchParams.get('access_token');
-            } catch {}
+            } catch { }
         }
 
         // 3. Cookies (fallback for cookie-based sessions / SSR)
@@ -54,7 +54,7 @@ const authMiddleware = async (req) => {
             }
         }
 
-        const user = await getUserById(decoded.id, 'status deletedAt role preferences');
+        const user = await getUserById(decoded.id, 'status deletedAt role preferences fcmToken');
 
         const statusMap = {
             [STATUS.DELETED]: RESPONSE_MESSAGES.AUTH.ACCOUNT_DELETED,

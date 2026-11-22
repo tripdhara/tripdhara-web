@@ -46,7 +46,7 @@ class BusinessController extends Controller {
             const existingProfile = await getBusinessByUserId(userId);
             // if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
             const result = await BusinessService.syncBusinessProfile(userId, body);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);
         } catch (error) {
             getLogger().error({ err: error }, 'Create Business Profile Error');
@@ -60,7 +60,7 @@ class BusinessController extends Controller {
             const body = req.payload;
             const result = await BusinessService.syncBusinessProfile(req.user.id, body);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_UPDATED, result);
         } catch (error) {
             getLogger().error({ err: error }, 'Update Business Profile Error');
@@ -77,7 +77,7 @@ class BusinessController extends Controller {
             const result = await BusinessService.updateBusinessStatus(req.user.id, params.id, status);
             const statusType = result?.businessProfile?.status === STATUS.ACTIVE ? NOTIFICATION.KEY.BUSINESS.PROFILE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PROFILE_DEACTIVATED;
             if (statusType) {
-                BusinessEvents.emitAsync(statusType, { identifier: result.email, details: result });
+                await BusinessEvents.emitAsync(statusType, { identifier: result.email, details: result });
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.STATUS_UPDATED);
         } catch (error) {
@@ -91,7 +91,7 @@ class BusinessController extends Controller {
         try {
             const result = await BusinessService.removeBusinessProfile(req.user.id, params?.id);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_DELETED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PROFILE_DELETED);
         } catch (error) {
             getLogger().error({ err: error }, 'Delete Business Profile Status Error');
@@ -109,7 +109,7 @@ class BusinessController extends Controller {
             const result = await BusinessService.toggleOperatingStatus(userId, isOperating, businessId);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            if (result.email) BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, { identifier: result.email, details: result });
+            if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.OPERATING_STATUS_UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.OPERATING_STATUS_UPDATED);
         } catch (error) {
             getLogger().error({ err: error }, 'Update Business Profile Operational Status Error');

@@ -9,6 +9,6 @@ export default [
         { method: 'POST', path: '/', schema: schemas.blog, handler: wrap(() => BlogController, 'createBlog') },
         { method: 'GET', path: '/:id', handler: wrap(() => BlogController, 'getBlog') },
         { method: 'PUT', path: '/:id', schema: schemas.blog, handler: wrap(() => BlogController, 'updateBlog') },
-        { method: 'DELETE', path: '/:id', schema: schemas.settingsUpdate, handler: wrap(() => BlogController, 'deleteBlog') },
+        { method: 'DELETE', path: '/:id', handler: wrap(() => BlogController, 'deleteBlog') },
     ]),
 ];

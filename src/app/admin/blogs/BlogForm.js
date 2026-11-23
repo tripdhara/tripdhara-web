@@ -12,9 +12,10 @@ import api from '@/core/Api/index.js';
 import { useToast } from '@/components/ui/ToastContext.js';
 import Button from '@/components/ui/Button.js';
 
-export default function BlogForm({ initialData = null }) {
+export default function BlogForm({ initialData = null, blogId = null }) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(Boolean(blogId && !initialData));
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('write'); // 'write' | 'preview'
 
@@ -23,9 +24,38 @@ export default function BlogForm({ initialData = null }) {
         excerpt: initialData?.excerpt || '',
         content: initialData?.content || '',
         coverImage: initialData?.coverImage || '',
-        tags: initialData?.tags?.join(', ') || '',
+        tags: Array.isArray(initialData?.tags) ? initialData.tags.join(', ') : (initialData?.tags || ''),
         status: initialData?.status || 'draft'
     });
+
+    const isEditMode = Boolean(initialData?._id || blogId);
+
+    // Fetch blog details when blogId is provided
+    useEffect(() => {
+        if (blogId && !initialData) {
+            setIsLoading(true);
+            api.admin.blogs.getById(blogId)
+                .then(res => {
+                    const data = res?.data || res;
+                    if (data) {
+                        setFormData({
+                            title: data.title || '',
+                            excerpt: data.excerpt || '',
+                            content: data.content || '',
+                            coverImage: data.coverImage || '',
+                            tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
+                            status: data.status || 'draft'
+                        });
+                    }
+                })
+                .catch(() => {
+                    toast('Failed to load blog publication', 'error');
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
+        }
+    }, [blogId, initialData, toast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,29 +68,41 @@ export default function BlogForm({ initialData = null }) {
 
         const payload = {
             ...formData,
-            tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean)
+            tags: typeof formData.tags === 'string'
+                ? formData.tags.split(',').map(t => t.trim()).filter(Boolean)
+                : (formData.tags || [])
         };
 
         try {
+            const targetId = initialData?._id || blogId;
             let res;
-            if (initialData) {
-                res = await api.admin.blogs.update(initialData._id, payload);
+            if (targetId) {
+                res = await api.admin.blogs.update(targetId, payload);
             } else {
                 res = await api.admin.blogs.create(payload);
             }
 
-            if (res.success) {
-                toast(`Blog ${initialData ? 'updated' : 'published'} successfully!`, 'success');
-                setTimeout(() => router.push('/admin/blogs'), 1500);
+            if (res && (res.success || res.data)) {
+                toast(`Blog ${isEditMode ? 'updated' : 'published'} successfully!`, 'success');
+                setTimeout(() => router.push('/admin/blogs'), 1000);
             } else {
-                toast(res.error || 'Operation failed', 'error');
+                toast(res?.error || res?.message || 'Operation failed', 'error');
                 setIsSubmitting(false);
             }
         } catch (error) {
-            toast('An error occurred. Please try again.', 'error');
+            toast(error?.message || 'An error occurred. Please try again.', 'error');
             setIsSubmitting(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="p-8 max-w-4xl mx-auto min-h-[500px] flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                <p className="text-sm font-mono text-slate-400">Loading blog publication...</p>
+            </div>
+        );
+    }
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 min-h-screen">

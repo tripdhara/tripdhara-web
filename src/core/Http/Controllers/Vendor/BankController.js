@@ -2,7 +2,7 @@ import BusinessService from '@/core/Services/Vendor/BusinessService.js';
 import BankService from '@/core/Services/Vendor/BankService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
-import BusinessEvents from '@/events/BusinessEvents.js';
+import BusinessEvents from '@/core/Events/BusinessEvents.js';
 import { getLogger } from '@/core/Lib/logger';
 import { getBusinessByUserId } from '@/core/Helpers/queryHelpers';
 import console from 'console';

@@ -7,19 +7,25 @@ import AppError from '@/core/Helpers/AppError.js';
 
 const categoryDocCreateSchema = z.object({
   name: z.string().min(2),
+  slug: z.string().optional(),
   description: z.string().optional(),
   category_slug: z.string().min(2),
+  isMandatory: z.boolean().optional(),
   isRequired: z.boolean().optional(),
+  isActive: z.boolean().optional(),
   fileTypes: z.array(z.string()).optional()
-});
+}).passthrough();
 
 const categoryDocUpdateSchema = z.object({
   name: z.string().min(2).optional(),
+  slug: z.string().optional(),
   description: z.string().optional(),
   category_slug: z.string().min(2).optional(),
+  isMandatory: z.boolean().optional(),
   isRequired: z.boolean().optional(),
+  isActive: z.boolean().optional(),
   fileTypes: z.array(z.string()).optional()
-});
+}).passthrough();
 
 /**
  * CategoryDocumentController (Admin Role) - Handles document hierarchy and taxonomy for vendor verification.
@@ -33,7 +39,7 @@ class CategoryDocumentController extends Controller {
       const url = new URL(req.url, baseUrl);
       const category_slug = url.searchParams.get('category_slug');
       const page = parseInt(url.searchParams.get('page')) || 1;
-      const limit = parseInt(url.searchParams.get('limit')) || 10;
+      const limit = parseInt(url.searchParams.get('limit')) || 100;
 
       const filter = {};
       if (category_slug) filter.category_slug = category_slug;

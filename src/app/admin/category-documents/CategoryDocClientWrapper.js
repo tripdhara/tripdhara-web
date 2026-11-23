@@ -1,199 +1,356 @@
 'use client';
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '@/core/Api/index.js';
 import DynamicModal from '@/components/admin/DynamicModal.js';
 import CyberTable from '@/components/admin/CyberTable.js';
-import { Search, Plus, FileText } from 'lucide-react';
+import Loading from '@/components/admin/Loading.js';
+import { useToast } from '@/components/ui/ToastContext.js';
+import { Search, Plus, FileText, CheckCircle2, XCircle, RefreshCw, Layers, Edit2, Trash2 } from 'lucide-react';
 
-export default function CategoryDocClientWrapper({ initialDocuments, initialCategories }) {
-  const router = useRouter();
-  const [services, setServices] = useState(initialDocuments);
-  const [categories] = useState(initialCategories);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState(null);
-  const [formData, setFormData] = useState({ name: '', slug: '', category_slug: '', isMandatory: true });
+export default function CategoryDocClientWrapper() {
+    const toast = useToast();
 
-  const [toast, setToast] = useState(null);
-  const toastTimeoutRef = useRef(null);
+    const [documents, setDocuments] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-  const showToast = (text, type = 'success') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ text, type });
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 4000);
-  };
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Modal Fields Configuration
-  const modalFields = [
-    {
-      name: 'category_slug',
-      label: 'Target Category',
-      type: 'select',
-      required: true,
-      options: categories.map(cat => ({ value: cat.slug, label: cat.name }))
-    },
-    {
-      name: 'name',
-      label: 'Packet Name',
-      type: 'text',
-      required: true,
-      onChange: (e) => {
-        const name = e.target.value;
-        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-        setFormData({ ...formData, name, slug });
-      }
-    },
-    { name: 'slug', label: 'Identifier (Slug)', type: 'text', required: true },
-    { name: 'isMandatory', label: 'Is Mandatory?', type: 'checkbox' }
-  ];
-
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    try {
-      const res = editingService ? await api.admin.documents.update(editingService._id, formData) : await api.admin.documents.create(formData);
-      if (res.success) {
-        showToast(`Document ${editingService ? 'updated' : 'created'} successfully`);
-        router.refresh();
-        closeModal();
-      } else {
-        showToast("Failed: " + (res.error || "Unknown error"), 'error');
-      }
-    } catch (error) { showToast('Error saving document', 'error'); }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure?')) return;
-    try {
-      const res = await api.admin.documents.delete(id);
-      if (res.success) {
-        showToast('Document deleted successfully');
-        router.refresh();
-      }
-    } catch (error) { showToast('Error deleting document', 'error'); }
-  };
-
-  const handleToggleField = async (service, field) => {
-    try {
-      const updateData = { [field]: !service[field] };
-      const res = await api.admin.documents.update(service._id, updateData);
-      if (res.success) {
-        showToast(`${field === 'isActive' ? 'Status' : 'Requirement'} updated`);
-        router.refresh();
-      }
-    } catch (error) { showToast('Failed to update field', 'error'); }
-  };
-
-  const openModal = (service = null) => {
-    setEditingService(service);
-    if (service) {
-      setFormData({
-        name: service.name,
-        slug: service.slug,
-        category_slug: service.category_slug,
-        isMandatory: service.isMandatory
-      });
-    } else {
-      setFormData({
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingDoc, setEditingDoc] = useState(null);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [formData, setFormData] = useState({
         name: '',
         slug: '',
-        category_slug: categories.length > 0 ? categories[0].slug : '',
-        isMandatory: true
-      });
+        category_slug: '',
+        isMandatory: true,
+        isActive: true
+    });
+
+    // Fetch documents and categories via Api client
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [docRes, catRes] = await Promise.all([
+                api.admin.documents.getAll({ limit: 100 }),
+                api.admin.categories.getAll()
+            ]);
+
+            const docList = docRes?.data?.docs || docRes?.data || [];
+            const catList = catRes?.data?.categories || catRes?.data || [];
+
+            setDocuments(Array.isArray(docList) ? docList : []);
+            setCategories(Array.isArray(catList) ? catList : []);
+        } catch (err) {
+            toast(err?.message || 'Failed to load category documents', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData, refreshKey]);
+
+    // Modal Fields Configuration
+    const modalFields = useMemo(() => [
+        {
+            name: 'category_slug',
+            label: 'Target Category',
+            type: 'select',
+            required: true,
+            options: categories.map(cat => ({ value: cat.slug, label: cat.name }))
+        },
+        {
+            name: 'name',
+            label: 'Packet Name',
+            type: 'text',
+            required: true,
+            placeholder: 'e.g. Mountaineering License',
+            onChange: (e) => {
+                const name = e.target.value;
+                const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                setFormData(prev => ({
+                    ...prev,
+                    name,
+                    slug: editingDoc ? prev.slug : autoSlug
+                }));
+            }
+        },
+        {
+            name: 'slug',
+            label: 'Identifier (Slug)',
+            type: 'text',
+            required: true,
+            placeholder: 'e.g. mountaineering-license'
+        },
+        {
+            name: 'isMandatory',
+            label: 'Is Mandatory Requirement?',
+            type: 'checkbox'
+        },
+        {
+            name: 'isActive',
+            label: 'Is Active?',
+            type: 'checkbox'
+        }
+    ], [categories, editingDoc]);
+
+    // Filtered documents by category & search
+    const filteredDocuments = useMemo(() => {
+        return documents.filter(doc => {
+            if (selectedCategory !== 'all' && doc.category_slug !== selectedCategory) {
+                return false;
+            }
+            return true;
+        });
+    }, [documents, selectedCategory]);
+
+    const openModal = (doc = null) => {
+        setEditingDoc(doc);
+        if (doc) {
+            setFormData({
+                name: doc.name || '',
+                slug: doc.slug || '',
+                category_slug: doc.category_slug || (categories[0]?.slug || ''),
+                isMandatory: doc.isMandatory !== false,
+                isActive: doc.isActive !== false
+            });
+        } else {
+            setFormData({
+                name: '',
+                slug: '',
+                category_slug: selectedCategory !== 'all' ? selectedCategory : (categories[0]?.slug || ''),
+                isMandatory: true,
+                isActive: true
+            });
+        }
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingDoc(null);
+        setFormData({ name: '', slug: '', category_slug: '', isMandatory: true, isActive: true });
+    };
+
+    const handleSubmit = async (e) => {
+        if (e?.preventDefault) e.preventDefault();
+        setModalLoading(true);
+        try {
+            if (editingDoc) {
+                await api.admin.documents.update(editingDoc._id, formData);
+                toast('Document updated successfully', 'success');
+            } else {
+                await api.admin.documents.create(formData);
+                toast('Document created successfully', 'success');
+            }
+            closeModal();
+            setRefreshKey(k => k + 1);
+        } catch (err) {
+            toast(err?.message || 'Error saving document', 'error');
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this document protocol? This action is irreversible.')) return;
+        try {
+            await api.admin.documents.delete(id);
+            toast('Document protocol deleted', 'success');
+            setRefreshKey(k => k + 1);
+        } catch (err) {
+            toast(err?.message || 'Error deleting document', 'error');
+        }
+    };
+
+    const handleToggleField = async (doc, field) => {
+        try {
+            const nextValue = !doc[field];
+            await api.admin.documents.update(doc._id, { [field]: nextValue });
+            toast(`${field === 'isActive' ? 'Status' : 'Requirement'} updated`, 'success');
+            setRefreshKey(k => k + 1);
+        } catch (err) {
+            toast(err?.message || 'Failed to update field', 'error');
+        }
+    };
+
+    const columns = [
+        {
+            header: 'S.No',
+            className: 'w-[5%]',
+            tdClassName: 'text-center font-mono text-[11px] text-slate-500',
+            render: (_, i) => i + 1
+        },
+        {
+            header: 'Status',
+            render: (doc) => (
+                <button
+                    onClick={() => handleToggleField(doc, 'isActive')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest uppercase transition-all cursor-pointer font-bold ${doc.isActive !== false
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
+                        }`}
+                >
+                    {doc.isActive !== false ? 'Active' : 'Inactive'}
+                </button>
+            )
+        },
+        {
+            header: 'Name',
+            render: (doc) => (
+                <div className="font-bold text-slate-200 hover:text-white transition-colors">
+                    {doc.name}
+                </div>
+            )
+        },
+        {
+            header: 'Slug / Identifier',
+            tdClassName: 'font-mono text-xs text-slate-400',
+            render: (doc) => doc.slug
+        },
+        {
+            header: 'Category',
+            render: (doc) => {
+                const cat = categories.find(c => c.slug === doc.category_slug);
+                return (
+                    <span className="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">
+                        {cat?.name || doc.category_slug}
+                    </span>
+                );
+            }
+        },
+        {
+            header: 'Requirement',
+            render: (doc) => (
+                <button
+                    onClick={() => handleToggleField(doc, 'isMandatory')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest uppercase transition-all cursor-pointer font-bold ${doc.isMandatory
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
+                        : 'bg-slate-800 text-slate-400 border border-white/10 hover:text-slate-200'
+                        }`}
+                >
+                    {doc.isMandatory ? 'Required' : 'Optional'}
+                </button>
+            )
+        },
+        {
+            header: 'Actions',
+            className: 'text-right',
+            tdClassName: 'text-right',
+            render: (doc) => (
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={() => openModal(doc)}
+                        className="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 p-2 rounded-lg border border-transparent hover:border-indigo-500/20 transition-colors cursor-pointer"
+                        title="Edit Document Protocol"
+                    >
+                        <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => handleDelete(doc._id)}
+                        className="text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 p-2 rounded-lg border border-transparent hover:border-rose-500/20 transition-colors cursor-pointer"
+                        title="Delete Document Protocol"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            )
+        }
+    ];
+
+    if (loading && documents.length === 0) {
+        return <Loading message="Syncing Category Document Protocols..." />;
     }
-    setIsModalOpen(true);
-  };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingService(null);
-    setFormData({ name: '', slug: '', category_slug: '', isMandatory: true });
-  };
+    return (
+        <div className="p-8 max-w-7xl mx-auto space-y-6">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <FileText className="w-7 h-7 text-indigo-400" /> Data Packets
+                    </h1>
+                    <p className="text-xs font-mono text-slate-500 uppercase mt-1 tracking-widest">
+                        Category Compliance & Verification Documents
+                    </p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="relative group hidden md:block">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Scan protocols..."
+                            className="bg-[#0a0a0c]/80 backdrop-blur-xl pl-10 pr-4 py-2 border border-white/10 rounded-lg outline-none text-sm text-slate-200 w-64 focus:border-indigo-500/50 transition-colors"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        onClick={() => openModal()}
+                        className="flex items-center gap-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-lg hover:bg-indigo-600/40 hover:text-white transition-all font-medium text-sm cursor-pointer shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                    >
+                        <Plus className="w-4 h-4" /> Add Doc
+                    </button>
+                </div>
+            </div>
 
-  const columns = [
-    { header: 'S.No', className: 'w-[5%]', tdClassName: 'text-center font-mono text-[11px] text-slate-500', render: (_, i) => i + 1 },
-    {
-      header: 'Status',
-      render: (doc) => (
-        <button onClick={() => handleToggleField(doc, 'isActive')} className={`px-2 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase transition-all ${doc.isActive !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-          {doc.isActive !== false ? 'Active' : 'Inactive'}
-        </button>
-      )
-    },
-    { header: 'Name', render: (doc) => <div className="font-bold text-slate-200">{doc.name}</div> },
-    { header: 'Slug', tdClassName: 'font-mono text-[13px] text-slate-400', render: (doc) => doc.slug },
-    {
-      header: 'Category',
-      render: (doc) => (
-        <span className="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-          {doc.category_slug}
-        </span>
-      )
-    },
-    {
-      header: 'Requirement',
-      render: (doc) => (
-        <button onClick={() => handleToggleField(doc, 'isMandatory')} className={`px-2 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase transition-all ${doc.isMandatory ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-400 border border-white/10'}`}>
-          {doc.isMandatory ? 'Required' : 'Optional'}
-        </button>
-      )
-    },
-    {
-      header: 'Actions',
-      className: 'text-right',
-      tdClassName: 'text-right',
-      render: (doc) => (
-        <div className="flex justify-end gap-2">
-          <button onClick={() => openModal(doc)} className="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 p-2 rounded-lg border border-transparent hover:border-indigo-500/20" title="Edit">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          </button>
-          <button onClick={() => handleDelete(doc._id)} className="text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 p-2 rounded-lg border border-transparent hover:border-rose-500/20" title="Delete">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-          </button>
+            {/* Category Filter Bar */}
+            {categories.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-3 cyber-scrollbar scrollbar-none mb-0">
+                    <button
+                        onClick={() => setSelectedCategory('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider font-semibold transition-all cursor-pointer whitespace-nowrap ${selectedCategory === 'all'
+                            ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]'
+                            : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10 hover:text-slate-200'
+                            }`}
+                    >
+                        All Categories ({documents.length})
+                    </button>
+                    {categories.map(cat => {
+                        const count = documents.filter(d => d.category_slug === cat.slug).length;
+                        const isSelected = selectedCategory === cat.slug;
+                        return (
+                            <button
+                                key={cat.slug}
+                                onClick={() => setSelectedCategory(cat.slug)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider font-semibold transition-all cursor-pointer whitespace-nowrap ${isSelected
+                                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]'
+                                    : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10 hover:text-slate-200'
+                                    }`}
+                            >
+                                {cat.name} ({count})
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Main Table */}
+            <CyberTable
+                data={filteredDocuments}
+                columns={columns}
+                itemsPerPage={15}
+                searchTerm={searchQuery}
+                searchKeys={['name', 'slug', 'category_slug']}
+                emptyText="NULL OUTPUT: No validation documents found."
+            />
+
+            {/* Add / Edit Modal */}
+            <DynamicModal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                title={editingDoc ? 'Edit Validation Doc' : 'Add Validation Doc'}
+                fields={modalFields}
+                formData={formData}
+                onChange={setFormData}
+                onSubmit={handleSubmit}
+                loading={modalLoading}
+                submitText={editingDoc ? 'Update Protocol' : 'Deploy Protocol'}
+            />
         </div>
-      )
-    }
-  ];
-
-  return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3"><FileText className="w-7 h-7 text-indigo-400" /> Data Packets</h1>
-          <p className="text-xs font-mono text-slate-500 uppercase mt-1 tracking-widest">Category Validation Documents</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative group hidden md:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-            <input type="text" placeholder="Scan protocols..." className="bg-[#0a0a0c]/80 backdrop-blur-xl pl-10 pr-4 py-2 border border-white/10 rounded-lg outline-none text-sm text-slate-200 w-64 md:w-65" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          </div>
-          <button onClick={() => openModal()} className="flex items-center gap-2 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-lg hover:bg-indigo-600/40 hover:text-white transition-all font-medium text-sm">
-            <Plus className="w-4 h-4" /> Add Doc
-          </button>
-        </div>
-      </div>
-
-      <CyberTable data={services} columns={columns} itemsPerPage={10} searchTerm={searchQuery} searchKeys={['name', 'slug', 'category_slug']} emptyText="NULL OUTPUT: No documents found." />
-      <DynamicModal isOpen={isModalOpen} onClose={closeModal} title={editingService ? 'Edit Validation Doc' : 'Add Validation Doc'} fields={modalFields} formData={formData} onChange={setFormData} onSubmit={handleSubmit} />
-
-      {/* Toast Notification */}
-      {toast && (
-        <>
-          <style>{`
-                        @keyframes slideIn {
-                            from { transform: translateX(100%); opacity: 0; }
-                            to { transform: translateX(0); opacity: 1; }
-                        }
-                        .toast-animate {
-                            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                        }
-                    `}</style>
-          <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-xl shadow-2xl toast-animate ${toast.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${toast.type === 'error' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-            <span className="text-xs font-mono uppercase tracking-widest font-semibold">{toast.text}</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
+    );
 }

@@ -18,7 +18,24 @@ const AuditLogSchema = new mongoose.Schema({
         summary: { type: String, default: DEFAULTS.NULL }
     },
     device: { type: mongoose.Schema.Types.Mixed, default: DEFAULTS.NULL },
-    userAgent: { type: String }
+    userAgent: { type: String },
+    previousState: { type: mongoose.Schema.Types.Mixed, default: DEFAULTS.NULL },
+    newState: { type: mongoose.Schema.Types.Mixed, default: DEFAULTS.NULL },
+    diff: [{
+        field: { type: String },
+        old: { type: mongoose.Schema.Types.Mixed },
+        new: { type: mongoose.Schema.Types.Mixed }
+    }],
+    security: {
+        threatScore: { type: Number, default: 0 },
+        riskLevel: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'], default: 'LOW' },
+        isProxyOrHosting: { type: Boolean, default: false },
+        riskFlags: [{ type: String }],
+        anomaly: { type: mongoose.Schema.Types.Mixed, default: DEFAULTS.NULL }
+    },
+    isRolledBack: { type: Boolean, default: false },
+    rolledBackAt: { type: Date, default: DEFAULTS.NULL },
+    rolledBackBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: DEFAULTS.NULL }
 }, {
     timestamps: DEFAULTS.TRUE,
     toJSON: { virtuals: DEFAULTS.TRUE, getters: DEFAULTS.TRUE, minimize: DEFAULTS.FALSE },

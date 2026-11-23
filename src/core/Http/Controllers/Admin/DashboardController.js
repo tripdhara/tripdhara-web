@@ -108,6 +108,19 @@ class DashboardController extends Controller {
         }
     }
 
+    // POST /admin/audit-logs/:id/rollback
+    async rollbackLog(req) {
+        try {
+            const id = req.params?.id;
+            const adminUserId = req.user?._id || req.user?.id;
+            const result = await AuditService.rollbackAction(id, adminUserId);
+            return this.success(HTTP_STATUS.OK, 'Mutation rolled back successfully', result);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
     // GET /admin/ip-lookup
     async lookupIp(req) {
         try {

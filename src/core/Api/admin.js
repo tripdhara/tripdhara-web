@@ -16,6 +16,7 @@ export const adminApi = (fetcher) => ({
             return fetcher(`admin/audit-logs${query}`);
         },
         lookupIp: (ip) => fetcher(`admin/ip-lookup?ip=${encodeURIComponent(ip)}`),
+        rollback: (id) => fetcher(`admin/audit-logs/${id}/rollback`, { method: 'POST' }),
     },
 
     // Profile & Auth

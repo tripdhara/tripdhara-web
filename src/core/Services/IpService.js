@@ -21,6 +21,47 @@ class IpService {
     }
 
     /**
+     * Analyzes ASN, ISP, and provider metadata to detect datacenter IPs, hosting providers, or proxies.
+     */
+    detectHostingOrProxy(data) {
+        if (!data) return { isProxyOrHosting: false, threatScore: 0, riskLevel: 'LOW', riskFlags: [] };
+        const riskFlags = [];
+        let threatScore = 0;
+
+        if (data.proxy) {
+            riskFlags.push('ANONYMOUS_PROXY');
+            threatScore += 50;
+        }
+        if (data.hosting) {
+            riskFlags.push('HOSTING_PROVIDER');
+            threatScore += 35;
+        }
+
+        const ispOrgAs = `${data.isp || ''} ${data.org || ''} ${data.as || ''} ${data.asnName || ''}`.toLowerCase();
+        const hostingKeywords = [
+            'amazon', 'aws', 'google cloud', 'gcp', 'digitalocean', 'hetzner', 'ovh',
+            'linode', 'azure', 'microsoft', 'oracle', 'leaseweb', 'm247', 'datacamp',
+            'vpn', 'tor', 'private internet access', 'nordvpn', 'expressvpn', 'choopa',
+            'vultr', 'alibaba', 'cloudflare'
+        ];
+
+        if (hostingKeywords.some(k => ispOrgAs.includes(k))) {
+            if (!riskFlags.includes('HOSTING_PROVIDER')) riskFlags.push('DATACENTER_IP');
+            threatScore = Math.max(threatScore, 40);
+        }
+
+        const isProxyOrHosting = threatScore >= 35;
+        const riskLevel = threatScore >= 60 ? 'HIGH' : (threatScore >= 30 ? 'MEDIUM' : 'LOW');
+
+        return {
+            isProxyOrHosting,
+            threatScore,
+            riskLevel,
+            riskFlags
+        };
+    }
+
+    /**
      * Performs an accurate geolocation & ISP lookup for a public IP address.
      * If an IP is a private subnet or loopback, it is strictly NOT queried to public GeoIP
      * and NOT overwritten by the host machine's public IP.
@@ -47,7 +88,13 @@ class IpService {
                 isp: null,
                 asn: null,
                 asnName: null,
-                summary: null
+                summary: null,
+                security: {
+                    threatScore: 0,
+                    riskLevel: 'LOW',
+                    isProxyOrHosting: false,
+                    riskFlags: isLocal ? ['LOOPBACK'] : ['PRIVATE_SUBNET']
+                }
             };
         }
 
@@ -75,13 +122,14 @@ class IpService {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 3000);
 
-            const url = `http://ip-api.com/json/${cleanIp}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
+            const url = `http://ip-api.com/json/${cleanIp}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query,proxy,hosting`;
             const response = await fetch(url, { signal: controller.signal });
             clearTimeout(timeout);
 
             if (response.ok) {
                 const data = await response.json();
                 if (data && data.status === 'success') {
+                    const security = this.detectHostingOrProxy(data);
                     const info = {
                         ip: data.query || cleanIp,
                         isPrivate: false,
@@ -97,7 +145,8 @@ class IpService {
                         isp: data.isp || data.org || null,
                         asn: data.as ? data.as.split(' ')[0] : null,
                         asnName: data.as || null,
-                        summary: [data.city, data.regionName, data.country].filter(Boolean).join(', ') || null
+                        summary: [data.city, data.regionName, data.country].filter(Boolean).join(', ') || null,
+                        security
                     };
 
                     memoryCache.set(cacheKey, { timestamp: Date.now(), data: info });
@@ -121,6 +170,12 @@ class IpService {
             if (response.ok) {
                 const data = await response.json();
                 if (data && data.success) {
+                    const security = this.detectHostingOrProxy({
+                        isp: data.connection?.isp,
+                        org: data.connection?.org,
+                        as: data.connection?.asn ? `AS${data.connection.asn}` : ''
+                    });
+
                     const info = {
                         ip: data.ip || cleanIp,
                         isPrivate: false,
@@ -136,7 +191,8 @@ class IpService {
                         isp: data.connection?.isp || data.connection?.org || null,
                         asn: data.connection?.asn ? `AS${data.connection.asn}` : null,
                         asnName: data.connection?.org || null,
-                        summary: [data.city, data.region, data.country].filter(Boolean).join(', ') || null
+                        summary: [data.city, data.region, data.country].filter(Boolean).join(', ') || null,
+                        security
                     };
 
                     memoryCache.set(cacheKey, { timestamp: Date.now(), data: info });
@@ -164,7 +220,13 @@ class IpService {
             isp: null,
             asn: null,
             asnName: null,
-            summary: null
+            summary: null,
+            security: {
+                threatScore: 0,
+                riskLevel: 'LOW',
+                isProxyOrHosting: false,
+                riskFlags: []
+            }
         };
     }
 }

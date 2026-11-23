@@ -19,7 +19,11 @@ import {
     Shield,
     MapPin,
     Cpu,
-    Wifi
+    Wifi,
+    RotateCcw,
+    AlertTriangle,
+    ArrowRight,
+    History
 } from 'lucide-react';
 import api from '@/core/Api/index.js';
 import { useToast } from '@/components/ui/ToastContext.js';
@@ -105,7 +109,27 @@ export default function AuditLogsClientWrapper({
     const [ipIntelMap, setIpIntelMap] = useState({});
     const [loadingIps, setLoadingIps] = useState({});
 
+    // Advanced Features State (Diff View & Rollback)
+    const [viewModeMap, setViewModeMap] = useState({});
+    const [confirmRollbackLog, setConfirmRollbackLog] = useState(null);
+    const [rollingBack, setRollingBack] = useState(false);
+
     const limit = 15;
+
+    // Feature 3: Execute Rollback Mutation
+    const handleExecuteRollback = async (logId) => {
+        setRollingBack(true);
+        try {
+            await api.admin.auditLogs.rollback(logId);
+            toast('Mutation reverted successfully!', 'success');
+            setLogs(prev => prev.map(l => l._id === logId ? { ...l, isRolledBack: true, rolledBackAt: new Date().toISOString() } : l));
+            setConfirmRollbackLog(null);
+        } catch (err) {
+            toast(err.message || 'Rollback failed', 'error');
+        } finally {
+            setRollingBack(false);
+        }
+    };
 
     // Fetch on-demand IP Intelligence (Only queries public routable IPs)
     const fetchIpIntel = useCallback(async (ip, force = false) => {
@@ -273,6 +297,98 @@ export default function AuditLogsClientWrapper({
                 className="font-mono text-xs leading-relaxed text-gray-300 select-text"
                 dangerouslySetInnerHTML={{ __html: highlighted }}
             />
+        );
+    };
+
+    // Feature 1: Visual State Mutation Diff Inspector
+    const VisualDiffInspector = ({ log }) => {
+        let diffs = log.diff || [];
+        if (!diffs.length && log.previousState && log.newState) {
+            const allKeys = new Set([...Object.keys(log.previousState), ...Object.keys(log.newState)]);
+            const ignoredKeys = new Set(['_id', '__v', 'createdAt', 'updatedAt', 'password', 'salt', 'token']);
+            diffs = [];
+            for (const key of allKeys) {
+                if (ignoredKeys.has(key)) continue;
+                const oldVal = log.previousState[key];
+                const newVal = log.newState[key];
+                if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+                    diffs.push({ field: key, old: oldVal, new: newVal });
+                }
+            }
+        }
+
+        if (diffs.length > 0) {
+            return (
+                <div className="overflow-x-auto max-h-[280px] scrollbar-thin">
+                    <table className="w-full text-left font-mono text-xs border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/10 text-[9px] uppercase tracking-wider text-slate-500 bg-white/[0.02]">
+                                <th className="p-2.5">Field</th>
+                                <th className="p-2.5 text-rose-400">Previous Value</th>
+                                <th className="p-2.5 text-emerald-400">Mutated Value</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {diffs.map((d, i) => (
+                                <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                    <td className="p-2.5 text-slate-300 font-bold whitespace-nowrap">
+                                        {d.field}
+                                    </td>
+                                    <td className="p-2.5 text-rose-300/90 bg-rose-500/5 font-mono break-all max-w-[200px]">
+                                        {typeof d.old === 'object' && d.old !== null ? JSON.stringify(d.old) : String(d.old ?? 'null')}
+                                    </td>
+                                    <td className="p-2.5 text-emerald-300/90 bg-emerald-500/5 font-mono break-all max-w-[200px]">
+                                        {typeof d.new === 'object' && d.new !== null ? JSON.stringify(d.new) : String(d.new ?? 'null')}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+
+        if (log.action === 'CREATE') {
+            return (
+                <div className="p-4 text-xs font-mono text-emerald-400/90 space-y-2">
+                    <div className="flex items-center gap-1.5 font-bold">
+                        <Check size={14} />
+                        Entity Inserted (Initial Creation)
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                        This action created a new entity. No prior snapshot exists.
+                    </p>
+                    <div className="bg-black/50 p-2.5 rounded-lg border border-white/5 max-h-[200px] overflow-auto">
+                        <SyntaxHighlight json={log.newState || log.details} />
+                    </div>
+                </div>
+            );
+        }
+
+        if (log.action === 'DELETE') {
+            return (
+                <div className="p-4 text-xs font-mono text-rose-400/90 space-y-2">
+                    <div className="flex items-center gap-1.5 font-bold">
+                        <AlertTriangle size={14} />
+                        Entity Deleted (Terminal Removal)
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                        This entity was deleted. Click &apos;One-Click Rollback&apos; to re-create it from its previous state.
+                    </p>
+                    <div className="bg-black/50 p-2.5 rounded-lg border border-white/5 max-h-[200px] overflow-auto">
+                        <SyntaxHighlight json={log.previousState || log.details} />
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="p-4 text-xs font-mono text-slate-400">
+                <p className="mb-2">No structural field diff available for this mutation.</p>
+                <div className="bg-black/50 p-2.5 rounded-lg border border-white/5 max-h-[200px] overflow-auto">
+                    <SyntaxHighlight json={log.details} />
+                </div>
+            </div>
         );
     };
 
@@ -478,9 +594,23 @@ export default function AuditLogsClientWrapper({
                                                     />
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className={`inline-flex px-2 py-0.5 rounded border text-[10px] font-bold ${getCyberBadge(log.action)}`}>
-                                                        {log.action}
-                                                    </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`inline-flex px-2 py-0.5 rounded border text-[10px] font-bold ${getCyberBadge(log.action)}`}>
+                                                                {log.action}
+                                                            </span>
+                                                            {log.isRolledBack && (
+                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-mono">
+                                                                    <RotateCcw size={9} /> Reverted
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {log.security?.anomaly && (
+                                                            <span className="text-[9px] text-rose-400 font-bold flex items-center gap-1 mt-0.5 animate-pulse">
+                                                                <AlertTriangle size={10} /> {log.security.anomaly.speedKmh} km/h Anomaly
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
@@ -573,6 +703,112 @@ export default function AuditLogsClientWrapper({
                                                     <td colSpan="6" className="p-0 border-b border-indigo-500/20 bg-[#0a0a0d]">
                                                         <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 shadow-inner">
                                                             
+                                                            {/* Top Action & Security Header (Full Width) */}
+                                                            <div className="lg:col-span-3 space-y-3">
+                                                                {/* Impossible Travel Anomaly Banner */}
+                                                                {log.security?.anomaly?.isAnomaly && (
+                                                                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between text-xs text-rose-300">
+                                                                        <div className="flex items-center gap-2.5">
+                                                                            <AlertTriangle size={18} className="text-rose-400 shrink-0" />
+                                                                            <div>
+                                                                                <span className="font-bold text-rose-200">Security Alert: Impossible Travel Velocity Detected!</span>
+                                                                                <p className="text-[11px] text-rose-300/80 mt-0.5">
+                                                                                    {log.security.anomaly.details || 'User account jumped locations at an impossible physical travel speed.'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <span className="px-2 py-0.5 bg-rose-500/20 border border-rose-500/30 rounded text-[10px] font-mono text-rose-300 shrink-0 font-bold">
+                                                                            CRITICAL ANOMALY
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Rollback Reverted Banner */}
+                                                                {log.isRolledBack && (
+                                                                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs text-amber-300">
+                                                                        <div className="flex items-center gap-2.5">
+                                                                            <RotateCcw size={16} className="text-amber-400 shrink-0" />
+                                                                            <div>
+                                                                                <span className="font-bold text-amber-200">Document Reverted to Previous State</span>
+                                                                                <p className="text-[11px] text-amber-300/80 mt-0.5">
+                                                                                    This entity was rolled back by Admin UID ({log.rolledBackBy || 'Authorized Admin'}) on {log.rolledBackAt ? new Date(log.rolledBackAt).toLocaleString() : 'Recent'}.
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded text-[10px] font-mono text-amber-300 shrink-0 font-bold">
+                                                                            ROLLED BACK
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Operations Toolbar */}
+                                                                <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="text-xs font-mono text-slate-400">Target Entity:</span>
+                                                                        <span className="text-xs font-mono font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                                                                            {log.target || 'SYSTEM'}
+                                                                        </span>
+                                                                        {log.details?.id && (
+                                                                            <span className="text-xs font-mono text-slate-400">
+                                                                                Entity ID: <span className="text-slate-200 font-semibold">{log.details.id}</span>
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-2">
+                                                                        {/* View Mode Switcher */}
+                                                                        {((log.diff && log.diff.length > 0) || log.previousState) && (
+                                                                            <div className="flex items-center bg-black/60 border border-white/10 rounded-lg p-0.5 text-xs font-mono">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setViewModeMap(prev => ({ ...prev, [log._id]: 'diff' }));
+                                                                                    }}
+                                                                                    className={`px-2.5 py-1 rounded transition-colors ${
+                                                                                        (viewModeMap[log._id] || 'diff') === 'diff'
+                                                                                            ? 'bg-indigo-600 text-white font-semibold'
+                                                                                            : 'text-slate-400 hover:text-white'
+                                                                                    }`}
+                                                                                >
+                                                                                    Visual State Diff
+                                                                                </button>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setViewModeMap(prev => ({ ...prev, [log._id]: 'raw' }));
+                                                                                    }}
+                                                                                    className={`px-2.5 py-1 rounded transition-colors ${
+                                                                                        (viewModeMap[log._id] || 'diff') === 'raw'
+                                                                                            ? 'bg-indigo-600 text-white font-semibold'
+                                                                                            : 'text-slate-400 hover:text-white'
+                                                                                    }`}
+                                                                                >
+                                                                                    Raw Details JSON
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* One-Click Rollback Button */}
+                                                                        {log.previousState && !log.isRolledBack && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setConfirmRollbackLog(log);
+                                                                                }}
+                                                                                className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-amber-200 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer shadow-sm hover:shadow-amber-500/10"
+                                                                                title="Restore MongoDB entity to previousState snapshot"
+                                                                            >
+                                                                                <RotateCcw size={12} className="text-amber-400" />
+                                                                                <span>Rollback to Previous State</span>
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
                                                             {/* IP Intelligence & Network Analysis Card */}
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
@@ -608,6 +844,50 @@ export default function AuditLogsClientWrapper({
                                                                             <span className={`text-[9px] px-1.5 py-0.5 rounded border ${ipInfo.badgeClass}`}>{ipInfo.type}</span>
                                                                         </div>
                                                                     </div>
+
+                                                                    {/* Threat Score Bar */}
+                                                                    {log.security && (
+                                                                        <div className="border-t border-white/5 pt-2 space-y-1.5">
+                                                                            <div className="flex items-center justify-between text-[10px]">
+                                                                                <span className="uppercase text-slate-400 font-mono">Risk / Threat Level</span>
+                                                                                <span className={`font-mono font-bold ${
+                                                                                    (log.security.threatScore || 0) > 50
+                                                                                        ? 'text-rose-400'
+                                                                                        : (log.security.threatScore || 0) > 20
+                                                                                        ? 'text-amber-400'
+                                                                                        : 'text-emerald-400'
+                                                                                }`}>
+                                                                                    {log.security.threatScore || 0}/100 ({log.security.riskLevel || 'LOW'})
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                                                                <div
+                                                                                    className={`h-full ${
+                                                                                        (log.security.threatScore || 0) > 50
+                                                                                            ? 'bg-rose-500'
+                                                                                            : (log.security.threatScore || 0) > 20
+                                                                                            ? 'bg-amber-500'
+                                                                                            : 'bg-emerald-500'
+                                                                                    }`}
+                                                                                    style={{ width: `${Math.min(100, Math.max(5, log.security.threatScore || 0))}%` }}
+                                                                                />
+                                                                            </div>
+                                                                            {log.security.isProxyOrHosting && (
+                                                                                <span className="inline-block text-[9px] px-1.5 py-0.2 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded font-mono">
+                                                                                    Detected Datacenter / Proxy IP
+                                                                                </span>
+                                                                            )}
+                                                                            {log.security.riskFlags && log.security.riskFlags.length > 0 && (
+                                                                                <div className="flex flex-wrap gap-1 pt-0.5">
+                                                                                    {log.security.riskFlags.map((flag, idx) => (
+                                                                                        <span key={idx} className="text-[9px] px-1.5 py-0.2 bg-white/5 border border-white/10 text-slate-300 rounded font-mono">
+                                                                                            {flag}
+                                                                                        </span>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
 
                                                                     {ipInfo.locationLabel && (
                                                                         <div className="border-t border-white/5 pt-2">
@@ -704,6 +984,18 @@ export default function AuditLogsClientWrapper({
                                                                             HTTP_{log.details?.status || 200}
                                                                         </span>
                                                                     </div>
+
+                                                                    {log.isRolledBack && (
+                                                                        <div className="border-t border-white/5 pt-2 space-y-1">
+                                                                            <span className="text-[9px] uppercase text-amber-500 block font-mono font-bold">Rollback Audit Trail</span>
+                                                                            <div className="text-[10px] text-slate-300 font-mono">
+                                                                                By: <span className="text-amber-300">{log.rolledBackBy || 'Admin'}</span>
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-400 font-mono">
+                                                                                At: {log.rolledBackAt ? new Date(log.rolledBackAt).toLocaleString() : 'N/A'}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
@@ -739,6 +1031,28 @@ export default function AuditLogsClientWrapper({
                                                                     <SyntaxHighlight json={log.details || { status: 'No active payload recorded' }} />
                                                                 </div>
                                                             </div>
+
+                                                            {/* Visual State Diff Inspector (Spans 3 Columns) */}
+                                                            {((viewModeMap[log._id] || 'diff') === 'diff' && ((log.diff && log.diff.length > 0) || log.previousState)) && (
+                                                                <div className="lg:col-span-3 space-y-2 border-t border-white/5 pt-4">
+                                                                    <div className="flex items-center justify-between pb-1">
+                                                                        <div className="flex items-center gap-2 text-indigo-400">
+                                                                            <Layers size={14} />
+                                                                            <span className="text-[11px] font-bold uppercase tracking-wider">
+                                                                                State Change Inspector (Before vs After)
+                                                                            </span>
+                                                                        </div>
+                                                                        <span className="text-[10px] text-slate-400 font-mono">
+                                                                            {log.diff?.length || 0} field(s) modified
+                                                                        </span>
+                                                                    </div>
+                                                                    <VisualDiffInspector
+                                                                        diff={log.diff}
+                                                                        previousState={log.previousState}
+                                                                        newState={log.newState}
+                                                                    />
+                                                                </div>
+                                                            )}
 
                                                         </div>
                                                     </td>
@@ -780,6 +1094,73 @@ export default function AuditLogsClientWrapper({
                     </div>
                 )}
             </main>
+
+            {/* Rollback Confirmation Modal */}
+            {confirmRollbackLog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#0f0f14] border border-amber-500/30 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+                        <div className="flex items-center gap-3 text-amber-400 border-b border-white/5 pb-3">
+                            <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                                <RotateCcw size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-sm text-white">Revert Entity to Previous State?</h3>
+                                <p className="text-xs text-slate-400">Rollback MongoDB document to its snapshot prior to this change.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-black/40 border border-white/5 rounded-xl p-3.5 space-y-2 text-xs font-mono">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Action:</span>
+                                <span className="text-rose-400 font-bold">{confirmRollbackLog.action}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Target Entity:</span>
+                                <span className="text-white font-bold">{confirmRollbackLog.target}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Entity ID:</span>
+                                <span className="text-indigo-400 font-bold select-all">{confirmRollbackLog.details?.id || '—'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Log Timestamp:</span>
+                                <span className="text-slate-300">{confirmRollbackLog.createdAt ? new Date(confirmRollbackLog.createdAt).toLocaleString() : 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
+                            <strong>Caution:</strong> This will restore the entity in the database to the snapshot stored in <code className="text-amber-200 font-bold">previousState</code> and log an <code className="text-amber-200 font-bold">AUDIT_ROLLBACK</code> event.
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                            <button
+                                disabled={rollingBack}
+                                onClick={() => setConfirmRollbackLog(null)}
+                                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                disabled={rollingBack}
+                                onClick={handleExecuteRollback}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                            >
+                                {rollingBack ? (
+                                    <>
+                                        <RefreshCw size={13} className="animate-spin" />
+                                        <span>Reverting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <RotateCcw size={13} />
+                                        <span>Confirm Rollback</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

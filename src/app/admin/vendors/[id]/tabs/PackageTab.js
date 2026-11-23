@@ -14,7 +14,7 @@ export const VERIFICATION_STATUS = {
     REJECTED: 'rejected'
 };
 
-export default function PackageTab({ vendor, packages, setPackages, id, activeTab, setActiveTab }) {
+export default function PackageTab({ vendor, packages, setPackages, id, activeTab, setActiveTab, onRefresh }) {
     const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [viewingDocs, setViewingDocs] = useState(null);
@@ -113,7 +113,7 @@ export default function PackageTab({ vendor, packages, setPackages, id, activeTa
                 status: newActive,
                 serviceType: catBucket
             });
-            router.refresh();
+            if (onRefresh) onRefresh();
             toast("Package status updated.", "success");
         } catch (err) {
             toast("Failed to toggle status: " + (err.message || ""), "error");

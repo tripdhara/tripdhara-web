@@ -42,6 +42,7 @@ export const adminApi = (fetcher) => ({
         create: (data) => fetcher('admin/vendors/create', { method: 'POST', body: prepareBody(data) }),
         update: (id, data) => fetcher(`admin/vendors/${id}/update`, { method: 'PATCH', body: prepareBody(data) }),
         delete: (id) => fetcher(`admin/vendors/${id}/delete`, { method: 'DELETE' }),
+        approve: (id) => fetcher('admin/approve-vendor', { method: 'POST', body: JSON.stringify({ vendorId: id, status: 'verified' }) }),
         globalApprove: (data) => fetcher('admin/approve-vendor', { method: 'POST', body: prepareBody(data) }),
     },
 

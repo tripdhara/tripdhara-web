@@ -7,6 +7,7 @@ import { User, Layers, Building2, ShieldCheck, MapPin, Landmark, Check as CheckI
 import { useToast } from '@/components/ui/ToastContext.js';
 
 const getInitialBusinessFormData = (vendor) => ({
+
     ownerName: vendor?.ownerName || '',
     personalNumber: vendor?.personalNumber || '',
     personalPanCard: vendor?.personalPanCard || '',
@@ -41,7 +42,6 @@ export default function BusinessTab({ vendor, setVendor, id, activeTab, setActiv
     const toast = useToast();
     const [formData, setFormData] = useState(() => getInitialBusinessFormData(vendor));
     const [prevVendor, setPrevVendor] = useState(vendor);
-
     if (vendor !== prevVendor) {
         setPrevVendor(vendor);
         setFormData(getInitialBusinessFormData(vendor));
@@ -51,7 +51,8 @@ export default function BusinessTab({ vendor, setVendor, id, activeTab, setActiv
         setSaving(true);
         try {
             const data = await api.admin.vendors.update(id, actionData);
-            setVendor(data.data.vendor);
+            if (onRefresh) onRefresh();
+            else if (data?.data?.vendor) setVendor(data.data.vendor);
             toast("Update successful", "success");
         } catch (e) {
             toast(e.message || "Error communicating with server.", "error");
@@ -77,7 +78,8 @@ export default function BusinessTab({ vendor, setVendor, id, activeTab, setActiv
         setSaving(true);
         try {
             const data = await api.admin.vendors.update(id, formData);
-            setVendor(data.data.vendor);
+            if (onRefresh) onRefresh();
+            else if (data?.data?.vendor) setVendor(data.data.vendor);
             setIsEditing(false);
             toast("Profile updated successfully.", "success");
         } catch (e) {

@@ -31,17 +31,20 @@ export default function VendorDetailsPage({ params }) {
     const toast = useToast();
 
     useEffect(() => {
+        let isMounted = true;
         const fetchVendor = async () => {
             try {
                 const data = await api.admin.vendors.getById(id);
-                if (data.data) setVendor(data.data);
+                if (isMounted && data.data) setVendor(data.data);
             } catch (e) {
+                if (isMounted) toast(e.message || 'Failed to load vendor node data', 'error');
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
         fetchVendor();
-    }, [id, refreshKey]);
+        return () => { isMounted = false; };
+    }, [id, refreshKey, toast]);
 
     const verifyDocument = async (field, status, reason = '', index = null) => {
         try {
@@ -138,9 +141,9 @@ export default function VendorDetailsPage({ params }) {
         </div>
     );
 
-    if (activeTab === 'personal') return <PersonalTab vendor={vendor} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} />;
-    if (activeTab === 'business') return <BusinessTab vendor={vendor.vendorProfile} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
-    if (activeTab === 'package') return <PackageTab vendor={vendor} packages={packages} setPackages={setPackages} id={id} activeTab={activeTab} setActiveTab={setActiveTab} />;
+    if (activeTab === 'personal') return <PersonalTab vendor={vendor} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
+    if (activeTab === 'business') return <BusinessTab vendor={vendor.vendorProfile || {}} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
+    if (activeTab === 'package') return <PackageTab vendor={vendor} packages={packages} setPackages={setPackages} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
     if (activeTab === 'documents') return <DocumentsTab vendor={vendor} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
 
     return (

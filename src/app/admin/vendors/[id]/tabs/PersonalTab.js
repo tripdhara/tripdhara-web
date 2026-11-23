@@ -59,7 +59,7 @@ const getInitialPersonalFormData = (vendor) => {
   };
 };
 
-export default function PersonalTab({ vendor, setVendor, id, activeTab, setActiveTab }) {
+export default function PersonalTab({ vendor, setVendor, id, activeTab, setActiveTab, onRefresh }) {
   const router = useRouter();
   const [showMapModal, setShowMapModal] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -79,7 +79,8 @@ export default function PersonalTab({ vendor, setVendor, id, activeTab, setActiv
     setSaving(true);
     try {
       const data = await api.admin.vendors.update(id, actionData);
-      setVendor(data.data.vendor);
+      if (onRefresh) onRefresh();
+      else if (data?.data?.vendor) setVendor(data.data.vendor);
       toast("Update successful", "success");
     } catch (e) {
       toast(e.message || "Error communicating with server.", "error");
@@ -98,9 +99,10 @@ export default function PersonalTab({ vendor, setVendor, id, activeTab, setActiv
         medicalConditions: formData.medicalConditions.split(',').map(s => s.trim()).filter(Boolean)
       };
       delete payload.emergencyContact; // Remove temporary singular object
-      
+
       const data = await api.admin.vendors.update(id, payload);
-      setVendor(data.data.vendor);
+      if (onRefresh) onRefresh();
+      else if (data?.data?.vendor) setVendor(data.data.vendor);
       setIsEditing(false);
       toast("Profile updated successfully", "success");
     } catch (e) {

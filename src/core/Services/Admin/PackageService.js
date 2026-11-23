@@ -218,7 +218,7 @@ class PackageService {
         if (cached) return cached;
 
         const packages = await getPackagesBy({
-            $or: [{ vendor: vendorId }, { business: vendorId }]
+            $or: [{ vendor: vendorId }, { business: vendorId }, { user: vendorId }]
         }, '', { path: 'vendor', select: 'name email' });
 
         const services = [];

@@ -1,20 +1,19 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Plus, Eye, Package as PackageIcon, ShieldAlert, CheckCircle2, Factory, X, User as UserIcon, Mail, Phone, Lock, Trash2 } from 'lucide-react';
+import { Plus, Eye, CheckCircle2, Factory, Lock, Trash2, ShieldAlert } from 'lucide-react';
 import PageHeader from '@/components/admin/PageHeader';
 import CyberTable from '@/components/admin/CyberTable.js';
 import api from '@/core/Api/index.js';
 import DynamicModal from '@/components/admin/DynamicModal.js';
 import { useToast } from '@/components/ui/ToastContext.js';
-import { useRouter } from 'next/navigation';
 
-export default function VendorsClientWrapper({ initialVendors }) {
-    const [vendors, setVendors] = useState(initialVendors);
+export default function VendorsClientWrapper() {
+    const [vendors, setVendors] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const toast = useToast();
-    const router = useRouter();
 
     const [addLoading, setAddLoading] = useState(false);
     const [bulkLoading, setBulkLoading] = useState(false);
@@ -28,15 +27,31 @@ export default function VendorsClientWrapper({ initialVendors }) {
         { name: 'password', label: 'Master Key (Password)', type: 'password', required: true, placeholder: '••••••••', icon: 'Lock' }
     ];
 
-    const refreshData = async () => {
-        router.refresh();
-        try {
-            const data = await api.admin.vendors.getAll();
-            if (data.data) setVendors(data.data);
-        } catch (e) {
-            toast(e?.message || "Failed to reload vendors", "error");
-        }
-    };
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const refreshData = useCallback(() => {
+        setRefreshKey(prev => prev + 1);
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchVendors = async () => {
+            try {
+                const data = await api.admin.vendors.getAll();
+                if (isMounted) {
+                    if (Array.isArray(data?.data)) setVendors(data.data);
+                    else if (Array.isArray(data)) setVendors(data);
+                }
+            } catch (e) {
+                if (isMounted) toast(e?.message || "Failed to load vendors", "error");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        fetchVendors();
+        return () => { isMounted = false; };
+    }, [refreshKey, toast]);
 
     const handleBulkDelete = async (selectedVendors) => {
         if (!confirm(`WARNING: Are you sure you want to terminate ${selectedVendors.length} network nodes? This action is irreversible.`)) return;
@@ -47,7 +62,7 @@ export default function VendorsClientWrapper({ initialVendors }) {
                 const data = await api.admin.vendors.delete(vendor._id);
                 if (data.success) successCount++;
             }
-            await refreshData();
+            refreshData();
             toast(`Terminated ${successCount} nodes.`, "success");
         } catch (e) {
             toast("Error executing bulk termination.", "error");
@@ -69,7 +84,7 @@ export default function VendorsClientWrapper({ initialVendors }) {
                     if (fallbackData.success) successCount++;
                 }
             }
-            await refreshData();
+            refreshData();
             toast(`Authorized ${successCount} nodes.`, "success");
         } catch (e) {
             toast("Error executing bulk authorization.", "error");
@@ -86,13 +101,13 @@ export default function VendorsClientWrapper({ initialVendors }) {
             if (data.success) {
                 setIsModalOpen(false);
                 setNewVendor({ businessName: '', ownerName: '', email: '', phone: '', password: '' });
-                await refreshData();
+                refreshData();
                 toast("Vendor successfully added.", "success");
             } else {
                 toast("Failed: " + (data.error || data.message), "error");
             }
         } catch (error) {
-            toast("An error occurred.", "error");
+            toast(error?.message || "An error occurred.", "error");
         } finally {
             setAddLoading(false);
         }
@@ -111,7 +126,9 @@ export default function VendorsClientWrapper({ initialVendors }) {
             className: 'w-1/4',
             render: (v) => (
                 <div className="flex flex-col items-start gap-1">
-                    <div className="font-bold text-slate-200 group-hover:text-indigo-300 transition-colors flex items-center gap-2">{v.ownerName || v.businessName || 'Unknown Entity'}</div>
+                    <div className="font-bold text-slate-200 group-hover:text-indigo-300 transition-colors flex items-center gap-2">
+                        {v.ownerName || v.businessName || 'Unknown Entity'}
+                    </div>
                 </div>
             )
         },
@@ -130,12 +147,24 @@ export default function VendorsClientWrapper({ initialVendors }) {
             accessor: 'isApproved',
             render: (v) => {
                 if (v.hasProfile && v.isApproved) {
-                    return <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"><CheckCircle2 className="w-3 h-3" /> Verified Node </div>;
+                    return (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                            <CheckCircle2 className="w-3 h-3" /> Verified Node
+                        </div>
+                    );
                 }
                 if (v.hasProfile && !v.isApproved) {
-                    return <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]"><ShieldAlert className="w-3 h-3" /> Pending Scan </div>;
+                    return (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+                            <ShieldAlert className="w-3 h-3" /> Pending Scan
+                        </div>
+                    );
                 }
-                return <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20"><Lock className="w-3 h-3" /> Initialization </div>;
+                return (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono tracking-widest uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                        <Lock className="w-3 h-3" /> Initialization
+                    </div>
+                );
             }
         },
         {
@@ -144,7 +173,11 @@ export default function VendorsClientWrapper({ initialVendors }) {
             tdClassName: 'text-right',
             render: (v) => (
                 <div className="flex justify-end gap-2 items-center opacity-70 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/admin/vendors/${v._id}`} title="Access Node Profile" className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg border border-transparent hover:border-indigo-500/20 transition-all hover:shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                    <Link
+                        href={`/admin/vendors/${v._id}`}
+                        title="Access Node Profile"
+                        className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg border border-transparent hover:border-indigo-500/20 transition-all hover:shadow-[0_0_10px_rgba(99,102,241,0.2)]"
+                    >
                         <Eye className="w-4 h-4" />
                     </Link>
                 </div>
@@ -154,14 +187,39 @@ export default function VendorsClientWrapper({ initialVendors }) {
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
-            <PageHeader title="Vendor Network" subtitle="Authorized Supply Chain Nodes" icon={Factory} searchQuery={searchQuery} onSearchChange={setSearchQuery} actionLabel="Register" actionIcon={Plus} onAction={() => setIsModalOpen(true)} />
-            <CyberTable data={vendors} columns={columns} itemsPerPage={10} searchTerm={searchQuery} searchKeys={['user.name', 'ownerName', 'user.email', 'businessName']} emptyText="NULL OUTPUT: No nodes found in current vector." exportFilename="vendor_nodes"
+            <PageHeader
+                title="Vendor Network"
+                subtitle="Authorized Supply Chain Nodes"
+                icon={Factory}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                actionLabel="Register"
+                actionIcon={Plus}
+                onAction={() => setIsModalOpen(true)}
+            />
+            <CyberTable
+                data={vendors}
+                columns={columns}
+                itemsPerPage={10}
+                loading={loading}
+                searchTerm={searchQuery}
+                searchKeys={['name', 'ownerName', 'email', 'phone', 'businessName', 'businessRegistration', 'gstNumber']}
+                emptyText="NULL OUTPUT: No nodes found in current vector."
+                exportFilename="vendor_nodes"
                 bulkActions={(selectedVendors) => (
                     <div className="flex items-center gap-2">
-                        <button onClick={() => handleBulkDelete(selectedVendors)} disabled={bulkLoading} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 rounded-lg text-xs font-mono tracking-wider transition-all shadow-[0_0_10px_rgba(244,63,94,0.1)] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button
+                            onClick={() => handleBulkDelete(selectedVendors)}
+                            disabled={bulkLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 rounded-lg text-xs font-mono tracking-wider transition-all shadow-[0_0_10px_rgba(244,63,94,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <Trash2 className="w-3.5 h-3.5" /> Terminate
                         </button>
-                        <button onClick={() => handleBulkApprove(selectedVendors)} disabled={bulkLoading} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg text-xs font-mono tracking-wider transition-all shadow-[0_0_10px_rgba(16,185,129,0.1)] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button
+                            onClick={() => handleBulkApprove(selectedVendors)}
+                            disabled={bulkLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg text-xs font-mono tracking-wider transition-all shadow-[0_0_10px_rgba(16,185,129,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <CheckCircle2 className="w-3.5 h-3.5" /> Authorize
                         </button>
                     </div>
@@ -180,7 +238,17 @@ export default function VendorsClientWrapper({ initialVendors }) {
                     </div>
                 )}
             />
-            <DynamicModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register New Node" fields={vendorFields} formData={newVendor} onChange={setNewVendor} onSubmit={handleAddVendor} loading={addLoading} submitText="Deploy Node" />
+            <DynamicModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Register New Node"
+                fields={vendorFields}
+                formData={newVendor}
+                onChange={setNewVendor}
+                onSubmit={handleAddVendor}
+                loading={addLoading}
+                submitText="Deploy Node"
+            />
         </div>
     );
 }

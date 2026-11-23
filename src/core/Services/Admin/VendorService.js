@@ -23,12 +23,16 @@ import mongoose from 'mongoose';
 class VendorService {
     
     // Helper to invalidate vendor caches
-    async invalidateVendorCaches(vendorId = null) {
+    async invalidateVendorCaches(vendorId = null, userId = null) {
         await CacheService.del('admin:vendors:all');
         await CacheService.del('admin:dashboard:stats');
         if (vendorId) {
             await CacheService.del(`admin:vendors:${vendorId}`);
             await CacheService.del(`user:profile:${vendorId}`);
+        }
+        if (userId) {
+            await CacheService.del(`admin:vendors:${userId}`);
+            await CacheService.del(`user:profile:${userId}`);
         }
     }
 
@@ -77,8 +81,14 @@ class VendorService {
         const cached = await CacheService.get(cacheKey);
         if (cached) return cached;
 
+        let userId = id;
+        const vendorDoc = await Vendor.findById(id).select('user').lean();
+        if (vendorDoc && vendorDoc.user) {
+            userId = vendorDoc.user;
+        }
+
         const results = await User.aggregate([
-            { $match: { _id: new mongoose.Types.ObjectId(id) } },
+            { $match: { _id: new mongoose.Types.ObjectId(userId) } },
             {
                 $lookup: {
                     from: 'vendors',
@@ -104,7 +114,7 @@ class VendorService {
                         {
                             $match: {
                                 $expr: {
-                                    $and: [
+                                    $or: [
                                         { $eq: ['$vendor', '$$vendorId'] },
                                         { $eq: ['$user', '$$userId'] }
                                     ]
@@ -119,7 +129,15 @@ class VendorService {
         ]);
 
         const vendor = results[0] || null;
-        if (vendor) await CacheService.set(cacheKey, vendor, 1800);
+        if (vendor) {
+            vendor.categoryDocuments = vendor.vendorDocuments || [];
+            await CacheService.set(cacheKey, vendor, 1800);
+            if (vendorDoc) {
+                await CacheService.set(`admin:vendors:${userId}`, vendor, 1800);
+            } else if (vendor.vendorProfile?._id) {
+                await CacheService.set(`admin:vendors:${vendor.vendorProfile._id}`, vendor, 1800);
+            }
+        }
         return vendor;
     }
 
@@ -348,6 +366,7 @@ class VendorService {
         const { vendorId, documentField, index, sync = false } = data;
         
         let vendor = await getBusinessById(vendorId, '', null, { lean: true });
+        if (!vendor) vendor = await getBusinessBy({ user: vendorId }, '', null, { lean: true });
         if (!vendor) throw new AppError(RESPONSE_MESSAGES.VENDOR.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
         let doc = null;
@@ -386,6 +405,7 @@ class VendorService {
         let identityData = null;
         
         let vendor = await getBusinessById(vendorId, '', null, { lean: false });
+        if (!vendor) vendor = await getBusinessBy({ user: vendorId }, '', null, { lean: false });
         if (!vendor) throw new AppError(RESPONSE_MESSAGES.VENDOR.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
         let doc = null;

@@ -1,9 +1,14 @@
 import BlogForm from '../BlogForm.js';
 
 export const metadata = {
-    title: 'Create Blog Post - Admin Dashboard',
+    title: 'Compose Publication - Admin Dashboard',
+    description: 'Compose and publish new travel stories, destination guides, and platform editorials.'
 };
 
 export default function CreateBlogPage() {
-    return <BlogForm />;
+    return (
+        <main>
+            <BlogForm />
+        </main>
+    );
 }

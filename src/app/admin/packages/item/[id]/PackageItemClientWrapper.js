@@ -1,48 +1,98 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import api from '@/core/Api/index.js';
 import { useToast } from '@/components/ui/ToastContext.js';
+import Loading from '@/components/admin/Loading.js';
 import { ArrowLeft, Save, Server, Code, Settings, Activity, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export default function PackageItemClientWrapper({ initialItem, itemId }) {
+export default function PackageItemClientWrapper({ initialItem = null, itemId }) {
     const router = useRouter();
     const toast = useToast();
 
+    const [item, setItem] = useState(initialItem);
+    const [loading, setLoading] = useState(!initialItem);
     const [saving, setSaving] = useState(false);
-    const [error] = useState(initialItem ? null : 'Item not found');
-
-    const extractedTitle = initialItem?.title || initialItem?.tourDetails?.tourName || initialItem?.details?.jumpName || initialItem?.vehicleDetails?.model || '';
-
-    // Immutable origin metadata loaded directly from server props
-    const vendorId = initialItem?.vendor?._id ? String(initialItem.vendor._id) : (initialItem?.vendorId ? String(initialItem.vendorId) : null);
-    const vendorName = initialItem?.vendor?.businessName || initialItem?.vendor?.name || vendorId || 'Vendor Profile';
+    const [error, setError] = useState(null);
 
     const [formData, setFormData] = useState({
-        title: extractedTitle,
-        isActive: initialItem?.isActive || false,
+        title: '',
+        isActive: false,
     });
+    const [rawJson, setRawJson] = useState('{}');
 
-    // Prepare clean JSON for advanced mode
-    const cleanObj = initialItem ? { ...initialItem } : {};
-    delete cleanObj.serviceType;
-    delete cleanObj.vendorId;
-    delete cleanObj.vendor;
-    delete cleanObj._id;
-    const [rawJson, setRawJson] = useState(JSON.stringify(cleanObj, null, 2));
+    // Sync item helper
+    const syncItemData = (targetItem) => {
+        if (!targetItem) return;
+        const extractedTitle = targetItem.title || targetItem.tourDetails?.tourName || targetItem.details?.jumpName || targetItem.vehicleDetails?.model || '';
+        setFormData({
+            title: extractedTitle,
+            isActive: targetItem.isActive || false,
+        });
+
+        const cleanObj = { ...targetItem };
+        delete cleanObj.serviceType;
+        delete cleanObj.vendorId;
+        delete cleanObj.vendor;
+        delete cleanObj._id;
+        setRawJson(JSON.stringify(cleanObj, null, 2));
+    };
+
+    // Client-side fetch if initialItem was not provided
+    useEffect(() => {
+        if (initialItem) {
+            setItem(initialItem);
+            syncItemData(initialItem);
+            setLoading(false);
+            return;
+        }
+
+        if (!itemId) {
+            setError('No package item ID specified');
+            setLoading(false);
+            return;
+        }
+
+        let isMounted = true;
+        setLoading(true);
+
+        api.admin.packages.getItem(itemId)
+            .then(res => {
+                if (!isMounted) return;
+                const fetched = res?.data?.item || res?.data;
+                if (fetched) {
+                    setItem(fetched);
+                    syncItemData(fetched);
+                    setError(null);
+                } else {
+                    setError('Package item not found in catalog');
+                }
+            })
+            .catch(err => {
+                if (!isMounted) return;
+                setError(err?.message || 'Failed to fetch package item');
+            })
+            .finally(() => {
+                if (isMounted) setLoading(false);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [initialItem, itemId]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
             const payload = JSON.parse(rawJson);
 
-            if (initialItem?.serviceType === 'tourPackages') {
+            if (item?.serviceType === 'tourPackages') {
                 if (!payload.tourDetails) payload.tourDetails = {};
                 payload.tourDetails.tourName = formData.title;
-            } else if (initialItem?.serviceType === 'taxiPackages') {
+            } else if (item?.serviceType === 'taxiPackages') {
                 if (!payload.vehicleDetails) payload.vehicleDetails = {};
                 payload.vehicleDetails.model = formData.title;
             } else {
@@ -54,43 +104,73 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
             const data = await api.admin.packages.updateItem(itemId, payload);
 
             if (data.success) {
-                toast('Item core updated successfully.', 'success');
-                router.refresh();
+                toast('Package node payload updated successfully.', 'success');
+                const updated = data.data?.item || data.data;
+                if (updated) {
+                    setItem(prev => ({ ...prev, ...updated, isActive: formData.isActive }));
+                }
             } else {
                 toast(data.message || 'Update failed', 'error');
             }
         } catch (e) {
-            toast('Invalid JSON structure or network error.', 'error');
+            toast('Invalid JSON syntax or payload structure error.', 'error');
         } finally {
             setSaving(false);
         }
     };
 
-    if (error || !initialItem) {
+    if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center text-slate-400 font-mono">
-                <AlertTriangle className="mr-3 text-rose-500" /> {error || "Item not found"}
+            <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+                <Loading message="Decrypting package node configuration..." />
             </div>
         );
     }
+
+    if (error || !item) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center text-slate-400 font-mono gap-4">
+                <div className="flex items-center text-rose-400 gap-2">
+                    <AlertTriangle className="w-6 h-6 text-rose-500" />
+                    <span>{error || 'Item not found in database'}</span>
+                </div>
+                <button
+                    onClick={() => router.back()}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-mono text-white transition-colors"
+                >
+                    Return to Packages Inventory
+                </button>
+            </div>
+        );
+    }
+
+    const vendorId = item?.vendor?._id ? String(item.vendor._id) : (item?.vendorId ? String(item.vendorId) : null);
+    const vendorName = item?.vendor?.businessName || item?.vendor?.name || vendorId || 'Vendor Profile';
 
     return (
         <div className="min-h-screen bg-[#0a0a0c] text-slate-300 pb-24">
             <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/10 px-8 py-5">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <button onClick={() => router.back()} className="text-slate-400 hover:text-white transition-colors p-2 bg-white/5 rounded-lg border border-white/10 hover:border-white/20">
+                        <button
+                            onClick={() => router.back()}
+                            className="text-slate-400 hover:text-white transition-colors p-2 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 cursor-pointer"
+                        >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
                             <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase flex items-center gap-2 mb-1">
                                 <Server className="w-3 h-3 text-pink-400" /> Database Identity
                                 <span className="text-slate-700">/</span>
-                                <span className="text-pink-400">{initialItem._id}</span>
+                                <span className="text-pink-400">{item._id}</span>
                             </div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                                {formData.title || 'Unknown Entity'}
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-widest uppercase border ${formData.isActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30'}`}>
+                                {formData.title || 'Package Node'}
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-widest uppercase border ${
+                                    formData.isActive
+                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                }`}>
                                     {formData.isActive ? 'ONLINE' : 'OFFLINE'}
                                 </span>
                             </h1>
@@ -98,8 +178,16 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
                     </div>
 
                     <div className="flex gap-3">
-                        <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 border border-pink-500/30 hover:border-pink-400/50 rounded-lg text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(236,72,153,0.2)] disabled:opacity-50">
-                            {saving ? <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div> : <Save className="w-4 h-4" />}
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="px-6 py-2.5 bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 border border-pink-500/30 hover:border-pink-400/50 rounded-lg text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(236,72,153,0.2)] disabled:opacity-50 cursor-pointer"
+                        >
+                            {saving ? (
+                                <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <Save className="w-4 h-4" />
+                            )}
                             {saving ? 'Writing...' : 'Commit Node'}
                         </button>
                     </div>
@@ -108,7 +196,6 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
 
             <main className="max-w-6xl mx-auto p-8 pt-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Core Basic Configuration */}
@@ -120,17 +207,34 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
 
                             <div className="space-y-6 relative z-10">
                                 <div>
-                                    <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-2">Display Designation</label>
-                                    <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all font-mono" />
+                                    <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-2">Display Designation / Title</label>
+                                    <input
+                                        type="text"
+                                        value={formData.title}
+                                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all font-mono"
+                                    />
                                 </div>
 
                                 <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex-1">
-                                        <label className="block text-[10px] font-mono font-bold text-slate-300 uppercase tracking-widest mb-1">Network Transmission</label>
-                                        <p className="text-xs text-slate-500">Toggle whether this node is accessible to external clients.</p>
+                                        <label className="block text-[10px] font-mono font-bold text-slate-300 uppercase tracking-widest mb-1">Network Transmission (Status)</label>
+                                        <p className="text-xs text-slate-500">Toggle whether this package node is active and visible on Tripdhara.</p>
                                     </div>
-                                    <button onClick={() => setFormData({ ...formData, isActive: !formData.isActive })} className={`relative w-14 h-7 rounded-full transition-all duration-300 ${formData.isActive ? 'bg-emerald-500/30 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-800 border border-slate-700'}`}>
-                                        <div className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-300 ${formData.isActive ? 'left-[calc(100%-1.5rem)] bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'left-1 bg-slate-500'}`}></div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                        className={`relative w-14 h-7 rounded-full transition-all duration-300 cursor-pointer ${
+                                            formData.isActive
+                                                ? 'bg-emerald-500/30 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                                                : 'bg-slate-800 border border-slate-700'
+                                        }`}
+                                    >
+                                        <div className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-300 ${
+                                            formData.isActive
+                                                ? 'left-[calc(100%-1.5rem)] bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
+                                                : 'left-1 bg-slate-500'
+                                        }`}></div>
                                     </button>
                                 </div>
                             </div>
@@ -171,7 +275,7 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
                                 <div>
                                     <label className="text-[9px] font-mono tracking-widest text-slate-500 uppercase mb-1 block">Entity Type</label>
                                     <div className="text-sm text-cyan-400 font-mono flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_currentColor]"></span> {initialItem.serviceType}
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_currentColor]"></span> {item.serviceType || 'Package'}
                                     </div>
                                 </div>
                                 <div className="pt-4 border-t border-white/5">
@@ -186,7 +290,7 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
                                 </div>
                                 <div className="pt-4 border-t border-white/5">
                                     <label className="text-[9px] font-mono tracking-widest text-slate-500 uppercase mb-1 block">Creation Timestamp</label>
-                                    <div className="text-xs text-slate-300 font-mono">{initialItem.createdAt ? new Date(initialItem.createdAt).toLocaleString() : 'N/A'}</div>
+                                    <div className="text-xs text-slate-300 font-mono">{item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A'}</div>
                                 </div>
                             </div>
                         </motion.div>
@@ -209,11 +313,11 @@ export default function PackageItemClientWrapper({ initialItem, itemId }) {
             </main>
 
             <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.6); }
-      `}</style>
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.6); }
+            `}</style>
         </div>
     );
 }

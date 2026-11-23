@@ -212,11 +212,12 @@ export const schemas = {
     }),
 
     packageStatus: z.object({
-        vendorId: idString.optional(),
-        userId: idString.optional(),
+        vendorId: z.preprocess(v => (v === '' || v === null ? undefined : v), idString.optional()),
+        userId: z.preprocess(v => (v === '' || v === null ? undefined : v), idString.optional()),
         serviceType: z.string().min(1).optional(),
         category: z.string().min(1).optional(),
-        itemId: idString.optional(),
+        serviceId: z.preprocess(v => (v === '' || v === null ? undefined : v), idString.optional()),
+        itemId: z.preprocess(v => (v === '' || v === null ? undefined : v), idString.optional()),
         status: z.union([z.boolean(), moderationStatus]).optional(),
         isActive: z.coerce.boolean().optional()
     }).passthrough(),

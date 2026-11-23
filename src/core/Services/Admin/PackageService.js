@@ -86,17 +86,30 @@ class PackageService {
 
             if (!pkg) throw new AppError(RESPONSE_MESSAGES.PACKAGE.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
-            const list = pkg[serviceType];
-            if (!list) throw new AppError(`Invalid service type: ${serviceType}`, HTTP_STATUS.BAD_REQUEST);
+            let targetType = serviceType;
+            const categoryFields = Object.keys(Package.schema.paths)
+                .filter(p => !p.includes('.') && Array.isArray(Package.schema.paths[p].options?.type));
+
+            if (!targetType || !Array.isArray(pkg[targetType]) || !pkg[targetType].some(s => s._id?.toString() === serviceId)) {
+                for (const key of categoryFields) {
+                    if (Array.isArray(pkg[key]) && pkg[key].some(s => s._id?.toString() === serviceId)) {
+                        targetType = key;
+                        break;
+                    }
+                }
+            }
+
+            const list = pkg[targetType];
+            if (!list) throw new AppError(`Invalid service type: ${serviceType || 'unknown'}`, HTTP_STATUS.BAD_REQUEST);
 
             const idx = list.findIndex(s => s._id.toString() === serviceId);
             if (idx === -1) throw new AppError(RESPONSE_MESSAGES.ITEM.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
-            pkg[serviceType][idx].isActive = status;
-            pkg.markModified(serviceType);
+            pkg[targetType][idx].isActive = status;
+            pkg.markModified(targetType);
             await pkg.save({ session });
             
-            updatedItem = pkg[serviceType][idx];
+            updatedItem = pkg[targetType][idx];
         });
 
         session.endSession();

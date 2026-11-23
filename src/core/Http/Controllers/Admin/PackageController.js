@@ -2,7 +2,7 @@ import PackageService from '@/core/Services/Admin/PackageService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
 import { item } from '@/core/Helpers/package.js';
-import { getBusinessById } from '@/core/Helpers/queryHelpers.js';
+import { getBusinessById, getBusinessByUserId } from '@/core/Helpers/queryHelpers.js';
 import { validate, schemas } from '@/core/Helpers/validation.js';
 
 /**
@@ -30,8 +30,9 @@ class PackageController extends Controller {
             const validation = validate(schemas.packageStatus, req.payload || {});
             if (!validation.success) return this.error(HTTP_STATUS.BAD_REQUEST, validation.error);
 
-            const { vendorId, userId, serviceType, status } = validation.data;
-            const serviceId = params?.id || validation.data.serviceId;
+            const { vendorId, userId, serviceType } = validation.data;
+            const status = validation.data.status !== undefined ? validation.data.status : validation.data.isActive;
+            const serviceId = params?.id || validation.data.serviceId || validation.data.itemId;
 
             if (!serviceId || status === undefined) {
                 return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
@@ -97,10 +98,14 @@ class PackageController extends Controller {
             if (!vendorId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ID_REQUIRED);
             if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 
-            const vendor = await getBusinessById(vendorId, 'user _id');
+            let vendor = await getBusinessById(vendorId, 'user _id');
+            if (!vendor) {
+                vendor = await getBusinessByUserId(vendorId, 'user _id');
+            }
             if (!vendor || !vendor.user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            const newItem = await item(vendor.user, vendor._id, category, itemData);
+            const userId = vendor.user?._id || vendor.user;
+            const newItem = await item(userId, category, itemData);
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.ITEM.CREATED, newItem);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

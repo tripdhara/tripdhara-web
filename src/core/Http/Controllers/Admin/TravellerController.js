@@ -9,7 +9,7 @@ const travellerCreateSchema = z.object({
   email: z.string().email(),
   phone: z.string().optional(),
   name: z.string().min(2),
-  password: z.string().min(6).optional()
+  password: z.preprocess(v => (v === '' || v === null ? undefined : v), z.string().min(6).optional())
 }).passthrough();
 
 const travellerUpdateSchema = z.object({

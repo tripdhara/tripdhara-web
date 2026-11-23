@@ -6,10 +6,12 @@ import api from '@/core/Api/index.js';
 import Link from 'next/link';
 import { User, Mail, Phone, Lock, ArrowLeft, PlusCircle, ShieldCheck } from 'lucide-react';
 import Loading from '@/components/admin/Loading.js';
+import { useToast } from '@/components/ui/ToastContext.js';
 import { motion } from 'framer-motion';
 
 export default function AddTravellerPage() {
   const router = useRouter();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,10 +34,16 @@ export default function AddTravellerPage() {
     setError('');
 
     try {
-      await api.admin.travellers.create(formData);
+      const payload = { ...formData };
+      if (!payload.password) delete payload.password;
+      if (!payload.phone) delete payload.phone;
+
+      await api.admin.travellers.create(payload);
+      toast('Traveller registered successfully', 'success');
       router.push('/admin/travellers');
     } catch (err) {
       setError(err.message || 'An error occurred while creating the traveller');
+      toast(err.message || 'Failed to create traveller', 'error');
     } finally {
       setLoading(false);
     }

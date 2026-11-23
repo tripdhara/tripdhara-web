@@ -1,30 +1,35 @@
 'use client';
-import { useRouter } from 'next/navigation';
+
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { setToken, getToken, getRole } from '@/app/utils/authUtils.js';
+import api from '@/core/Api/index.js';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, Mail, ArrowRight, Loader2, Cpu, Zap, Ghost } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowRight, Loader2, Cpu, Zap, Ghost, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectParam = searchParams.get('redirect');
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Auto-redirect if already logged in as Admin
     useEffect(() => {
         const token = getToken();
         const role = getRole();
-        if (token && role) {
-            if (role === 'admin') router.push('/admin');
-            else if (role === 'vendor') router.push('/vendor');
-            else if (role === 'traveller') router.push('/traveller');
+        if (token && role === 'admin') {
+            const target = redirectParam?.startsWith('/admin') ? redirectParam : '/admin';
+            router.replace(target);
         }
-    }, [router]);
+    }, [router, redirectParam]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -32,28 +37,22 @@ export default function LoginPage() {
         setMessage('');
         setIsLoading(true);
 
+        const cleanEmail = email.trim().toLowerCase();
+
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, rememberMe })
+            const res = await api.auth.login({
+                email: cleanEmail,
+                password,
+                rememberMe
             });
 
-            const response = await res.json();
+            const { tokens, role } = res.data;
+            setToken(tokens.accessToken, role, rememberMe);
 
-            if (res.ok) {
-                const data = response.data || response;
-                const tokenToSet = data.tokens?.accessToken || data.token;
-                setToken(tokenToSet, data.role, rememberMe);
-
-                if (data.role === 'admin') router.push('/admin');
-                else if (data.role === 'vendor') router.push('/vendor');
-                else router.push('/traveller');
-            } else {
-                setError(response.message || response.error || 'Identity verification failed');
-            }
+            const target = redirectParam?.startsWith('/admin') ? redirectParam : '/admin';
+            router.replace(target);
         } catch (err) {
-            setError('Communication breach: ' + (err.message || 'Server unreachable'));
+            setError(err.message || 'Identity verification failed');
         } finally {
             setIsLoading(false);
         }
@@ -65,20 +64,13 @@ export default function LoginPage() {
         setMessage('');
         setIsLoading(true);
 
+        const cleanEmail = email.trim().toLowerCase();
+
         try {
-            const res = await fetch('/api/auth/forget-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const response = await res.json();
-            if (res.ok) {
-                setMessage('Access recovery sequence initiated. Check your uplink.');
-            } else {
-                setError(response.message || 'Recovery failed');
-            }
+            const res = await api.auth.forgotPassword({ email: cleanEmail });
+            setMessage(res.message);
         } catch (err) {
-            setError('Uplink error: ' + (err.message || 'Network failure'));
+            setError(err.message || 'Recovery request failed');
         } finally {
             setIsLoading(false);
         }
@@ -106,10 +98,14 @@ export default function LoginPage() {
                             <Shield className="w-8 h-8 text-indigo-400" />
                         </div>
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tighter mb-2">Tripdhara<span className="text-indigo-500">.</span></h1>
+                    <h1 className="text-4xl font-bold text-white tracking-tighter mb-2">
+                        Tripdhara<span className="text-indigo-500">.</span>
+                    </h1>
                     <div className="flex items-center gap-2">
                         <div className="h-[1px] w-8 bg-white/10"></div>
-                        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">Governance Gateway</p>
+                        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500">
+                            Governance Gateway
+                        </p>
                         <div className="h-[1px] w-8 bg-white/10"></div>
                     </div>
                 </div>
@@ -120,92 +116,215 @@ export default function LoginPage() {
 
                     <AnimatePresence mode="wait">
                         {!isForgotPassword ? (
-                            <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
+                            <motion.div
+                                key="login"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-6"
+                            >
                                 <div className="mb-8">
                                     <h2 className="text-xl font-bold text-white mb-1">Authenticate Identity</h2>
-                                    <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">Input credentials to access neural hub</p>
+                                    <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
+                                        Input credentials to access neural hub
+                                    </p>
                                 </div>
 
                                 {error && (
-                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-[11px] font-mono flex items-center gap-3"><Zap className="w-4 h-4 shrink-0" /> {error}</motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-[11px] font-mono flex items-center gap-3"
+                                    >
+                                        <Zap className="w-4 h-4 shrink-0" />
+                                        <span>{error}</span>
+                                    </motion.div>
                                 )}
 
                                 <form onSubmit={handleLogin} className="space-y-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">Uplink Address</label>
+                                        <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">
+                                            Uplink Address
+                                        </label>
                                         <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" /></div>
-                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@tripdhara.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+                                            </div>
+                                            <input
+                                                required
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                type="email"
+                                                autoComplete="email"
+                                                placeholder="admin@tripdhara.in"
+                                                className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-end mb-1 px-1">
-                                            <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Secure Protocol</label>
-                                            <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[10px] font-mono uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors">Lost Access?</button>
+                                            <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                                                Secure Protocol
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsForgotPassword(true)}
+                                                className="text-[10px] font-mono uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors"
+                                            >
+                                                Lost Access?
+                                            </button>
                                         </div>
                                         <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Lock className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" /></div>
-                                            <input required value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="••••••••" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Lock className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+                                            </div>
+                                            <input
+                                                required
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                type={showPassword ? 'text' : 'password'}
+                                                autoComplete="current-password"
+                                                placeholder="••••••••"
+                                                className="block w-full pl-11 pr-11 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-600 hover:text-slate-400 transition-colors"
+                                                tabIndex={-1}
+                                            >
+                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center px-1 py-1">
                                         <label className="flex items-center gap-3 cursor-pointer group">
-                                            <div className="relative"><input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only" />
-                                                <div className={`w-5 h-5 rounded border border-white/10 flex items-center justify-center transition-all ${rememberMe ? 'bg-indigo-500 border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-black/40 group-hover:border-white/20'}`}>{rememberMe && <Zap className="w-3 h-3 text-white fill-white" />}</div>
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={rememberMe}
+                                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                                    className="sr-only"
+                                                />
+                                                <div
+                                                    className={`w-5 h-5 rounded border border-white/10 flex items-center justify-center transition-all ${
+                                                        rememberMe
+                                                            ? 'bg-indigo-500 border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
+                                                            : 'bg-black/40 group-hover:border-white/20'
+                                                    }`}
+                                                >
+                                                    {rememberMe && <Zap className="w-3 h-3 text-white fill-white" />}
+                                                </div>
                                             </div>
-                                            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 group-hover:text-slate-400 transition-colors">Maintain Session Persistence</span>
+                                            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 group-hover:text-slate-400 transition-colors">
+                                                Maintain Session Persistence
+                                            </span>
                                         </label>
                                     </div>
 
-                                    <button type="submit" disabled={isLoading} className="w-full relative group">
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full relative group cursor-pointer"
+                                    >
                                         <div className="absolute inset-0 bg-indigo-600 blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
                                         <div className="relative flex items-center justify-center gap-3 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm tracking-widest uppercase transition-all shadow-xl disabled:opacity-50">
                                             {isLoading ? (
                                                 <Loader2 className="w-5 h-5 animate-spin" />
                                             ) : (
-                                                <>Access Matrix <ArrowRight className="w-4 h-4" /></>
+                                                <>
+                                                    Access Matrix <ArrowRight className="w-4 h-4" />
+                                                </>
                                             )}
                                         </div>
                                     </button>
                                 </form>
                             </motion.div>
                         ) : (
-                            <motion.div key="forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                            <motion.div
+                                key="forgot"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-6"
+                            >
                                 <div className="mb-8">
                                     <h2 className="text-xl font-bold text-white mb-1">Recover Uplink</h2>
-                                    <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">Initiate emergency reset protocol</p>
+                                    <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
+                                        Initiate emergency reset protocol
+                                    </p>
                                 </div>
 
                                 {message && (
-                                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-[11px] font-mono flex items-center gap-3">
-                                        <Ghost className="w-4 h-4 shrink-0" /> {message}
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-[11px] font-mono flex items-center gap-3"
+                                    >
+                                        <Ghost className="w-4 h-4 shrink-0" />
+                                        <span>{message}</span>
+                                    </motion.div>
+                                )}
+
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-[11px] font-mono flex items-center gap-3"
+                                    >
+                                        <Zap className="w-4 h-4 shrink-0" />
+                                        <span>{error}</span>
                                     </motion.div>
                                 )}
 
                                 <form onSubmit={handleForgotPassword} className="space-y-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">Target Address</label>
+                                        <label className="text-[10px] font-mono uppercase tracking-widest text-slate-400 ml-1">
+                                            Target Address
+                                        </label>
                                         <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" /></div>
-                                            <input required value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="admin@tripdhara.in" className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" />
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Mail className="h-4 w-4 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+                                            </div>
+                                            <input
+                                                required
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                type="email"
+                                                autoComplete="email"
+                                                placeholder="admin@tripdhara.in"
+                                                className="block w-full pl-11 pr-4 py-3 bg-black/40 border border-white/5 rounded-2xl text-sm text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                                            />
                                         </div>
                                     </div>
 
-                                    <button type="submit" disabled={isLoading} className="w-full relative group">
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full relative group cursor-pointer"
+                                    >
                                         <div className="absolute inset-0 bg-emerald-600 blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
                                         <div className="relative flex items-center justify-center gap-3 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-sm tracking-widest uppercase transition-all shadow-xl disabled:opacity-50">
                                             {isLoading ? (
                                                 <Loader2 className="w-5 h-5 animate-spin" />
                                             ) : (
-                                                <>Send Recovery Code <Cpu className="w-4 h-4" /></>
+                                                <>
+                                                    Send Recovery Code <Cpu className="w-4 h-4" />
+                                                </>
                                             )}
                                         </div>
                                     </button>
 
                                     <div className="text-center pt-4">
-                                        <button type="button" onClick={() => setIsForgotPassword(false)} className="text-[10px] font-mono uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Back to Authentication</button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsForgotPassword(false)}
+                                            className="text-[10px] font-mono uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+                                        >
+                                            Back to Authentication
+                                        </button>
                                     </div>
                                 </form>
                             </motion.div>

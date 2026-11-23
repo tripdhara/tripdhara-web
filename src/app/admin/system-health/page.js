@@ -1,4 +1,3 @@
-import DashboardService from '@/core/Services/Admin/DashboardService.js';
 import SystemHealthClientWrapper from './SystemHealthClientWrapper.js';
 
 export const metadata = {
@@ -6,16 +5,10 @@ export const metadata = {
     description: 'Monitor System Telemetry and Performance.'
 };
 
-export default async function SystemHealthPage() {
-    let rawHealth = null;
-    
-    try {
-        rawHealth = await DashboardService.getSystemHealth();
-    } catch(e) {
-        // Handle silently
-    }
-
-    const initialHealth = JSON.parse(JSON.stringify(rawHealth || {}));
-
-    return <SystemHealthClientWrapper initialHealth={initialHealth} />;
+export default function SystemHealthPage() {
+    return (
+        <main>
+            <SystemHealthClientWrapper />
+        </main>
+    );
 }

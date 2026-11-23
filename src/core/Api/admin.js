@@ -8,6 +8,7 @@ export const adminApi = (fetcher) => ({
             const query = params ? `?${new URLSearchParams(params).toString()}` : '';
             return fetcher(`admin/analytics${query}`);
         },
+        getSystemHealth: () => fetcher('admin/analytics?type=health'),
     },
 
     auditLogs: {

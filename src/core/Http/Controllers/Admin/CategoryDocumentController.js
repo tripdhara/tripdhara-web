@@ -6,25 +6,25 @@ import { validate } from '@/core/Helpers/validation.js';
 import AppError from '@/core/Helpers/AppError.js';
 
 const categoryDocCreateSchema = z.object({
-  name: z.string().min(2),
-  slug: z.string().optional(),
-  description: z.string().optional(),
-  category_slug: z.string().min(2),
-  isMandatory: z.boolean().optional(),
-  isRequired: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  fileTypes: z.array(z.string()).optional()
+    name: z.string().min(2),
+    slug: z.string().optional(),
+    description: z.string().optional(),
+    category_slug: z.string().min(2),
+    isMandatory: z.boolean().optional(),
+    isRequired: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    fileTypes: z.array(z.string()).optional()
 }).passthrough();
 
 const categoryDocUpdateSchema = z.object({
-  name: z.string().min(2).optional(),
-  slug: z.string().optional(),
-  description: z.string().optional(),
-  category_slug: z.string().min(2).optional(),
-  isMandatory: z.boolean().optional(),
-  isRequired: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  fileTypes: z.array(z.string()).optional()
+    name: z.string().min(2).optional(),
+    slug: z.string().optional(),
+    description: z.string().optional(),
+    category_slug: z.string().min(2).optional(),
+    isMandatory: z.boolean().optional(),
+    isRequired: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    fileTypes: z.array(z.string()).optional()
 }).passthrough();
 
 /**
@@ -32,82 +32,82 @@ const categoryDocUpdateSchema = z.object({
  */
 class CategoryDocumentController extends Controller {
 
-  // GET /admin/category-documents
-  async getAll(req) {
-    try {
-      const baseUrl = APP_DETAILS.APP_URL || 'http://localhost';
-      const url = new URL(req.url, baseUrl);
-      const category_slug = url.searchParams.get('category_slug');
-      const page = parseInt(url.searchParams.get('page')) || 1;
-      const limit = parseInt(url.searchParams.get('limit')) || 100;
+    // GET /admin/category-documents
+    async getAll(req) {
+        try {
+            const baseUrl = APP_DETAILS.APP_URL || 'http://localhost';
+            const url = new URL(req.url, baseUrl);
+            const category_slug = url.searchParams.get('category_slug');
+            const page = parseInt(url.searchParams.get('page')) || 1;
+            const limit = parseInt(url.searchParams.get('limit')) || 100;
 
-      const filter = {};
-      if (category_slug) filter.category_slug = category_slug;
+            const filter = {};
+            if (category_slug) filter.category_slug = category_slug;
 
-      const documents = await categoryDocumentService.getAll(filter, page, limit);
-      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, documents);
-    } catch (error) {
-      if (error instanceof AppError) return this.error(error.statusCode, error.message);
-      return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            const documents = await categoryDocumentService.getAll(filter, page, limit);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, documents);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
     }
-  }
 
-  // GET /admin/category-documents/:id
-  async getById(req, { params }) {
-    try {
-      const document = await categoryDocumentService.getById(params.id);
-      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, document);
-    } catch (error) {
-      if (error instanceof AppError) return this.error(error.statusCode, error.message);
-      return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.DOCUMENT_NOT_FOUND);
+    // GET /admin/category-documents/:id
+    async getById(req, { params }) {
+        try {
+            const document = await categoryDocumentService.getById(params.id);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, document);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.DOCUMENT_NOT_FOUND);
+        }
     }
-  }
 
-  // POST /admin/category-documents
-  async create(req) {
-    try {
-      const rawBody = await req.json();
-      const { success, data, error } = validate(categoryDocCreateSchema, rawBody);
-      
-      if (!success) {
-          throw new AppError(error, HTTP_STATUS.BAD_REQUEST);
-      }
+    // POST /admin/category-documents
+    async create(req) {
+        try {
+            const rawBody = await req.json();
+            const { success, data, error } = validate(categoryDocCreateSchema, rawBody);
 
-      const document = await categoryDocumentService.create(data);
-      return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.SUCCESS.CREATED, document);
-    } catch (error) {
-      if (error instanceof AppError) return this.error(error.statusCode, error.message);
-      return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+            if (!success) {
+                throw new AppError(error, HTTP_STATUS.BAD_REQUEST);
+            }
+
+            const document = await categoryDocumentService.create(data);
+            return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.SUCCESS.CREATED, document);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+        }
     }
-  }
 
-  // PUT /admin/category-documents/:id
-  async update(req, { params }) {
-    try {
-      const rawBody = await req.json();
-      const { success, data, error } = validate(categoryDocUpdateSchema, rawBody);
-      
-      if (!success) {
-          throw new AppError(error, HTTP_STATUS.BAD_REQUEST);
-      }
+    // PUT /admin/category-documents/:id
+    async update(req, { params }) {
+        try {
+            const rawBody = await req.json();
+            const { success, data, error } = validate(categoryDocUpdateSchema, rawBody);
 
-      const document = await categoryDocumentService.update(params.id, data);
-      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.UPDATED, document);
-    } catch (error) {
-      if (error instanceof AppError) return this.error(error.statusCode, error.message);
-      return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+            if (!success) {
+                throw new AppError(error, HTTP_STATUS.BAD_REQUEST);
+            }
+
+            const document = await categoryDocumentService.update(params.id, data);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.UPDATED, document);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+        }
     }
-  }
 
-  async delete(req, { params }) {
-    try {
-      await categoryDocumentService.delete(params.id);
-      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
-    } catch (error) {
-      if (error instanceof AppError) return this.error(error.statusCode, error.message);
-      return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+    async delete(req, { params }) {
+        try {
+            await categoryDocumentService.delete(params.id);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.BAD_REQUEST, error.message);
+        }
     }
-  }
 }
 
 const categoryDocumentController = new CategoryDocumentController();

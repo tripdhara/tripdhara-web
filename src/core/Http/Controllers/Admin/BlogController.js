@@ -19,9 +19,9 @@ class BlogController extends Controller {
         }
     }
 
-    async getBlog(req) {
+    async getBlog(req, context = {}) {
         try {
-            const { id } = req.params;
+            const id = context?.params?.id || req?.params?.id;
             const blog = await BlogService.getBlogById(id);
             return this.success(HTTP_STATUS.OK, 'Blog retrieved successfully', blog);
         } catch (error) {
@@ -31,13 +31,13 @@ class BlogController extends Controller {
 
     async createBlog(req) {
         try {
-            const rawData = req.payload || req.body || await req.json();
+            const rawData = req.payload || req.body || req.jsonBody || await req.json();
             const { success, data, error } = validate(schemas.blog, rawData);
             if (!success) {
                 return this.error(HTTP_STATUS.BAD_REQUEST, error);
             }
             
-            const authorId = req.user ? req.user._id : null; 
+            const authorId = req.user ? (req.user._id || req.user.id) : null; 
             const blog = await BlogService.createBlog(data, authorId);
             return this.success(HTTP_STATUS.CREATED, 'Blog created successfully', blog);
         } catch (error) {
@@ -45,10 +45,10 @@ class BlogController extends Controller {
         }
     }
 
-    async updateBlog(req) {
+    async updateBlog(req, context = {}) {
         try {
-            const { id } = req.params;
-            const rawData = req.payload || req.body || await req.json();
+            const id = context?.params?.id || req?.params?.id;
+            const rawData = req.payload || req.body || req.jsonBody || await req.json();
             const { success, data, error } = validate(schemas.blog, rawData);
             if (!success) {
                 return this.error(HTTP_STATUS.BAD_REQUEST, error);
@@ -61,9 +61,9 @@ class BlogController extends Controller {
         }
     }
 
-    async deleteBlog(req) {
+    async deleteBlog(req, context = {}) {
         try {
-            const { id } = req.params;
+            const id = context?.params?.id || req?.params?.id;
             await BlogService.deleteBlog(id);
             return this.success(HTTP_STATUS.OK, 'Blog deleted successfully', null);
         } catch (error) {

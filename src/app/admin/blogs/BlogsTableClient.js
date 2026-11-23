@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-    FileText, Plus, CheckCircle2, Clock, Edit2, 
+import {
+    FileText, Plus, CheckCircle2, Clock, Edit2,
     ExternalLink, RefreshCw, Image as ImageIcon, Tag
 } from 'lucide-react';
 import PageHeader from '@/components/admin/PageHeader.js';
@@ -12,11 +12,11 @@ import CyberTable from '@/components/admin/CyberTable.js';
 import DeleteBlogButton from './DeleteBlogButton.js';
 import api from '@/core/Api/index.js';
 
-export default function BlogsTableClient({ 
-    initialBlogs = [], 
-    totalItems = 0, 
-    initialPage = 1, 
-    initialSearch = '' 
+export default function BlogsTableClient({
+    initialBlogs = [],
+    totalItems = 0,
+    initialPage = 1,
+    initialSearch = ''
 }) {
     const router = useRouter();
     const [blogs, setBlogs] = useState(initialBlogs);
@@ -79,10 +79,10 @@ export default function BlogsTableClient({
                 <div className="flex items-center gap-3.5">
                     {blog.coverImage ? (
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
-                            <img 
-                                src={blog.coverImage} 
-                                alt={blog.title} 
-                                className="w-full h-full object-cover" 
+                            <img
+                                src={blog.coverImage}
+                                alt={blog.title}
+                                className="w-full h-full object-cover"
                                 onError={(e) => { e.target.style.display = 'none'; }}
                             />
                         </div>
@@ -92,8 +92,8 @@ export default function BlogsTableClient({
                         </div>
                     )}
                     <div className="flex flex-col items-start gap-1 overflow-hidden">
-                        <Link 
-                            href={`/admin/blogs/${blog._id}/edit`} 
+                        <Link
+                            href={`/admin/blogs/${blog._id}/edit`}
                             className="font-bold text-slate-200 hover:text-indigo-400 transition-colors line-clamp-1 text-sm text-left"
                             title={blog.title}
                         >
@@ -169,9 +169,9 @@ export default function BlogsTableClient({
                 <div className="flex items-center justify-end gap-2">
                     {/* Public Preview Link */}
                     {blog.slug && (
-                        <a 
-                            href={`/blogs/${blog.slug}`} 
-                            target="_blank" 
+                        <a
+                            href={`/blog/${blog.slug}`}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors border border-white/10"
                             title="View Public Post"
@@ -180,16 +180,16 @@ export default function BlogsTableClient({
                         </a>
                     )}
                     {/* Edit Publication */}
-                    <Link 
-                        href={`/admin/blogs/${blog._id}/edit`} 
+                    <Link
+                        href={`/admin/blogs/${blog._id}/edit`}
                         className="p-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors border border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.1)]"
                         title="Edit Publication"
                     >
                         <Edit2 className="w-3.5 h-3.5" />
                     </Link>
                     {/* Delete Publication */}
-                    <DeleteBlogButton 
-                        blogId={blog._id.toString()} 
+                    <DeleteBlogButton
+                        blogId={blog._id.toString()}
                         onDeleteSuccess={handleDeleteSuccess}
                     />
                 </div>
@@ -199,15 +199,15 @@ export default function BlogsTableClient({
 
     return (
         <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-            <PageHeader 
-                title="Blog Management" 
-                subtitle="Create, curate, and manage your platform's editorial publications" 
-                icon={FileText} 
-                searchQuery={searchQuery} 
-                onSearchChange={setSearchQuery} 
-                actionLabel="New Post" 
-                actionIcon={Plus} 
-                onAction={() => router.push('/admin/blogs/create')} 
+            <PageHeader
+                title="Blog Management"
+                subtitle="Create, curate, and manage your platform's editorial publications"
+                icon={FileText}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                actionLabel="New Post"
+                actionIcon={Plus}
+                onAction={() => router.push('/admin/blogs/create')}
             />
 
             {/* Status Filter Tabs & Refresh Bar */}
@@ -221,11 +221,10 @@ export default function BlogsTableClient({
                         <button
                             key={tab.key}
                             onClick={() => setStatusFilter(tab.key)}
-                            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                                statusFilter === tab.key
+                            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${statusFilter === tab.key
                                     ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/20'
                                     : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
+                                }`}
                         >
                             {tab.label}
                         </button>
@@ -247,22 +246,22 @@ export default function BlogsTableClient({
                 </div>
             </div>
 
-            <CyberTable 
-                data={blogs} 
-                columns={columns} 
-                itemsPerPage={10} 
+            <CyberTable
+                data={blogs}
+                columns={columns}
+                itemsPerPage={10}
                 loading={loading}
                 loadingText="Querying Editorial Core..."
                 emptyText={searchQuery ? 'No blogs match your search query.' : 'No publications found in this vector.'}
                 exportFilename="tripdhara_blogs_export"
-                
+
                 // Server-side Pagination
                 totalItems={total}
                 externalCurrentPage={currentPage}
                 onPageChange={handlePageChange}
-                
+
                 // Handled via external search state
-                searchable={false} 
+                searchable={false}
             />
         </div>
     );

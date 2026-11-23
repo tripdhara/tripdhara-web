@@ -385,10 +385,10 @@ export const schemas = {
 
     blog: z.object({
         title: z.string().min(1, 'Title is required').max(150),
-        excerpt: z.string().max(300).optional(),
+        excerpt: z.string().max(300).nullish(),
         content: z.string().min(1, 'Content is required'),
-        coverImage: z.union([z.string().url(), z.literal('')]).optional(),
-        tags: z.array(z.string()).optional(),
+        coverImage: z.union([z.string().url(), z.string().regex(/^\/.+/), z.literal('')]).nullish(),
+        tags: z.array(z.string()).nullish(),
         status: z.enum(['draft', 'published']).optional()
     }).passthrough(),
 

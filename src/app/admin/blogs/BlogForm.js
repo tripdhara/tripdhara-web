@@ -40,7 +40,7 @@ export default function BlogForm({ initialData = null, blogId = null }) {
             setIsLoading(true);
             api.admin.blogs.getById(blogId)
                 .then(res => {
-                    const data = res?.data || res;
+                    const data = res?.data?.blog || res?.data || res;
                     if (data) {
                         setFormData({
                             title: data.title || '',
@@ -52,8 +52,8 @@ export default function BlogForm({ initialData = null, blogId = null }) {
                         });
                     }
                 })
-                .catch(() => {
-                    toast('Failed to load blog publication', 'error');
+                .catch((err) => {
+                    toast(err?.message || 'Failed to load blog publication', 'error');
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -110,6 +110,8 @@ export default function BlogForm({ initialData = null, blogId = null }) {
 
         const payload = {
             ...formData,
+            title: (formData.title || '').trim(),
+            coverImage: (formData.coverImage || '').trim(),
             status: statusToApply,
             tags: typeof formData.tags === 'string'
                 ? formData.tags.split(',').map(t => t.trim()).filter(Boolean)

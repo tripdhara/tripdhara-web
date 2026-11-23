@@ -125,7 +125,8 @@ class BlogService {
                     data.publishedAt = new Date();
                 }
 
-                Object.assign(blog, data);
+                const { _id, ...cleanData } = data;
+                Object.assign(blog, cleanData);
                 await blog.save({ session });
                 updatedBlog = blog;
             });

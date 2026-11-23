@@ -139,6 +139,7 @@ export function createNextRouter(routes) {
             }
 
             const sanitizedRouteParams = sanitizeNoSQL({ ...routeParams });
+            req.params = sanitizedRouteParams;
 
             const response = await routeDef.handler(req, { params: sanitizedRouteParams });
 

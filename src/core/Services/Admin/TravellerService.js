@@ -6,6 +6,7 @@ import Wishlist from '@/core/Models/Wishlist.js';
 import CacheService from '@/core/Services/CacheService.js';
 import AppError from '@/core/Helpers/AppError.js';
 import { getUserBy, getUsersBy, getBookingsBy, getManyBy, updateById, deleteById } from '@/core/Helpers/queryHelpers.js';
+import crypto from 'crypto';
 
 /**
  * TravellerService (Admin Role)
@@ -38,14 +39,18 @@ class TravellerService {
     if (exists) throw new AppError(RESPONSE_MESSAGES.ERROR.ALREADY_EXISTS, 400);
 
     const user = await User.create({
-      email, phone, name, password,
-      role: 'traveller', isVerified: true
+      email, 
+      phone: phone || null, 
+      name, 
+      password: password || crypto.randomBytes(8).toString('hex'),
+      role: 'traveller', 
+      isVerified: true
     });
 
     if (req && req.user) {
       await AuditService.logAction(req.user.id, 'CREATE', 'USER', user._id, { email: user.email }, req);
     }
-    await CacheService.delete('admin:travellers:all');
+    await CacheService.del('admin:travellers:all');
     return user;
   }
 
@@ -55,13 +60,15 @@ class TravellerService {
     }
     const user = await updateById(User, id, data, { returnDocument: 'after' });
     if (req && req.user) await AuditService.logAction(req.user.id, 'UPDATE', 'USER', id, { changes: data }, req);
-    await CacheService.delete('admin:travellers:all');
+    await CacheService.del('admin:travellers:all');
+    await CacheService.del(`admin:travellers:${id}`);
     return user;
   }
 
   async deleteTraveller(id) {
     const deleted = await deleteById(User, id);
-    await CacheService.delete('admin:travellers:all');
+    await CacheService.del('admin:travellers:all');
+    await CacheService.del(`admin:travellers:${id}`);
     return deleted;
   }
 }

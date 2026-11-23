@@ -1,17 +1,18 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import CyberTable from '@/components/admin/CyberTable.js';
 import { Users, Mail, Phone, Plus, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/ToastContext.js';
 import api from '@/core/Api/index.js';
 import DynamicModal from '@/components/admin/DynamicModal.js';
+import Loading from '@/components/admin/Loading.js';
 
-export default function TravellersClientWrapper({ initialTravellers }) {
-    const router = useRouter();
-    const [travellers, setTravellers] = useState(initialTravellers);
+export default function TravellersClientWrapper() {
+    const [travellers, setTravellers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // Edit Modal State
     const [editingTraveller, setEditingTraveller] = useState(null);
@@ -25,6 +26,30 @@ export default function TravellersClientWrapper({ initialTravellers }) {
         { name: 'phone', label: 'Phone Number', type: 'tel', icon: 'Phone' }
     ];
 
+    const refreshData = useCallback(() => {
+        setRefreshKey(prev => prev + 1);
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchTravellers = async () => {
+            try {
+                const res = await api.admin.travellers.getAll();
+                if (isMounted) {
+                    const list = res?.data?.travellers || res?.data || [];
+                    setTravellers(Array.isArray(list) ? list : []);
+                }
+            } catch (e) {
+                if (isMounted) toast(e?.message || "Failed to load travellers", "error");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        fetchTravellers();
+        return () => { isMounted = false; };
+    }, [refreshKey, toast]);
+
     const handleToggleBlock = async (traveller) => {
         const newStatus = traveller.status === 'blocked' ? 'active' : 'blocked';
         if (!confirm(`Are you sure you want to ${newStatus === 'blocked' ? 'block' : 'unblock'} this traveller?`)) return;
@@ -32,31 +57,29 @@ export default function TravellersClientWrapper({ initialTravellers }) {
         try {
             const data = await api.admin.travellers.update(traveller._id, { status: newStatus });
             if (data.success) {
-                setTravellers(prev => prev.map(t => t._id === traveller._id ? { ...t, status: newStatus } : t));
+                refreshData();
                 toast(`Traveller ${newStatus === 'blocked' ? 'blocked' : 'unblocked'} successfully.`, 'success');
-                router.refresh();
             } else {
                 toast("Failed: " + (data.error || "Unknown error"), 'error');
             }
         } catch (e) {
-            toast("Error updating status.", 'error');
+            toast(e?.message || "Error updating status.", 'error');
         }
     };
 
     const handleDelete = async (traveller) => {
-        if (!confirm(`Are you sure you want to permanently delete traveller ${traveller.name}?`)) return;
+        if (!confirm(`Are you sure you want to permanently delete traveller ${traveller.name || 'this user'}?`)) return;
 
         try {
             const data = await api.admin.travellers.delete(traveller._id);
             if (data.success) {
-                setTravellers(prev => prev.filter(t => t._id !== traveller._id));
+                refreshData();
                 toast("Traveller deleted successfully.", 'success');
-                router.refresh();
             } else {
                 toast("Failed: " + (data.error || "Unknown error"), 'error');
             }
         } catch (e) {
-            toast("Error deleting traveller.", 'error');
+            toast(e?.message || "Error deleting traveller.", 'error');
         }
     };
 
@@ -77,14 +100,12 @@ export default function TravellersClientWrapper({ initialTravellers }) {
             if (data.success) {
                 toast("Traveller updated successfully!", 'success');
                 setEditingTraveller(null);
-                router.refresh();
-                // Update local state for immediate UI feedback
-                setTravellers(prev => prev.map(t => t._id === editingTraveller._id ? { ...t, ...editForm } : t));
+                refreshData();
             } else {
                 toast("Failed: " + (data.error || "Unknown error"), 'error');
             }
         } catch (e) {
-            toast("Error updating traveller.", 'error');
+            toast(e?.message || "Error updating traveller.", 'error');
         } finally {
             setIsSaving(false);
         }
@@ -133,24 +154,26 @@ export default function TravellersClientWrapper({ initialTravellers }) {
             render: (t) => (
                 <div className="flex justify-start gap-2">
                     <Link href={`/admin/travellers/${t._id}`} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg text-xs font-mono transition-all shadow-[0_0_10px_rgba(59,130,246,0.1)]">View</Link>
-                    <button onClick={() => openEditModal(t)} className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded-lg text-xs font-mono transition-all shadow-[0_0_10px_rgba(99,102,241,0.1)]">Edit</button>
+                    <button onClick={() => openEditModal(t)} className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded-lg text-xs font-mono transition-all shadow-[0_0_10px_rgba(99,102,241,0.1)] cursor-pointer">Edit</button>
                     <button
                         onClick={() => handleToggleBlock(t)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${t.status === 'blocked'
+                        className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all cursor-pointer ${t.status === 'blocked'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
                             : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'
                             }`}>
                         {t.status === 'blocked' ? 'Unblock' : 'Block'}
                     </button>
-                    <button onClick={() => handleDelete(t)} className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg text-xs font-mono transition-all shadow-[0_0_10px_rgba(239,68,68,0.1)]">Delete</button>
+                    <button onClick={() => handleDelete(t)} className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg text-xs font-mono transition-all shadow-[0_0_10px_rgba(239,68,68,0.1)] cursor-pointer">Delete</button>
                 </div>
             )
         }
     ];
 
+    if (loading) return <Loading message="Syncing Traveller Nodes..." />;
+
     return (
         <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 gap-4">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3"><Users className="w-7 h-7 text-indigo-400 opacity-80" /> Traveller Management</h1>
                     <p className="text-xs font-mono text-slate-500 tracking-widest uppercase mt-1">Platform Users & Clients</p>
@@ -178,7 +201,7 @@ export default function TravellersClientWrapper({ initialTravellers }) {
             />
 
             <DynamicModal
-                isOpen={!!editingTraveller}
+                isOpen={Boolean(editingTraveller)}
                 onClose={() => setEditingTraveller(null)}
                 title="Edit Traveller"
                 fields={travellerFields}

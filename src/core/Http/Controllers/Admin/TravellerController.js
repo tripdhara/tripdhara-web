@@ -1,5 +1,5 @@
 import TravellerService from '@/core/Services/Admin/TravellerService.js';
-import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
+import { HTTP_STATUS, RESPONSE_MESSAGES, STATUS } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
 import { z } from 'zod';
 import { validate } from '@/core/Helpers/validation.js';
@@ -7,18 +7,30 @@ import AppError from '@/core/Helpers/AppError.js';
 
 const travellerCreateSchema = z.object({
   email: z.string().email(),
-  phone: z.string().min(10),
-  name: z.string().min(3),
-  password: z.string().min(6)
-});
+  phone: z.string().optional(),
+  name: z.string().min(2),
+  password: z.string().min(6).optional()
+}).passthrough();
 
 const travellerUpdateSchema = z.object({
   email: z.string().email().optional(),
-  phone: z.string().min(10).optional(),
-  name: z.string().min(3).optional(),
+  phone: z.string().optional(),
+  name: z.string().min(2).optional(),
+  status: z.enum(Object.values(STATUS)).optional(),
   address: z.any().optional(),
-  status: z.enum(['active', 'suspended', 'banned', 'pending']).optional()
-});
+  gender: z.string().optional(),
+  dateOfBirth: z.any().optional(),
+  designation: z.string().optional(),
+  bio: z.string().optional(),
+  website: z.string().optional(),
+  expertise: z.any().optional(),
+  bloodGroup: z.string().optional(),
+  medicalConditions: z.any().optional(),
+  socialLinks: z.any().optional(),
+  emergencyContacts: z.any().optional(),
+  preferences: z.any().optional(),
+  isVerified: z.boolean().optional()
+}).passthrough();
 
 /**
  * TravellerController (Admin Role)
@@ -51,7 +63,7 @@ class TravellerController extends Controller {
   // POST /admin/travellers/create
   async createTraveller(req) {
     try {
-      const rawBody = await req.json();
+      const rawBody = req.payload || req.body || (typeof req.json === 'function' ? await req.json() : {});
       const { success, data, error } = validate(travellerCreateSchema, rawBody);
       
       if (!success) {
@@ -69,7 +81,7 @@ class TravellerController extends Controller {
   // PATCH /admin/travellers/:id/update
   async updateTraveller(req, { params }) {
     try {
-      const rawBody = await req.json();
+      const rawBody = req.payload || req.body || (typeof req.json === 'function' ? await req.json() : {});
       const { success, data, error } = validate(travellerUpdateSchema, rawBody);
       
       if (!success) {

@@ -147,11 +147,12 @@ export default function TravellerViewPage({ params }) {
             if (data.success) {
                 setTraveller(data.data?.traveller);
                 initFormData(data.data?.traveller);
+                toast("Update successful", 'success');
             } else {
                 toast("Action failed: " + (data.error || "Unknown error"), 'error');
             }
         } catch (e) {
-            toast("Error communicating with server.", 'error');
+            toast(e?.message || "Error communicating with server.", 'error');
         } finally {
             setSaving(false);
         }
@@ -313,6 +314,7 @@ export default function TravellerViewPage({ params }) {
     // Mock vendor object structure for VendorHeader compatibility
     const headerMockData = {
         name: traveller.name,
+        businessName: traveller.name,
         email: traveller.email,
         phone: traveller.phone,
         status: traveller.status,

@@ -14,16 +14,28 @@ class AuditService {
   async logAction(userId, action, target, targetId, details = {}, req = null) {
     try {
       if (req) req._auditLogged = true; // Flag to prevent duplicate logging in apiHandler
-      const { ipAddress, userAgent } = getRequestMetadata(req);
+      const metadata = getRequestMetadata(req);
       const logData = {
         userId,
         action: action.toUpperCase(),
         target: target.toUpperCase(),
         targetId: String(targetId),
         details: redactSensitiveData(details),
-        ipAddress,
-        userAgent
+        ipAddress: metadata?.ipAddress,
+        userAgent: metadata?.userAgent
       };
+      if (metadata?.location && typeof metadata.location === 'object') {
+        logData.ipLocation = {
+          city: metadata.location.city || null,
+          region: metadata.location.region || null,
+          country: metadata.location.country || null,
+          asn: metadata.location.asn || null,
+          summary: metadata.location.summary || null
+        };
+      }
+      if (metadata?.device) {
+        logData.device = metadata.device;
+      }
       await AuditLog.create(logData);
     } catch (error) {
       // Intentionally silent or use a generic logging mechanism

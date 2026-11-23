@@ -129,7 +129,17 @@ export const getRequestMetadata = (req) => {
         try { return decodeURIComponent(str); } catch { return str; }
     };
 
-    // 1. IP & Network Resolution
+    // Helper to identify internal/proxy private ranges
+    const isPrivateIp = (ipStr) => {
+        if (!ipStr) return true;
+        const clean = ipStr.trim();
+        if (clean === '127.0.0.1' || clean === '::1' || clean === 'localhost') return true;
+        if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(clean)) return true;
+        if (/^(fe80:|fc00:|fd00:)/i.test(clean)) return true;
+        return false;
+    };
+
+    // 1. IP & Network Resolution (Cloudflare, Vercel, Nginx, AWS reverse proxies)
     const rawIp =
         getHeader('cf-connecting-ip') ||
         getHeader('true-client-ip') ||
@@ -141,9 +151,18 @@ export const getRequestMetadata = (req) => {
         req?.connection?.remoteAddress ||
         '127.0.0.1';
 
-    let clientIp = String(rawIp).split(',')[0].trim();
-    if (clientIp.startsWith('::ffff:')) clientIp = clientIp.substring(7);
-    if (clientIp === '::1') clientIp = '127.0.0.1';
+    const ipList = String(rawIp)
+        .split(',')
+        .map(s => {
+            let ip = s.trim();
+            if (ip.startsWith('::ffff:')) ip = ip.substring(7);
+            if (ip === '::1') ip = '127.0.0.1';
+            return ip;
+        })
+        .filter(Boolean);
+
+    // Prioritize actual public internet IP over internal proxy/VPC hops
+    let clientIp = ipList.find(ip => !isPrivateIp(ip)) || ipList[0] || '127.0.0.1';
 
     const protocol = getHeader('x-forwarded-proto') || (req?.socket?.encrypted ? 'https' : (req ? 'http' : 'https'));
     const host = getHeader('x-forwarded-host') || getHeader('host') || 'localhost';
@@ -152,7 +171,7 @@ export const getRequestMetadata = (req) => {
 
     // 2. TLS / SSL & CDN Edge Context
     const cfRay = getHeader('cf-ray') || null;
-    const datacenter = cfRay && cfRay.includes('-') ? cfRay.split('-').pop() : (getHeader('x-datacenter') || (clientIp === '127.0.0.1' ? 'Local Origin' : 'Direct Origin'));
+    const datacenter = cfRay && cfRay.includes('-') ? cfRay.split('-').pop() : (getHeader('x-datacenter') || null);
     const tlsVersion = getHeader('x-ssl-protocol') || getHeader('x-forwarded-tls-version') || (req?.socket?.encrypted ? 'TLSv1.3' : (req ? null : 'TLSv1.3'));
     const tlsCipher = getHeader('cf-tls-cipher') || getHeader('x-ssl-cipher') || null;
     const threatScore = parseInt(getHeader('cf-threat-score') || '0', 10);
@@ -184,7 +203,7 @@ export const getRequestMetadata = (req) => {
     const asn = getHeader('cf-connecting-asn') || getHeader('x-asn') || null;
 
     const validGeoParts = [city, region, country].filter(p => p && p.trim().length > 0);
-    const locationSummary = validGeoParts.length > 0 ? validGeoParts.join(', ') : (clientIp === '127.0.0.1' ? 'Local Network (127.0.0.1)' : (req ? 'Unknown Location' : 'Local System'));
+    const locationSummary = validGeoParts.length > 0 ? validGeoParts.join(', ') : null;
 
     // 6. Localization & Timezone
     const acceptLanguage = getHeader('accept-language') || 'en-US';
@@ -197,7 +216,7 @@ export const getRequestMetadata = (req) => {
     const buildNumber = getHeader('x-app-build') || getHeader('x-build-number') || null;
     const platform = getHeader('x-platform') || (secChUaPlatform || device.os || 'web').toLowerCase();
     const deviceId = getHeader('x-device-id') || getHeader('x-installation-id') || getHeader('x-unique-id') || null;
-    const carrier = getHeader('x-carrier-name') || getHeader('x-network-operator') || (clientIp === '127.0.0.1' ? 'Local Broadband' : 'Broadband / Wi-Fi');
+    const carrier = getHeader('x-carrier-name') || getHeader('x-network-operator') || null;
     const bundleId = getHeader('x-app-bundle-id') || getHeader('x-bundle-id') || null;
     const sdkVersion = getHeader('x-sdk-version') || null;
     const appState = getHeader('x-app-state') || 'active';

@@ -8,6 +8,7 @@ export default [
     { method: 'GET', path: '/stats', handler: wrap(() => DashboardController, 'getStats') },
     { method: 'GET', path: '/analytics', handler: wrap(() => DashboardController, 'getAnalytics') },
     { method: 'GET', path: '/audit-logs', handler: wrap(() => DashboardController, 'getAuditLogs') },
+    { method: 'GET', path: '/ip-lookup', handler: wrap(() => DashboardController, 'lookupIp') },
     { method: 'POST', path: '/change-password', schema: schemas.passwordChange, handler: wrap(() => AuthController, 'changePassword') },
     { method: 'POST', path: '/reset-password', schema: schemas.passwordReset, handler: wrap(() => AuthController, 'resetPassword') },
     { method: 'GET', path: '/profile', handler: wrap(() => ProfileController, 'getProfile') },

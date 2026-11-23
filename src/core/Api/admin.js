@@ -14,7 +14,8 @@ export const adminApi = (fetcher) => ({
         getAll: (params) => {
             const query = params ? `?${new URLSearchParams(params).toString()}` : '';
             return fetcher(`admin/audit-logs${query}`);
-        }
+        },
+        lookupIp: (ip) => fetcher(`admin/ip-lookup?ip=${encodeURIComponent(ip)}`),
     },
 
     // Profile & Auth

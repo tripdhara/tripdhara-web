@@ -1,5 +1,6 @@
 import DashboardService from '@/core/Services/Admin/DashboardService.js';
 import AuditService from '@/core/Services/Admin/AuditService.js';
+import IpService from '@/core/Services/IpService.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES, APP_DETAILS } from '@/core/Constants/index.js';
 import Controller from '../Controller.js';
 import { z } from 'zod';
@@ -96,14 +97,28 @@ class DashboardController extends Controller {
                 startDate: data.startDate
             };
 
-            const page = parseInt(data.page);
-            const limit = parseInt(data.limit);
+            const page = parseInt(data.page || '1') || 1;
+            const limit = parseInt(data.limit || '20') || 20;
 
             const result = await AuditService.getAuditLogs(params, page, limit);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.ADMIN.AUDIT_LOGS_FETCHED, result);
         } catch (error) {
             if (error instanceof AppError) return this.error(error.statusCode, error.message);
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
+
+    // GET /admin/ip-lookup
+    async lookupIp(req) {
+        try {
+            const baseUrl = APP_DETAILS.APP_URL || 'http://localhost';
+            const url = new URL(req.url, baseUrl);
+            const ip = url.searchParams.get('ip') || '127.0.0.1';
+            const result = await IpService.lookup(ip);
+            return this.success(HTTP_STATUS.OK, 'IP Intelligence fetched', result || {});
+        } catch (error) {
+            if (error instanceof AppError) return this.error(error.statusCode, error.message);
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
 }

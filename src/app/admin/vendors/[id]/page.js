@@ -12,6 +12,9 @@ import Loading from '@/components/admin/Loading.js';
 import PersonalTab from './tabs/PersonalTab.js';
 import BusinessTab from './tabs/BusinessTab.js';
 import PackageTab from './tabs/PackageTab.js';
+import BookingsTab from './tabs/BookingsTab.js';
+import PayoutsTab from './tabs/PayoutsTab.js';
+import ReviewsTab from './tabs/ReviewsTab.js';
 import DocumentsTab from './tabs/DocumentsTab.js';
 
 export default function VendorDetailsPage({ params }) {
@@ -144,6 +147,9 @@ export default function VendorDetailsPage({ params }) {
     if (activeTab === 'personal') return <PersonalTab vendor={vendor} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
     if (activeTab === 'business') return <BusinessTab vendor={vendor.vendorProfile || {}} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
     if (activeTab === 'package') return <PackageTab vendor={vendor} packages={packages} setPackages={setPackages} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
+    if (activeTab === 'bookings') return <BookingsTab vendor={vendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
+    if (activeTab === 'payouts') return <PayoutsTab vendor={vendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
+    if (activeTab === 'reviews') return <ReviewsTab vendor={vendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
     if (activeTab === 'documents') return <DocumentsTab vendor={vendor} setVendor={setVendor} id={id} activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => setRefreshKey(old => old + 1)} />;
 
     return (

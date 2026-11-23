@@ -1,20 +1,39 @@
 import Review from '@/core/Models/Review.js';
+import Vendor from '@/core/Models/Vendor.js';
 import AuditService from '@/core/Services/Admin/AuditService.js';
 import AppError from '@/core/Helpers/AppError.js';
 import { getReviewsBy, updateById, deleteById } from '@/core/Helpers/queryHelpers.js';
+import mongoose from 'mongoose';
 
 /**
  * ReviewService (Admin Role)
  * Administration of user feedback, system-wide ratings, and service testimonials.
  */
 class ReviewService {
-  async getAllReviews() {
+  async getAllReviews(filter = {}) {
+    const query = {};
+    if (filter.vendor) {
+      if (mongoose.Types.ObjectId.isValid(filter.vendor)) {
+        const vendorIdObj = new mongoose.Types.ObjectId(filter.vendor);
+        const vendorDoc = await Vendor.findOne({
+          $or: [
+            { _id: vendorIdObj },
+            { user: vendorIdObj }
+          ]
+        }).select('_id').lean();
+        query.vendor = vendorDoc ? vendorDoc._id : vendorIdObj;
+      } else {
+        query.vendor = filter.vendor;
+      }
+    }
+
     return await getReviewsBy(
-      {},
+      query,
       '',
       [
-        { path: 'user', select: 'name' },
-        { path: 'vendor', select: 'businessName' }
+        { path: 'user', select: 'name email phone avatar' },
+        { path: 'vendor', select: 'businessName ownerName' },
+        { path: 'booking', select: 'bookingCode' }
       ],
       { createdAt: -1 }
     );

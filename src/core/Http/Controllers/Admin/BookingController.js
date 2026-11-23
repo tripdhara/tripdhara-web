@@ -17,7 +17,11 @@ class BookingController extends Controller {
     async getAllBookings(req) {
         try {
             const url = new URL(req.url);
-            const filter = { status: url.searchParams.get('status') || 'all' };
+            const filter = {
+                status: url.searchParams.get('status') || 'all'
+            };
+            const vendor = url.searchParams.get('vendor') || url.searchParams.get('vendorId');
+            if (vendor) filter.vendor = vendor;
             const page = parseInt(url.searchParams.get('page') || '1');
             const limit = parseInt(url.searchParams.get('limit') || '10');
 

@@ -13,8 +13,16 @@ class PaymentController extends Controller {
   // GET /admin/payment-history (Router path)
   async getPaymentHistory(req) {
     try {
-      const history = await BookingService.getPaymentHistory();
-      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.ADMIN.PAYMENT_HISTORY_FETCHED, { history });
+      const url = new URL(req.url);
+      const filter = {};
+      const vendor = url.searchParams.get('vendor') || url.searchParams.get('vendorId');
+      if (vendor) filter.vendor = vendor;
+      if (url.searchParams.get('search')) filter.search = url.searchParams.get('search');
+      const page = parseInt(url.searchParams.get('page') || '1');
+      const limit = parseInt(url.searchParams.get('limit') || '50');
+
+      const history = await BookingService.getPaymentHistory(filter, page, limit);
+      return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.ADMIN.PAYMENT_HISTORY_FETCHED, history);
     } catch (error) {
       if (error instanceof AppError) return this.error(error.statusCode, error.message);
       return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

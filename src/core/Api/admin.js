@@ -76,14 +76,20 @@ export const adminApi = (fetcher) => ({
     },
 
     payments: {
-        getHistory: () => fetcher('admin/payments'),
+        getHistory: (params) => {
+            const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+            return fetcher(`admin/payments${query}`);
+        },
         payout: (data) => fetcher('admin/payments/payout', { method: 'POST', body: prepareBody(data) }),
         refund: (data) => fetcher('admin/payments/refund', { method: 'POST', body: prepareBody(data) }),
     },
 
     // Moderation & Social
     reviews: {
-        getPending: () => fetcher('admin/reviews'),
+        getPending: (params) => {
+            const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+            return fetcher(`admin/reviews${query}`);
+        },
         updateStatus: (id, data) => fetcher(`admin/reviews/${id}`, { method: 'PATCH', body: prepareBody(data) }),
         reject: (id) => fetcher(`admin/reviews/${id}`, { method: 'DELETE' }),
     },

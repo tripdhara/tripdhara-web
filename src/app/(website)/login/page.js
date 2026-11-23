@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { setToken, getToken, getRole } from '@/app/utils/authUtils.js';
 import api from '@/core/Api/index.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, Mail, ArrowRight, Loader2, Cpu, Zap, Ghost, Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectParam = searchParams.get('redirect');

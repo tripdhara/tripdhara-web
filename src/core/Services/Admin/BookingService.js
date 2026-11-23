@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import Booking from '@/core/Models/Booking.js';
 import Dispute from '@/core/Models/Dispute.js';
+import Vendor from '@/core/Models/Vendor.js';
 import AuditService from '@/core/Services/Admin/AuditService.js';
 import RazorpayService from '@/core/Services/General/RazorpayService.js';
 import NotificationService from '@/core/Services/General/NotificationService.js';
@@ -28,6 +29,21 @@ class BookingService {
     async getAllBookings(filter = {}, page = 1, limit = 10) {
         const query = {};
         if (filter.status && filter.status !== 'all') query.status = filter.status;
+
+        if (filter.vendor) {
+            if (mongoose.Types.ObjectId.isValid(filter.vendor)) {
+                const vendorIdObj = new mongoose.Types.ObjectId(filter.vendor);
+                const vendorDoc = await Vendor.findOne({
+                    $or: [
+                        { _id: vendorIdObj },
+                        { user: vendorIdObj }
+                    ]
+                }).select('_id').lean();
+                query.vendor = vendorDoc ? vendorDoc._id : vendorIdObj;
+            } else {
+                query.vendor = filter.vendor;
+            }
+        }
 
         // Simple cache key based on query params
         const cacheKey = `admin:bookings:all:${JSON.stringify(filter)}:${page}:${limit}`;
@@ -147,6 +163,21 @@ class BookingService {
     async getPaymentHistory(filter = {}, page = 1, limit = 10) {
         const query = { paymentStatus: { $in: ['paid', 'refunded', 'partially_refunded'] } };
         
+        if (filter.vendor) {
+            if (mongoose.Types.ObjectId.isValid(filter.vendor)) {
+                const vendorIdObj = new mongoose.Types.ObjectId(filter.vendor);
+                const vendorDoc = await Vendor.findOne({
+                    $or: [
+                        { _id: vendorIdObj },
+                        { user: vendorIdObj }
+                    ]
+                }).select('_id').lean();
+                query.vendor = vendorDoc ? vendorDoc._id : vendorIdObj;
+            } else {
+                query.vendor = filter.vendor;
+            }
+        }
+
         if (filter.search) {
             // Optional search by bookingCode
             query.bookingCode = { $regex: filter.search, $options: 'i' };
@@ -157,7 +188,7 @@ class BookingService {
             query,
             'bookingCode user vendor item pricing payment status occupancy payout createdAt',
             [
-                { path: 'user', select: 'name email' },
+                { path: 'user', select: 'name email phone' },
                 { path: 'vendor', select: 'businessName ownerName businessEmail bankDetails' }
             ],
             { createdAt: -1 },

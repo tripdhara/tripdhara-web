@@ -18,7 +18,12 @@ class ReviewController extends Controller {
   // GET /admin/reviews
   async getPendingReviews(req) {
     try {
-      const reviews = await ReviewService.getAllReviews();
+      const url = new URL(req.url);
+      const filter = {};
+      const vendor = url.searchParams.get('vendor') || url.searchParams.get('vendorId');
+      if (vendor) filter.vendor = vendor;
+
+      const reviews = await ReviewService.getAllReviews(filter);
       return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, { reviews });
     } catch (error) {
       if (error instanceof AppError) return this.error(error.statusCode, error.message);

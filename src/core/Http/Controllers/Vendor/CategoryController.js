@@ -57,12 +57,13 @@ class CategoryController extends Controller {
     // GET /vendor/category/documents (Retrieve document requirements)
     async getCategoryDocuments(req, { params } = {}) {
         try {
-            const slug = params.slug || (req.payload && (req.payload.slug || req.payload.category_slug));
+            const { slug } = params;
             if (!slug) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
 
             const docs = await CategoryService.getDocuments(req.user.id, slug);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.CATEGORY_DOCS_FETCHED, docs);
         } catch (error) {
+            console.log('error', error);
             return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

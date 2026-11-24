@@ -106,9 +106,7 @@ class CategoryService {
     async getDocuments(userId, categorySlug) {
         const vendor = await getBusinessByUserId(userId, 'category');
         const isAssigned = vendor?.category?.some(c => c.slug === categorySlug);
-        if (!isAssigned) {
-            throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.NOT_ASSIGNED);
-        }
+        if (!isAssigned) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.NOT_ASSIGNED);
         return await this.getRequirementsBySlug(categorySlug);
     }
 

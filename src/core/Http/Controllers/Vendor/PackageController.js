@@ -118,6 +118,8 @@ class PackageController extends Controller {
                 { $set: { [`${schemaKey}.$.isActive`]: isActive } }
             );
             if (updated.matchedCount === 0) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
+            const vendor = await getBusinessByUserId(userId, '_id');
+            await PackageService._invalidateCaches(vendor?._id, itemId);
             return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.PACKAGE_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.PACKAGE_DEACTIVATED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
@@ -142,6 +144,8 @@ class PackageController extends Controller {
                 { user: userId },
                 { $set: { [`${schemaKey}.$[].isActive`]: isActive } }
             );
+            const vendor = await getBusinessByUserId(userId, '_id');
+            await PackageService._invalidateCaches(vendor?._id);
             return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_DEACTIVATED);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

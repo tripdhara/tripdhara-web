@@ -4,10 +4,11 @@ import InventoryService from '@/core/Services/Vendor/InventoryService.js';
 import { formatInventoryItem } from '@/core/Helpers/InventoryHelper.js';
 import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import { item, vendorPackagePayload, findOrCreateCatalog } from '@/core/Helpers/package.js';
-import { getPackageItemById, getPackageById as fetchPackageById, getPackageBy, getBusinessById, deleteById } from '@/core/Helpers/queryHelpers.js';
+import { getPackageItemById, getPackageById as fetchPackageById, getPackageBy, getBusinessById, getBusinessByUserId, deleteById } from '@/core/Helpers/queryHelpers.js';
 import CacheService from '@/core/Services/CacheService.js';
 import { getLogger } from '@/core/Lib/logger.js';
 import { AppError } from '@/core/Errors/AppError.js';
+import { clearBrowseCache } from '@/core/Helpers/Package/testBrowsePackages.js';
 
 /**
  * PackageService (Vendor Role) - Comprehensive management of vendor catalogs and service items.
@@ -17,6 +18,7 @@ class PackageService {
     // Helper: Invalidate caches across vendor & admin domains
     async _invalidateCaches(vendorId, itemId = null) {
         try {
+            clearBrowseCache();
             await CacheService.del('admin:packages:all');
             await CacheService.deletePattern('admin:packages:*');
             await CacheService.deletePattern('packages:*');
@@ -138,20 +140,26 @@ class PackageService {
     async updatePackage(id, userId, vendorId, data) {
         const pkg = await this._verifyOwnership(id, userId, vendorId);
         Object.assign(pkg, data);
-        return await pkg.save();
+        const saved = await pkg.save();
+        await this._invalidateCaches(vendorId, id);
+        return saved;
     }
 
     // Delete Package
     async deletePackage(id, userId, vendorId) {
         await this._verifyOwnership(id, userId, vendorId);
-        return await deleteById(Package, id);
+        const deleted = await deleteById(Package, id);
+        await this._invalidateCaches(vendorId, id);
+        return deleted;
     }
 
     // Update Package Status
     async updatePackageStatus(id, userId, vendorId, isActive) {
         const pkg = await this._verifyOwnership(id, userId, vendorId);
         pkg.isActive = isActive;
-        return await pkg.save();
+        const saved = await pkg.save();
+        await this._invalidateCaches(vendorId, id);
+        return saved;
     }
 
     // Helper to format a single catalog item
@@ -162,12 +170,18 @@ class PackageService {
     // November 21, 2026
     // Add Item
     async addItem(userId, category, data) {
-        return await item(userId, category, data);
+        const result = await item(userId, category, data);
+        const vendor = await getBusinessByUserId(userId, '_id');
+        await this._invalidateCaches(vendor?._id, result?._id);
+        return result;
     }
 
     // Update Item
     async updateItem(userId, category, data, itemId) {
-        return await item(userId, category, data, itemId);
+        const result = await item(userId, category, data, itemId);
+        const vendor = await getBusinessByUserId(userId, '_id');
+        await this._invalidateCaches(vendor?._id, itemId || result?._id);
+        return result;
     }
 
 
@@ -194,6 +208,7 @@ class PackageService {
 
         pkg[schemaKey].pull({ _id: itemId });
         await pkg.save();
+        await this._invalidateCaches(vendorId, itemId);
         return { itemId, deleted: true };
     }
 
@@ -205,7 +220,9 @@ class PackageService {
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             updates.push({ date: new Date(d), ...settings });
         }
-        return await InventoryService.update(vendorId, itemId, serviceType, updates);
+        const res = await InventoryService.update(vendorId, itemId, serviceType, updates);
+        await this._invalidateCaches(vendorId, itemId);
+        return res;
     }
 
     // Update category range (Vendor Management)
@@ -218,6 +235,7 @@ class PackageService {
             const res = await this.updateRange(userId, vendorId, item._id, serviceType, startDate, endDate, settings);
             results.push(res);
         }
+        await this._invalidateCaches(vendorId);
         return results;
     }
 
@@ -235,7 +253,9 @@ class PackageService {
             item.isActive = isActive;
         });
 
-        return await pkg.save();
+        const saved = await pkg.save();
+        await this._invalidateCaches(vendorId);
+        return saved;
     }
 
     // Find Item Details (Unified)

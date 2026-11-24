@@ -106,6 +106,7 @@ class PackageController extends Controller {
 
             const userId = vendor.user?._id || vendor.user;
             const newItem = await item(userId, category, itemData);
+            await PackageService.invalidatePackageCaches(vendorId, newItem?._id);
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.ITEM.CREATED, newItem);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

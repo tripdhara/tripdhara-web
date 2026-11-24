@@ -5,7 +5,7 @@ export const packagesApi = (fetcher) => ({
         );
         const query = new URLSearchParams(cleanParams).toString();
         return fetcher(`packages${query ? `?${query}` : ''}`, {
-            next: { revalidate: 120, tags: ['packages'] },
+            cache: 'no-store',
             ...options
         });
     },
@@ -16,14 +16,14 @@ export const packagesApi = (fetcher) => ({
         );
         const query = new URLSearchParams(cleanParams).toString();
         return fetcher(`packages/search${query ? `?${query}` : ''}`, {
-            next: { revalidate: 120, tags: ['packages-search'] },
+            cache: 'no-store',
             ...options
         });
     },
 
     getById: (id, options = {}) => {
         return fetcher(`packages/${id}`, {
-            next: { revalidate: 120, tags: [`package-${id}`] },
+            cache: 'no-store',
             ...options
         });
     }

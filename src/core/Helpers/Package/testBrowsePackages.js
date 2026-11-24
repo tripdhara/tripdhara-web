@@ -44,6 +44,10 @@ import { getAppConfig } from '@/core/Lib/appConfig.js';
 const browseCache = new Map();
 const BROWSE_CACHE_TTL_MS = 120 * 1000;
 
+export function clearBrowseCache() {
+    browseCache.clear();
+}
+
 function getBrowseCacheKey(q) {
     const { query, category, minPrice, maxPrice, sort, lat, lng, radius, address, userId, format, page, limit } = q || {};
     return [
@@ -559,4 +563,4 @@ export async function getPackageItemById(itemId, userId = null) {
     return results[0] || null;
 }
 
-export default { getTestBrowsePackages, getPackageItemById };
+export default { getTestBrowsePackages, getPackageItemById, clearBrowseCache };

@@ -5,6 +5,7 @@ import AppError from '@/core/Helpers/AppError.js';
 import CacheService from '@/core/Services/CacheService.js';
 import mongoose from 'mongoose';
 import { getPackagesBy, getPackageBy } from '@/core/Helpers/queryHelpers.js';
+import { clearBrowseCache } from '@/core/Helpers/Package/testBrowsePackages.js';
 
 /**
  * PackageService (Admin Role)
@@ -13,7 +14,10 @@ import { getPackagesBy, getPackageBy } from '@/core/Helpers/queryHelpers.js';
 class PackageService {
 
     async invalidatePackageCaches(vendorId = null, serviceId = null) {
+        clearBrowseCache();
         await CacheService.del('admin:packages:all');
+        await CacheService.deletePattern('admin:packages:*');
+        await CacheService.deletePattern('packages:*');
         if (vendorId) await CacheService.del(`admin:packages:vendor:${vendorId}`);
         if (serviceId) await CacheService.del(`admin:packages:item:${serviceId}`);
     }

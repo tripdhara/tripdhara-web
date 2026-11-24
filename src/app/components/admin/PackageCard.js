@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { Briefcase, ExternalLink, Power, MapPin, Layers } from 'lucide-react';
 
 export const getServiceName = (pkg) => {
-    return pkg.title || pkg.tourDetails?.tourName || pkg.details?.jumpName || pkg.details?.stretchName || pkg.vehicleDetails?.model || pkg.roomDetails?.roomType || pkg.details?.trekType || pkg.details?.serviceType || 'Unnamed Service';
+    return pkg.title;
 };
 
 export const getPrice = (pkg) => {
-    return pkg.pricing?.pricePerNight || pkg.pricing?.pricePerPerson || pkg.pricing?.pricePerDay || pkg.pricing?.basePrice || pkg.pricing?.baseFare || 0;
+    return pkg.pricing?.basePrice || 0;
 };
 
 

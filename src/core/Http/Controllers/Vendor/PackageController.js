@@ -2,7 +2,7 @@ import PackageService from '@/core/Services/Vendor/PackageService.js';
 import { CATEGORY_MAP } from '@/core/Constants/categories.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES, APP_DETAILS } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
-import { getBusinessByUserId, getReviewsByItemId } from '@/core/Helpers/queryHelpers.js';
+import { getBusinessByUserId, getPackageBy, getReviewsByItemId } from '@/core/Helpers/queryHelpers.js';
 import { vendorPackageItem } from '@/core/Helpers/package.js';
 import { getVendorPackages, getVendorPackageItemById } from '@/core/Helpers/Package/vendorPackage.js';
 import { parseQuery } from '@/core/Helpers/search.js';
@@ -155,24 +155,38 @@ class PackageController extends Controller {
     // DELETE /vendor/package/:itemId/delete-item
     async removePackageItem(req, { params } = {}) {
         try {
-            // const body = req.payload || {};
-            // const userId = req.user.id;
+            const body = req.payload || {};
+            const userId = req.user.id;
 
-            // const itemId = params.itemId || body.itemId;
-            // if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
-            // if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
+            const { itemId } = params || body;
+            if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
+            if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
 
-            // const { category } = body;
-            // if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
+            const { category } = body;
+            if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 
-            // const vendorId = await this._getVendorId(req.user.id);
-            // if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            const schemaKey = CATEGORY_MAP[category];
+            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
 
-            // const itemId = params.itemId || body.itemId;
-            // const category = (body.category || params.category || '').trim();
+            const business = await getBusinessByUserId(userId);
+            if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
 
-            // await PackageService.removeItem(req.user.id, vendorId, category, itemId);
-            // return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
+            const businessId = business._id.toString();
+
+            let pkg = await getPackageBy({ user: userId, vendor: businessId }, '', null, { lean: false });
+            if (!pkg) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            const targetItem = pkg[schemaKey].id(itemId);
+            if (!targetItem || targetItem.deletedAt) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
+
+            targetItem.deletedAt = new Date();
+            targetItem.isActive = false;
+            pkg.markModified(schemaKey);
+            await pkg.save();
+
+            await PackageService._invalidateCaches(businessId, itemId);
+
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.error(status, error.message);
@@ -182,15 +196,41 @@ class PackageController extends Controller {
     // DELETE /vendor/package/:category/delete
     async bulkPackageRemoveByCategory(req, { params } = {}) {
         try {
-            // const body = req.payload || {};
-            // const vendorId = await this._getVendorId(req.user.id);
-            // if (!vendorId) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            const body = req.payload || {};
+            const userId = req.user.id;
 
-            // const itemId = params.itemId || body.itemId;
-            // const category = (body.category || params.category || '').trim();
+            // URL param se category read karega (e.g. /vendor/package/homestay/delete) ya fallback body se
+            const category = (params?.category || body?.category || '').trim();
+            if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 
-            // await PackageService.removeItem(req.user.id, vendorId, category, itemId);
-            // return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
+            const schemaKey = CATEGORY_MAP[category];
+            if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            const business = await getBusinessByUserId(userId);
+            if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+
+            const hasCategory = business.category?.some(c => c.slug === category);
+            if (!hasCategory) return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.VENDOR.UNAUTHORIZED_CATEGORY);
+
+            const businessId = business._id.toString();
+
+            let pkg = await getPackageBy({ user: userId, vendor: businessId }, '', null, { lean: false });
+            if (!pkg) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.CATEGORY.INVALID);
+
+            const items = pkg[schemaKey] || [];
+            const targetItems = items.filter(item => !item.deletedAt);
+            if (!targetItems.length) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
+
+            const now = new Date();
+            targetItems.forEach(item => {
+                item.deletedAt = now;
+                item.isActive = false;
+            });
+
+            pkg.markModified(schemaKey);
+            await pkg.save();
+            await PackageService._invalidateCaches(businessId);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.error(status, error.message);

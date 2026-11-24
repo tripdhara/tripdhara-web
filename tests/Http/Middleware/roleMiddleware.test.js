@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
 jest.unstable_mockModule('@/core/Constants/index.js', () => ({
-    USER_ROLES: { ADMIN: 'admin', VENDOR: 'vendor', TRAVELLER: 'traveller' },
+    USER_ROLES: { ADMIN: 'admin', SUPER_ADMIN: 'super_admin', DEVELOPER: 'developer', VENDOR: 'vendor', TRAVELLER: 'traveller' },
     RESPONSE_MESSAGES: {
         AUTH: { UNAUTHORIZED: 'Unauthorized', ADMIN_ONLY: 'Admin only' },
         ERROR: { FORBIDDEN: 'Forbidden' }
@@ -41,6 +41,34 @@ describe('Role Middleware', () => {
         const result = roleMiddleware({ 
             user: { role: 'admin', preferences: { tempRole: 'vendor' } } 
         }, ['vendor']);
+        expect(result).toEqual({ authorized: true });
+    });
+
+    it('should prevent non-admin privilege escalation via tempRole', () => {
+        const result = roleMiddleware({ 
+            user: { role: 'traveller', preferences: { tempRole: 'admin' } } 
+        }, ['admin']);
+        expect(result).toEqual({ authorized: false, message: 'Admin only' });
+    });
+
+    it('should allow super_admin on admin-restricted routes', () => {
+        const result = roleMiddleware({ 
+            user: { role: 'super_admin' } 
+        }, ['admin']);
+        expect(result).toEqual({ authorized: true });
+    });
+
+    it('should allow developer on admin-restricted routes', () => {
+        const result = roleMiddleware({ 
+            user: { role: 'developer' } 
+        }, ['admin']);
+        expect(result).toEqual({ authorized: true });
+    });
+
+    it('should safely accept allowedRoles as a string', () => {
+        const result = roleMiddleware({ 
+            user: { role: 'admin' } 
+        }, 'admin');
         expect(result).toEqual({ authorized: true });
     });
 });

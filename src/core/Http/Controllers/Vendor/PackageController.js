@@ -199,7 +199,6 @@ class PackageController extends Controller {
             const body = req.payload || {};
             const userId = req.user.id;
 
-            // URL param se category read karega (e.g. /vendor/package/homestay/delete) ya fallback body se
             const category = (params?.category || body?.category || '').trim();
             if (!category) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ITEM.CATEGORY_REQUIRED);
 

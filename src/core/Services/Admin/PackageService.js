@@ -170,16 +170,14 @@ class PackageService {
             const categoryFields = Object.keys(Package.schema.paths)
                 .filter(p => !p.includes('.') && Array.isArray(Package.schema.paths[p].options.type));
 
-            const pkg = await getPackageBy({
+            const pkg = await Package.findOne({
                 $or: categoryFields.map(key => ({ [`${key}._id`]: oid }))
             }).session(session);
 
             if (!pkg) throw new AppError(RESPONSE_MESSAGES.ITEM.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
-            const EXCLUDED_KEYS = ['_id', 'vendor', 'business', 'createdAt', 'updatedAt', '__v'];
-            for (const key of Object.keys(pkg.toObject())) {
-                if (EXCLUDED_KEYS.includes(key)) continue;
-                const item = pkg[key]?.id(oid);
+            for (const key of categoryFields) {
+                const item = pkg[key].id(oid);
                 if (item) {
                     Object.assign(item, data);
                     pkg.markModified(key);

@@ -12,9 +12,7 @@ const authMiddleware = async (req) => {
         // 1. Authorization header (Bearer <token>)
         const authHeader = req?.headers?.get ? (req.headers.get('authorization') || '') : '';
         const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-        if (bearerMatch) {
-            token = bearerMatch[1];
-        }
+        if (bearerMatch) token = bearerMatch[1];
 
         // 2. Query parameter (?token= or ?access_token=) - required for SSE (EventSource) & WebSockets
         if (!token && req?.url) {
@@ -31,9 +29,7 @@ const authMiddleware = async (req) => {
             } else if (req?.headers?.get) {
                 const cookieHeader = req.headers.get('cookie') || '';
                 const cookieMatch = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
-                if (cookieMatch) {
-                    token = decodeURIComponent(cookieMatch[1]);
-                }
+                if (cookieMatch) token = decodeURIComponent(cookieMatch[1]);
             }
         }
 
@@ -46,9 +42,7 @@ const authMiddleware = async (req) => {
         if (decoded.jti) {
             try {
                 const isBlacklisted = await CacheService.get(`blacklist:${decoded.jti}`);
-                if (isBlacklisted) {
-                    return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
-                }
+                if (isBlacklisted) return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
             } catch (cacheErr) {
                 getLogger().error({ err: cacheErr, jti: decoded.jti }, '[AuthMiddleware] Redis token blacklist lookup failed');
             }

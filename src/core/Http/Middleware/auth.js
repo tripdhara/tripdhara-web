@@ -1,6 +1,5 @@
 import { STATUS, RESPONSE_MESSAGES, DEFAULTS } from '@/core/Constants/index.js';
 import { verifyToken } from '@/core/Helpers/jwt.js';
-import User from '@/core/Models/User.js';
 import { getUserById } from '@/core/Helpers/queryHelpers.js';
 import CacheService from '@/core/Services/CacheService.js';
 import { getLogger } from '@/core/Lib/logger.js';
@@ -10,25 +9,18 @@ const authMiddleware = async (req) => {
         let token = null;
 
         // 1. Authorization header (Bearer <token>)
-        const authHeader = req?.headers?.get ? (req.headers.get('authorization') || '') : '';
+        const authHeader = req.headers?.get?.('authorization') || '';
         const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
         if (bearerMatch) token = bearerMatch[1];
 
-        // 2. Query parameter (?token= or ?access_token=) - required for SSE (EventSource) & WebSockets
-        if (!token && req?.url) {
-            try {
-                const url = new URL(req.url, 'http://localhost');
-                token = url.searchParams.get('token') || url.searchParams.get('access_token');
-            } catch { }
-        }
+        // 2. Query parameter (?token=) for real-time stream
+        if (!token && req.url?.includes('/stream')) token = new URL(req.url).searchParams.get('token');
 
-        // 3. Cookies (fallback for cookie-based sessions / SSR)
+        // 3. Cookie (token)
         if (!token) {
-            if (typeof req?.cookies?.get === 'function') {
-                token = req.cookies.get('token')?.value;
-            } else if (req?.headers?.get) {
-                const cookieHeader = req.headers.get('cookie') || '';
-                const cookieMatch = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+            token = req.cookies?.get?.('token')?.value;
+            if (!token && req.headers?.get) {
+                const cookieMatch = (req.headers.get('cookie') || '').match(/(?:^|;\s*)token=([^;]+)/);
                 if (cookieMatch) token = decodeURIComponent(cookieMatch[1]);
             }
         }
@@ -37,6 +29,7 @@ const authMiddleware = async (req) => {
 
         const decoded = await verifyToken(token);
         if (!decoded) return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
+        if (decoded.type && decoded.type !== 'access') return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID }
 
         // Check Redis for blacklisted JTI (logout / token revocation)
         if (decoded.jti) {
@@ -59,6 +52,7 @@ const authMiddleware = async (req) => {
         const denialReason = (!user || user.deletedAt) ? RESPONSE_MESSAGES.AUTH.ACCOUNT_DELETED : statusMap[user.status];
         return denialReason ? { authorized: DEFAULTS.FALSE, message: denialReason } : { authorized: DEFAULTS.TRUE, user: { ...user, id: user._id.toString() } };
     } catch (error) {
+        getLogger().error({ err: error }, '[AuthMiddleware] Authentication service failure');
         return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.AUTH_SERVICE_ERROR };
     }
 };

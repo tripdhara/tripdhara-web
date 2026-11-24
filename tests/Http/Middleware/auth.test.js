@@ -88,6 +88,22 @@ describe('Auth Middleware', () => {
         expect(verifyToken).toHaveBeenCalledWith('validCookieToken');
     });
 
+    it('should reject refresh tokens used as access tokens', async () => {
+        verifyToken.mockResolvedValue({ id: 'u1', type: 'refresh' });
+        const result = await authMiddleware(createRequest('Bearer refreshToken'));
+        expect(result).toEqual({ authorized: false, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID });
+    });
+
+    it('should disallow query token on mutating POST requests', async () => {
+        const req = {
+            method: 'POST',
+            headers: { get: () => null },
+            url: 'http://localhost:3000/api/vendor/package/add-item?token=validQueryToken'
+        };
+        const result = await authMiddleware(req);
+        expect(result).toEqual({ authorized: false, message: RESPONSE_MESSAGES.AUTH.NO_TOKEN });
+    });
+
     it('should handle thrown errors gracefully', async () => {
         verifyToken.mockRejectedValue(new Error('crash'));
         const result = await authMiddleware(createRequest('Bearer token'));

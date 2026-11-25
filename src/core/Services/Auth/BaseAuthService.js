@@ -92,16 +92,21 @@ class BaseAuthService {
         const existingUser = await getUserById(userId);
         if (!existingUser) throw AppError.notFound(RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
+        const safeUpdates = { ...updates };
+
         // Security Whitelist: Strip sensitive security & role fields from updates
         const forbiddenFields = ['role', 'status', 'isVerified', 'isVendorVerified', 'deletedAt', 'deletedBy', 'deletedReason'];
-        forbiddenFields.forEach(field => delete updates[field]);
+        forbiddenFields.forEach(field => delete safeUpdates[field]);
 
-        if (updates.preferences) {
-            // Prevent tempRole injection via preferences
-            const safePreferences = { ...updates.preferences };
+        if (safeUpdates.phone === '') safeUpdates.phone = null;
+
+        if (safeUpdates.preferences) {
+            // Prevent tempRole/tempExtraData injection via preferences
+            const safePreferences = { ...safeUpdates.preferences };
             delete safePreferences.tempRole;
+            delete safePreferences.tempExtraData;
             const existingPrefs = existingUser.preferences || {};
-            updates.preferences = {
+            safeUpdates.preferences = {
                 ...existingPrefs,
                 ...safePreferences,
                 notifications: {
@@ -111,9 +116,22 @@ class BaseAuthService {
             };
         }
 
-        if (updates.address) mapToGeoJSON(updates.address, 'location');
+        if (safeUpdates.socialLinks) {
+            safeUpdates.socialLinks = { ...(existingUser.socialLinks || {}), ...safeUpdates.socialLinks };
+        }
 
-        const user = await updateById(User, userId, updates, { returnDocument: 'after' });
+        if (safeUpdates.address) {
+            safeUpdates.address = { ...(existingUser.address || {}), ...safeUpdates.address };
+            mapToGeoJSON(safeUpdates.address, 'location');
+        }
+
+        let user;
+        try {
+            user = await updateById(User, userId, safeUpdates, { returnDocument: 'after' });
+        } catch (err) {
+            if (err?.code === 11000) throw AppError.conflict(RESPONSE_MESSAGES.ERROR.ALREADY_EXISTS);
+            throw err;
+        }
         if (!user) throw AppError.notFound(RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
         // Invalidate Redis caches so Admin panel and APIs immediately reflect fresh data
@@ -121,6 +139,7 @@ class BaseAuthService {
             await CacheService.del(`admin:vendors:${userId}`);
             await CacheService.del('admin:vendors:all');
             await CacheService.del(`user:profile:${userId}`);
+            await CacheService.del(`user:profile:full:${userId}`);
             const vendorProfile = await getBusinessBy({ user: userId });
             if (vendorProfile?._id) await CacheService.del(`admin:vendors:${vendorProfile._id}`);
         } catch (cacheError) {

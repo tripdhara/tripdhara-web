@@ -84,8 +84,10 @@ class ProfileController extends Controller {
             const updatedProfile = await BaseAuthService.updateUserProfile(req.user.id, updates);
 
             if (updatedProfile?.email) UserEvents.emit(NOTIFICATION.KEY.USER.PROFILE.UPDATED, { identifier: updatedProfile.email, details: updatedProfile });
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.PERSONAL_UPDATED, updatedProfile);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.USER.UPDATED, updatedProfile);
         } catch (error) {
+            if (error?.isOperational) return this.error(error.statusCode, error.message);
+            getLogger().error({ err: error, userId: req.user?.id }, '[ProfileController:updateProfile] Error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

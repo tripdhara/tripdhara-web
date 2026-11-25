@@ -1,9 +1,8 @@
 import PackageService from '@/core/Services/Vendor/PackageService.js';
 import { CATEGORY_MAP } from '@/core/Constants/categories.js';
-import { HTTP_STATUS, RESPONSE_MESSAGES, APP_DETAILS } from '@/core/Constants/index.js';
+import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import Controller from '@/core/Controllers/Controller.js';
-import { getBusinessByUserId, getPackageBy, getReviewsByItemId } from '@/core/Helpers/queryHelpers.js';
-import { vendorPackageItem } from '@/core/Helpers/package.js';
+import { getBusinessByUserId, getPackageBy } from '@/core/Helpers/queryHelpers.js';
 import { getVendorPackages, getVendorPackageItemById } from '@/core/Helpers/Package/vendorPackage.js';
 import { parseQuery } from '@/core/Helpers/search.js';
 import User from '@/core/Models/User';
@@ -201,7 +200,7 @@ class PackageController extends Controller {
             await pkg.save();
 
             await PackageService._invalidateCaches(businessId, itemId);
-            const result = await getVendorPackageItemById(userId, schemaKey, itemId);
+            const result = await getVendorPackageItemById(userId, category, itemId);
 
             const user = await User.findById(req.user.id);
             const profile = await userAuthResponse(user);

@@ -45,7 +45,12 @@ export const NOTIFICATION = {
             CREATE: 'Emails/Package/create.html',
             UPDATE: 'Emails/Package/update.html',
             DELETE: 'Emails/Package/delete.html',
-            STATUS: 'Emails/Package/status.html',
+            ACTIVATED: 'Emails/Package/activated.html',
+            DEACTIVATED: 'Emails/Package/deactivated.html',
+            BULK_ACTIVATED: 'Emails/Package/bulk_activated.html',
+            BULK_DEACTIVATED: 'Emails/Package/bulk_deactivated.html',
+            DELEATED: 'Emails/Package/delete.html',
+            BULK_DELEATED: 'Emails/Package/bulk_deleted.html',
         },
         SYSTEM: {
 
@@ -108,9 +113,15 @@ export const NOTIFICATION = {
 
             DOCUMENT_UPLOADED: 'vendor.document_uploaded',
 
+            // Package
             PACKAGE_CREATED: 'vendor.package_created',
             PACKAGE_UPDATED: 'vendor.package_updated',
             PACKAGE_DELETED: 'vendor.package_deleted',
+            PACKAGE_ACTIVATED: 'vendor.package_activated',
+            PACKAGE_DEACTIVATED: 'vendor.package_dectivated',
+            PACKAGE_BULK_ACTIVATED: 'vendor.package_bulk_activated',
+            PACKAGE_BULK_DEACTIVATED: 'vendor.package_bulk_deactivated',
+            PACKAGE_BULK_DELETED: 'vendor.package_bulk_deleted',
 
             PROFILE_UPDATE: 'vendor.profile_update',
             ACCOUNT_DELETED: 'vendor.account_deleted',
@@ -147,10 +158,15 @@ export const NOTIFICATION = {
             CATEGORY_DOCUMENT_UPLOADED: 'Category Document Uploaded To You',
             CATEGORY_DOCUMENT_REMOVED: 'Category Document Removed From You',
 
+            // Package
             PACKAGE_CREATED: 'New Package Item Created',
             PACKAGE_UPDATED: 'Package Item Updated',
+            PACKAGE_ACTIVATED: 'Package Item Status Updated',
+            PACKAGE_DEACTIVATED: 'Package Item Status Updated',
+            PACKAGE_BULK_ACTIVATED: 'Package Item Status Updated',
+            PACKAGE_BULK_DEACTIVATED: 'Package Item Status Updated',
             PACKAGE_DELETED: 'Package Item Status Updated',
-            PACKAGE_STATUS_UPDATED: 'Package Item Status Updated',
+            PACKAGE_BULK_DELETED: 'Package Item Status Updated',
 
 
             ACCOUNT_DELETED: 'Your Account Has Been Deleted',
@@ -200,10 +216,15 @@ export const NOTIFICATION = {
                 CATEGORY_DOCUMENT_UPLOADED: 'Category document uploaded',
                 CATEGORY_DOCUMENT_REMOVED: 'Category document removed',
 
+                // Package
                 PACKAGE_CREATED: 'Package Created',
                 PACKAGE_UPDATED: 'Package Updated',
+                PACKAGE_ACTIVATED: 'Package Activated',
+                PACKAGE_DEACTIVATED: 'Package Deactivated',
+                PACKAGE_BULK_ACTIVATED: 'Package Bulk Activated',
+                PACKAGE_BULK_DEACTIVATED: 'Package Bulk Deactivated',
                 PACKAGE_DELETED: 'Package Deleted',
-                PACKAGE_STATUS_UPDATED: 'Package Status Updated',
+                PACKAGE_BULK_DELETED: 'Package Bulk Deleted',
 
                 DOCUMENT_UPLOADED: 'Document uploaded',
                 ACCOUNT_DELETED: 'Account deleted',
@@ -211,32 +232,32 @@ export const NOTIFICATION = {
                 CATEGORY_REMOVED: 'Category removed',
             },
             BODY: {
-                WELCOME: 'Welcome to Tripdhara',
-                PROFILE_CREATED: 'Your business profile has been created successfully',
-                PROFILE_UPDATE: 'Your business profile has been updated successfully',
-
-                PROFILE_DEACTIVATED: 'Your business profile has been deactivated',
-                PROFILE_ACTIVATED: 'Your business profile has been activated',
-                PROFILE_APPROVED: 'Your business profile has been Approved',
-
-                OPERATING_STATUS_UPDATED: "Your business profile operational status has been updated successfully",
-
-                BANK_DETAILS_CREATED: 'Your bank details has been added successfully',
-                BANK_DETAILS_UPDATED: "Your bank details has been updated successfully",
-                BANK_DETAILS_REMOVED: 'Your bank details has been removed successfully',
-
+                WELCOME: 'Welcome to Tripdhara.',
+                PROFILE_CREATED: 'Your business profile has been created successfully.',
+                PROFILE_UPDATE: 'Your business profile has been updated successfully.',
+                PROFILE_DEACTIVATED: 'Your business profile has been deactivated.',
+                PROFILE_ACTIVATED: 'Your business profile has been activated.',
+                PROFILE_APPROVED: 'Your business profile has been approved.',
+                OPERATING_STATUS_UPDATED: 'Your business profile operational status has been updated successfully.',
+                BANK_DETAILS_CREATED: 'Your bank details have been added successfully.',
+                BANK_DETAILS_UPDATED: 'Your bank details have been updated successfully.',
+                BANK_DETAILS_REMOVED: 'Your bank details have been removed successfully.',
+                // Package
                 PACKAGE_CREATED: 'Your listing has been created successfully.',
                 PACKAGE_UPDATED: 'Your listing has been updated successfully.',
+                PACKAGE_ACTIVATED: 'Your listing has been activated successfully.',
+                PACKAGE_DEACTIVATED: 'Your listing has been deactivated successfully.',
+                PACKAGE_BULK_ACTIVATED: 'Your selected listings have been activated successfully.',
+                PACKAGE_BULK_DEACTIVATED: 'Your selected listings have been deactivated successfully.',
                 PACKAGE_DELETED: 'Your listing has been deleted successfully.',
-                PACKAGE_STATUS_UPDATED: 'Your listing status has been updated successfully.',
+                PACKAGE_BULK_DELETED: 'Your selected listings have been deleted successfully.',
 
-                DOCUMENT_UPLOADED: 'documents has been uploaded successfully',
-                ACCOUNT_DELETED: 'Your account has been deleted successfully',
-                CATEGORY_ASSIGNED: 'Your category has been assigned successfully',
-                CATEGORY_REMOVED: 'Your category has been removed successfully',
-
-                CATEGORY_DOCUMENT_UPLOADED: 'documents has been uploaded successfully',
-                CATEGORY_DOCUMENT_REMOVED: 'Your category document has been removed successfully',
+                DOCUMENT_UPLOADED: 'Your documents have been uploaded successfully.',
+                ACCOUNT_DELETED: 'Your account has been deleted successfully.',
+                CATEGORY_ASSIGNED: 'Your category has been assigned successfully.',
+                CATEGORY_REMOVED: 'Your category has been removed successfully.',
+                CATEGORY_DOCUMENT_UPLOADED: 'Your category documents have been uploaded successfully.',
+                CATEGORY_DOCUMENT_REMOVED: 'Your category document has been removed successfully.',
             },
             TYPE: {
                 WELCOME: 'welcome',
@@ -256,10 +277,15 @@ export const NOTIFICATION = {
                 BANK_DETAILS_UPDATED: "business_bank_details_updated",
                 BANK_DETAILS_REMOVED: 'business_bank_details_Removed',
 
+                // Package
                 PACKAGE_CREATED: 'package_created',
                 PACKAGE_UPDATED: 'package_updated',
+                PACKAGE_ACTIVATED: 'package_activated',
+                PACKAGE_DEACTIVATED: 'package_deactivated',
                 PACKAGE_DELETED: 'package_deleted',
-                PACKAGE_STATUS_UPDATED: 'package_status_updated',
+                PACKAGE_BULK_ACTIVATED: 'package_bulk_activated',
+                PACKAGE_BULK_DEACTIVATED: 'package_bulk_deactivated',
+                PACKAGE_BULK_DELETED: 'package_bulk_deleted',
 
                 ACCOUNT_DELETED: 'account_deleted',
 

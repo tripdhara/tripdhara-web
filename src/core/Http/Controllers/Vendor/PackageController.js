@@ -120,6 +120,22 @@ class PackageController extends Controller {
             if (updated.matchedCount === 0) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
             const vendor = await getBusinessByUserId(userId, '_id');
             await PackageService._invalidateCaches(vendor?._id, itemId);
+
+            const result = await getVendorPackageItemById(userId, category, itemId);
+            const eventName = isActive ? NOTIFICATION.KEY.BUSINESS.PACKAGE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PACKAGE_DEACTIVATED;
+
+            const user = await User.findById(req.user.id);
+            const profile = await userAuthResponse(user);
+            if (profile?.email) {
+                PackageEvents.emitAsync(eventName, {
+                    identifier: profile.email,
+                    details: {
+                        ...profile,
+                        package: result
+                    }
+                });
+            }
+
             return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.PACKAGE_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.PACKAGE_DEACTIVATED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
@@ -185,7 +201,19 @@ class PackageController extends Controller {
             await pkg.save();
 
             await PackageService._invalidateCaches(businessId, itemId);
+            const result = await getVendorPackageItemById(userId, schemaKey, itemId);
 
+            const user = await User.findById(req.user.id);
+            const profile = await userAuthResponse(user);
+            if (profile?.email) {
+                PackageEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, {
+                    identifier: profile.email,
+                    details: {
+                        ...profile,
+                        package: result
+                    }
+                });
+            }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
             const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;

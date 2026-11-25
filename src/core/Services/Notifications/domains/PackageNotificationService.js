@@ -127,6 +127,54 @@ export class PackageNotificationService {
         });
     }
 
+    sendPackageActivateEmail(email, details) {
+        return this._notify(email, details, {
+            contextName: 'PackageActivate',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.ACTIVATED,
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_ACTIVATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_ACTIVATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_ACTIVATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_ACTIVATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
+        });
+    }
+
+    sendPackageDeactivateEmail(email, details) {
+        return this._notify(email, details, {
+            contextName: 'PackageDeactivate',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.DEACTIVATED,
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_DEACTIVATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_DEACTIVATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_DEACTIVATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_DEACTIVATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
+        });
+    }
+
+    sendPackageBulkActivateEmail(email, details) {
+        return this._notify(email, details, {
+            contextName: 'PackageBulkActivate',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.BULK_ACTIVATED,
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_BULK_ACTIVATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_BULK_ACTIVATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_BULK_ACTIVATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_BULK_ACTIVATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
+        });
+    }
+
+    sendPackageBulkDeactivateEmail(email, details) {
+        return this._notify(email, details, {
+            contextName: 'PackageBulkDeactivate',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.BULK_DEACTIVATED,
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_BULK_DEACTIVATED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_BULK_DEACTIVATED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_BULK_DEACTIVATED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_BULK_DEACTIVATED,
+            priority: NOTIFICATION_PRIORITIES.MEDIUM
+        });
+    }
+
     sendPackageDeletedEmail(email, details) {
         return this._notify(email, details, {
             contextName: 'PackageDeleted',
@@ -139,17 +187,29 @@ export class PackageNotificationService {
         });
     }
 
-    sendPackageStatusUpdatedEmail(email, details) {
+    sendPackageBulkDeletedEmail(email, details) {
         return this._notify(email, details, {
-            contextName: 'PackageStatusUpdated',
-            template: NOTIFICATION.TEMPLATE.PACKAGE.STATUS,
-            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_STATUS_UPDATED,
-            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_STATUS_UPDATED,
-            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_STATUS_UPDATED,
-            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_STATUS_UPDATED,
+            contextName: 'PackageBulkDeleted',
+            template: NOTIFICATION.TEMPLATE.PACKAGE.BULK_DELEATED,
+            subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_BULK_DELETED,
+            title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_BULK_DELETED,
+            message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_BULK_DELETED,
+            type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_BULK_DELETED,
             priority: NOTIFICATION_PRIORITIES.MEDIUM
         });
     }
+
+    // sendPackageStatusUpdatedEmail(email, details) {
+    //     return this._notify(email, details, {
+    //         contextName: 'PackageStatusUpdated',
+    //         template: NOTIFICATION.TEMPLATE.PACKAGE.STATUS,
+    //         subject: NOTIFICATION.SUBJECT.BUSINESS.PACKAGE_STATUS_UPDATED,
+    //         title: NOTIFICATION.PUSH.BUSINESS.TITLE.PACKAGE_STATUS_UPDATED,
+    //         message: NOTIFICATION.PUSH.BUSINESS.BODY.PACKAGE_STATUS_UPDATED,
+    //         type: NOTIFICATION.PUSH.BUSINESS.TYPE.PACKAGE_STATUS_UPDATED,
+    //         priority: NOTIFICATION_PRIORITIES.MEDIUM
+    //     });
+    // }
 }
 
 export default new PackageNotificationService();

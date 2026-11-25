@@ -5,11 +5,6 @@ import { NOTIFICATION } from '../Constants/notification.js';
 
 const PackageEvents = new EventEmitter();
 
-// ================================================================== //
-//                                                                    //
-//                      PACKAGE Events Emails                         //
-//                                                                    //
-// ================================================================== //
 const packageEmailListener = (eventKey, handlerFn) => {
     PackageEvents.on(eventKey, async ({ identifier, details, businessName = {} }) => {
         try {
@@ -22,10 +17,14 @@ const packageEmailListener = (eventKey, handlerFn) => {
     });
 };
 
-// Business Profile Emails
 packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_CREATED, (id, data) => PackageNotificationService.sendPackageCreatedEmail(id, data));
 packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_UPDATED, (id, data) => PackageNotificationService.sendPackageUpdatedEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_ACTIVATED, (id, data) => PackageNotificationService.sendPackageActivateEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_DEACTIVATED, (id, data) => PackageNotificationService.sendPackageDeactivateEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_BULK_ACTIVATED, (id, data) => PackageNotificationService.sendPackageBulkActivateEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_BULK_DEACTIVATED, (id, data) => PackageNotificationService.sendPackageBulkDeactivateEmail(id, data));
 packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, (id, data) => PackageNotificationService.sendPackageDeletedEmail(id, data));
+packageEmailListener(NOTIFICATION.KEY.BUSINESS.PACKAGE_BULK_DELETED, (id, data) => PackageNotificationService.sendPackageBulkDeletedEmail(id, data));
 
 PackageEvents.emitAsync = async function (event, data) {
     const listeners = this.listeners(event);

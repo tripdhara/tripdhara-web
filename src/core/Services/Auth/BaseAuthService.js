@@ -93,15 +93,12 @@ class BaseAuthService {
         if (!existingUser) throw AppError.notFound(RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
         const safeUpdates = { ...updates };
-
-        // Security Whitelist: Strip sensitive security & role fields from updates
         const forbiddenFields = ['role', 'status', 'isVerified', 'isVendorVerified', 'deletedAt', 'deletedBy', 'deletedReason'];
         forbiddenFields.forEach(field => delete safeUpdates[field]);
 
         if (safeUpdates.phone === '') safeUpdates.phone = null;
 
         if (safeUpdates.preferences) {
-            // Prevent tempRole/tempExtraData injection via preferences
             const safePreferences = { ...safeUpdates.preferences };
             delete safePreferences.tempRole;
             delete safePreferences.tempExtraData;
@@ -125,33 +122,7 @@ class BaseAuthService {
             mapToGeoJSON(safeUpdates.address, 'location');
         }
 
-        let user;
-        try {
-            user = await updateById(User, userId, safeUpdates, { returnDocument: 'after' });
-        } catch (err) {
-            if (err?.code === 11000) throw AppError.conflict(RESPONSE_MESSAGES.ERROR.ALREADY_EXISTS);
-            throw err;
-        }
-        if (!user) throw AppError.notFound(RESPONSE_MESSAGES.ERROR.NOT_FOUND);
-
-        // Invalidate Redis caches so Admin panel and APIs immediately reflect fresh data
-        try {
-            await CacheService.del(`admin:vendors:${userId}`);
-            await CacheService.del('admin:vendors:all');
-            await CacheService.del(`user:profile:${userId}`);
-            await CacheService.del(`user:profile:full:${userId}`);
-            const vendorProfile = await getBusinessBy({ user: userId });
-            if (vendorProfile?._id) await CacheService.del(`admin:vendors:${vendorProfile._id}`);
-        } catch (cacheError) {
-            // Non-blocking cache flush error fallback
-        }
-        // Trigger in-app notification for profile update
-        try {
-            await NotificationService.notifyProfileUpdated(user);
-        } catch (notifErr) {
-            getLogger().error({ err: notifErr, userId }, '[BaseAuthService] Failed to dispatch profile update notification');
-        }
-
+        const user = await updateById(User, userId, safeUpdates, { returnDocument: 'after' });
         return await userAuthResponse(user);
     }
 

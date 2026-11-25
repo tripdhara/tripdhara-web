@@ -12,8 +12,43 @@ import PackageEvents from '@/events/PackageEvents';
 import mongoose from 'mongoose';
 import AppError from '@/core/Helpers/AppError';
 import { Package } from '@/core/Models/index';
+import { getLogger } from '@/core/Lib/logger.js';
 
 class PackageController extends Controller {
+
+    /**
+     * Production-safe error handler: exposes only operational AppError messages,
+     * hides internal/DB errors behind generic SERVER_ERROR.
+     */
+    _handleError(error, context = 'PackageController') {
+        if (error?.isOperational) {
+            return this.error(error.statusCode, error.message);
+        }
+        getLogger().error({ err: error }, `[${context}] Unexpected error`);
+        return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+    }
+
+    /**
+     * Dispatches package notifications asynchronously without failing the main request.
+     */
+    async _emitPackageEvent(userId, eventName, pkgResult) {
+        if (!pkgResult) return;
+        try {
+            const user = await User.findById(userId);
+            const profile = await userAuthResponse(user);
+            if (profile?.email) {
+                await PackageEvents.emitAsync(eventName, {
+                    identifier: profile.email,
+                    details: {
+                        ...profile,
+                        package: pkgResult
+                    }
+                });
+            }
+        } catch (err) {
+            getLogger().error({ err, eventName, userId }, '[PackageController] Notification dispatch error');
+        }
+    }
 
     // GET /vendor/packages
     async getPackages(req) {
@@ -27,7 +62,7 @@ class PackageController extends Controller {
             if (result && result.pagination) return this.paginatedSuccess(HTTP_STATUS.OK, message, result.items || result.data, result.pagination);
             return this.success(HTTP_STATUS.OK, message, result);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            return this._handleError(error, 'getPackages');
         }
     }
 
@@ -40,7 +75,7 @@ class PackageController extends Controller {
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, result);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            return this._handleError(error, 'getPackageItem');
         }
     }
 
@@ -77,21 +112,11 @@ class PackageController extends Controller {
             } else {
                 result = await PackageService.addItem(userId, category, body);
             }
-            const user = await User.findById(req.user.id);
-            const profile = await userAuthResponse(user);
-            if (profile?.email) {
-                PackageEvents.emitAsync(eventName, {
-                    identifier: profile.email,
-                    details: {
-                        ...profile,
-                        package: result
-                    }
-                });
-            }
+
+            this._emitPackageEvent(userId, eventName, result);
             return this.success(status, message);
         } catch (error) {
-            console.log(error);
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            return this._handleError(error, 'savePackageItem');
         }
     }
 
@@ -101,7 +126,7 @@ class PackageController extends Controller {
             const body = req.payload || {};
             const userId = req.user.id;
 
-            const itemId = params.itemId || body.itemId;
+            const itemId = params?.itemId || body.itemId;
             if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
             if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
 
@@ -113,7 +138,7 @@ class PackageController extends Controller {
             if (!schemaKey) throw AppError.badRequest(RESPONSE_MESSAGES.CATEGORY.INVALID);
 
             const updated = await Package.updateOne(
-                { user: userId, [`${schemaKey}._id`]: itemId },
+                { user: userId, [schemaKey]: { $elemMatch: { _id: itemId, deletedAt: null } } },
                 { $set: { [`${schemaKey}.$.isActive`]: isActive } }
             );
             if (updated.matchedCount === 0) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
@@ -122,23 +147,11 @@ class PackageController extends Controller {
 
             const result = await getVendorPackageItemById(userId, category, itemId);
             const eventName = isActive ? NOTIFICATION.KEY.BUSINESS.PACKAGE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PACKAGE_DEACTIVATED;
-
-            const user = await User.findById(req.user.id);
-            const profile = await userAuthResponse(user);
-            if (profile?.email) {
-                PackageEvents.emitAsync(eventName, {
-                    identifier: profile.email,
-                    details: {
-                        ...profile,
-                        package: result
-                    }
-                });
-            }
+            this._emitPackageEvent(userId, eventName, result);
 
             return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.PACKAGE_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.PACKAGE_DEACTIVATED);
         } catch (error) {
-            const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
-            return this.error(status, error.message);
+            return this._handleError(error, 'updatePackageStatus');
         }
     }
 
@@ -153,17 +166,35 @@ class PackageController extends Controller {
             const body = req.payload || {};
             const userId = req.user.id;
 
+            const business = await getBusinessByUserId(userId, '_id category');
+            if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+
+            const hasCategory = business.category?.some(c => c.slug === category);
+            if (!hasCategory) return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.VENDOR.UNAUTHORIZED_CATEGORY);
+
             const isActive = String(body.isActive).trim().toLowerCase() === 'true';
 
-            await Package.updateOne(
+            const updated = await Package.updateOne(
                 { user: userId },
-                { $set: { [`${schemaKey}.$[].isActive`]: isActive } }
+                { $set: { [`${schemaKey}.$[elem].isActive`]: isActive } },
+                { arrayFilters: [{ 'elem.deletedAt': null }] }
             );
-            const vendor = await getBusinessByUserId(userId, '_id');
-            await PackageService._invalidateCaches(vendor?._id);
+            if (updated.matchedCount === 0) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ITEM.NOT_FOUND);
+
+            await PackageService._invalidateCaches(business._id);
+
+            const categoryName = business.category?.find(c => c.slug === category)?.name || category;
+            const eventName = isActive ? NOTIFICATION.KEY.BUSINESS.PACKAGE_BULK_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PACKAGE_BULK_DEACTIVATED;
+            this._emitPackageEvent(userId, eventName, {
+                id: business._id.toString(),
+                category_name: categoryName,
+                totalCount: updated.modifiedCount,
+                isActive
+            });
+
             return this.success(HTTP_STATUS.OK, isActive ? RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_ACTIVATED : RESPONSE_MESSAGES.PACKAGE.CATEGORY_STATUS_DEACTIVATED);
         } catch (error) {
-            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+            return this._handleError(error, 'bulkPackageStatusByCategory');
         }
     }
 
@@ -173,7 +204,7 @@ class PackageController extends Controller {
             const body = req.payload || {};
             const userId = req.user.id;
 
-            const { itemId } = params || body;
+            const itemId = params?.itemId || body.itemId;
             if (!itemId) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.ITEM_ID_REQUIRED);
             if (!mongoose.Types.ObjectId.isValid(itemId)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.INVALID_ITEM_ID);
 
@@ -201,22 +232,11 @@ class PackageController extends Controller {
 
             await PackageService._invalidateCaches(businessId, itemId);
             const result = await getVendorPackageItemById(userId, category, itemId);
+            this._emitPackageEvent(userId, NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, result);
 
-            const user = await User.findById(req.user.id);
-            const profile = await userAuthResponse(user);
-            if (profile?.email) {
-                PackageEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PACKAGE_DELETED, {
-                    identifier: profile.email,
-                    details: {
-                        ...profile,
-                        package: result
-                    }
-                });
-            }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
-            const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
-            return this.error(status, error.message);
+            return this._handleError(error, 'removePackageItem');
         }
     }
 
@@ -258,8 +278,7 @@ class PackageController extends Controller {
             await PackageService._invalidateCaches(businessId);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.DELETED);
         } catch (error) {
-            const status = error.message?.toLowerCase().includes('authorized') ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
-            return this.error(status, error.message);
+            return this._handleError(error, 'bulkPackageRemoveByCategory');
         }
     }
 }

@@ -118,7 +118,7 @@ export const NOTIFICATION = {
             PACKAGE_UPDATED: 'vendor.package_updated',
             PACKAGE_DELETED: 'vendor.package_deleted',
             PACKAGE_ACTIVATED: 'vendor.package_activated',
-            PACKAGE_DEACTIVATED: 'vendor.package_dectivated',
+            PACKAGE_DEACTIVATED: 'vendor.package_deactivated',
             PACKAGE_BULK_ACTIVATED: 'vendor.package_bulk_activated',
             PACKAGE_BULK_DEACTIVATED: 'vendor.package_bulk_deactivated',
             PACKAGE_BULK_DELETED: 'vendor.package_bulk_deleted',
@@ -161,12 +161,12 @@ export const NOTIFICATION = {
             // Package
             PACKAGE_CREATED: 'New Package Item Created',
             PACKAGE_UPDATED: 'Package Item Updated',
-            PACKAGE_ACTIVATED: 'Package Item Status Updated',
-            PACKAGE_DEACTIVATED: 'Package Item Status Updated',
-            PACKAGE_BULK_ACTIVATED: 'Package Item Status Updated',
-            PACKAGE_BULK_DEACTIVATED: 'Package Item Status Updated',
-            PACKAGE_DELETED: 'Package Item Status Updated',
-            PACKAGE_BULK_DELETED: 'Package Item Status Updated',
+            PACKAGE_ACTIVATED: 'Package Item Activated',
+            PACKAGE_DEACTIVATED: 'Package Item Deactivated',
+            PACKAGE_BULK_ACTIVATED: 'Category Listings Activated',
+            PACKAGE_BULK_DEACTIVATED: 'Category Listings Deactivated',
+            PACKAGE_DELETED: 'Package Item Deleted',
+            PACKAGE_BULK_DELETED: 'Category Listings Deleted',
 
 
             ACCOUNT_DELETED: 'Your Account Has Been Deleted',

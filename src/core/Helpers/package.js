@@ -1,4 +1,4 @@
-import Vendor from '@/core/Models/Vendor.js';
+// import Vendor from '@/core/Models/Vendor.js';
 import Package from '@/core/Models/Package.js';
 import InventoryService from '@/core/Services/Vendor/InventoryService.js';
 import { CATEGORY_MAP, SCHEMA_KEYS } from '@/core/Constants/categories.js';
@@ -6,12 +6,12 @@ import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import { slugify } from './stringUtils.js';
 import { sellingPrice } from './sellingPrice.js';
 import { mapToGeoJSON } from './geoUtils.js';
-import { uploadToCloudinary } from './cloudinary.js';
+// import { uploadToCloudinary } from './cloudinary.js';
 import AppError from '@/core/Helpers/AppError.js';
 import { notifyIndexNow } from './indexNow.js';
 import { getLocationPoint } from './addressHelper.js';
-import { getLogger } from '@/core/Lib/logger.js';
-import { getPackageBy, getBusinessById, getBusinessByUserId } from './queryHelpers.js';
+// import { getLogger } from '@/core/Lib/logger.js';
+import { getPackageBy, getBusinessByUserId } from './queryHelpers.js';
 import Review from '../Models/Review.js';
 import mongoose from 'mongoose';
 
@@ -34,11 +34,13 @@ export function flattenObject(obj, prefix = '') {
 }
 
 /**
+ * Unused Helper (commented out after codebase usage audit)
  * Processes photo inputs, uploading files/buffers to Cloudinary or formatting URL objects.
  * @param {Array|Object|string} photos - Photo input(s)
  * @param {string} uploadPath - Cloudinary folder path
  * @returns {Promise<Array>} Standardized photo array
  */
+/*
 export async function processItemPhotos(photos, uploadPath) {
     if (!photos) return [];
     const photoArray = Array.isArray(photos) ? photos : [photos];
@@ -61,6 +63,7 @@ export async function processItemPhotos(photos, uploadPath) {
 
     return uploadResults;
 }
+*/
 
 /**
  * Finds or initializes a vendor's package catalog document.

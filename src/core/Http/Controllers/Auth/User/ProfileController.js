@@ -6,7 +6,7 @@ import Dispute from '@/core/Models/Dispute.js';
 import { BaseAuthService, UserAuthService } from '@/core/Services/Auth/index.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES, STATUS, BOOKING_STATUS, PAYMENT_STATUS, PAYOUT_STATUS } from '@/core/Constants/index.js';
 import { uploadToCloudinary } from '@/core/Helpers/cloudinary.js';
-import { businessPayload, getBusinessById, getBusinessByUserId, getPackageBy, getUserById, getVendorDocumentsBy, updateById, itemsFormate, transformAuthResponse, userAuthResponse } from '@/core/Helpers/index.js';
+import { businessPayload, getBusinessById, getBusinessByUserId, getPackageBy, getUserById, getVendorDocumentsBy, updateById, itemsFormate, transformAuthResponse, userAuthResponse, itemBusinessPayload } from '@/core/Helpers/index.js';
 import { mapToGeoJSON } from '@/core/Helpers/geoUtils.js';
 import Controller from '@/core/Controllers/Controller.js';
 import UserEvents from '@/core/Events/UserEvents.js';
@@ -232,10 +232,18 @@ class ProfileController extends Controller {
      */
     async getVendorProfile(req, { params }) {
         try {
-            const user = await getUserById(params.userId);
-            if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.USER.NOT_FOUND);
-            const result = await userAuthResponse(user);
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.USER.FETCHED, result);
+            const userId = params.userId;
+            const business = await getBusinessByUserId(userId);
+            if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            const businessId = business._id.toString();
+            const categories = business.category;
+            const packages = await getPackageBy({ vendor: businessId }) || {};
+            const items = await itemsFormate(packages, categories);
+            const responseData = {
+                ...itemBusinessPayload(business),
+                items
+            };
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.FETCHED, responseData);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
@@ -255,12 +263,14 @@ class ProfileController extends Controller {
      */
     async getBusinessProfile(req, { params }) {
         try {
-            const business = await getBusinessById(params.businessId, '', { path: 'user' });
+            const businessId = params.businessId;
+            const business = await getBusinessById(businessId);
             if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-            const packages = await getPackageBy({ vendor: params.businessId }) || {};
-            const items = itemsFormate(packages);
+            const categories = business.category;
+            const packages = await getPackageBy({ vendor: businessId }) || {};
+            const items = await itemsFormate(packages, categories);
             const responseData = {
-                ...businessPayload(business),
+                ...itemBusinessPayload(business),
                 items
             };
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.FETCHED, responseData);

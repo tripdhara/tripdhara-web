@@ -12,6 +12,8 @@ import { notifyIndexNow } from './indexNow.js';
 import { getLocationPoint } from './addressHelper.js';
 import { getLogger } from '@/core/Lib/logger.js';
 import { getPackageBy, getBusinessById, getBusinessByUserId } from './queryHelpers.js';
+import Review from '../Models/Review.js';
+import mongoose from 'mongoose';
 
 /**
  * Recursively flattens nested objects into dot notation for partial Mongoose subdocument updates.
@@ -181,17 +183,46 @@ export function normalizePackageItem(item, reviews = []) {
     };
 }
 
-/**
- * Formats package items grouped by schema keys.
- */
-export function itemsFormate(packages) {
+export async function itemsFormate(packages, categories) {
+    if (!packages || packages.deletedAt) return {};
     const items = {};
-    if (!packages) return items;
-    Object.values(SCHEMA_KEYS).forEach(key => {
-        const catItems = packages[key];
-        items[key] = Array.isArray(catItems) ? catItems.map(item => vendorPackageItem(item)) : [];
-    });
+    for (const { slug } of categories) {
+        const list = packages[CATEGORY_MAP[slug]];
+        if (!list?.length) continue;
+        const activeItems = await Promise.all(list.filter(item => !item.deletedAt && item.isActive).map(item => packageItemPayload(item)));
+        if (activeItems.length) items[slug] = activeItems;
+    }
     return items;
+}
+
+export async function packageItemPayload(item) {
+    if (!item) return null;
+    const [stat] = mongoose.Types.ObjectId.isValid(item._id) ? await Review.aggregate([
+        { $match: { 'item.itemId': new mongoose.Types.ObjectId(item._id), isVisible: true } },
+        {
+            $group: {
+                _id: '$item.itemId',
+                average: { $avg: '$rating' },
+                count: { $sum: 1 }
+            }
+        }
+    ]) : [];
+    const rating = stat ? { average: Math.round(stat.average * 10) / 10, count: stat.count } : { average: 0, count: 0 };
+    return {
+        id: item._id?.toString(),
+        title: item.title,
+        slug: item.slug,
+        isActive: Boolean(item.isActive),
+        pricing: {
+            basePrice: item.pricing?.basePrice,
+            gst: item.pricing?.gst,
+            sellingPrice: item.pricing?.sellingPrice
+        },
+        address: item.location?.address,
+        location: getLocationPoint(item.location),
+        image: item.photos?.[0]?.url,
+        rating
+    };
 }
 
 /**

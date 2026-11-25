@@ -1,13 +1,13 @@
-import Package from '@/core/Models/Package.js';
-import { CATEGORY_MAP, SCHEMA_KEYS } from '@/core/Constants/categories.js';
-import InventoryService from '@/core/Services/Vendor/InventoryService.js';
+// import Package from '@/core/Models/Package.js';
+import { CATEGORY_MAP } from '@/core/Constants/categories.js';
+// import InventoryService from '@/core/Services/Vendor/InventoryService.js';
 import { formatInventoryItem } from '@/core/Helpers/InventoryHelper.js';
-import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
+// import { RESPONSE_MESSAGES } from '@/core/Constants/index.js';
 import { item, vendorPackagePayload, findOrCreateCatalog } from '@/core/Helpers/package.js';
-import { getPackageItemById, getPackageById as fetchPackageById, getPackageBy, getBusinessById, getBusinessByUserId, deleteById } from '@/core/Helpers/queryHelpers.js';
+import { getPackageItemById, getBusinessById, getBusinessByUserId } from '@/core/Helpers/queryHelpers.js';
 import CacheService from '@/core/Services/CacheService.js';
 import { getLogger } from '@/core/Lib/logger.js';
-import { AppError } from '@/core/Errors/AppError.js';
+// import { AppError } from '@/core/Errors/AppError.js';
 import { clearBrowseCache } from '@/core/Helpers/Package/testBrowsePackages.js';
 
 /**
@@ -37,16 +37,6 @@ class PackageService {
     // Helper: Find or Create Catalog for Vendor (Composite lookup)
     async ensureCatalog(userId, vendorId) {
         return await findOrCreateCatalog(userId, vendorId, true);
-    }
-
-    // Helper: Internal catalog ownership verifier
-    async _verifyOwnership(id, userId, vendorId) {
-        const pkg = await fetchPackageById(id, '', null, { lean: false });
-        if (!pkg) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.CATALOG_NOT_FOUND);
-        if (pkg.vendor.toString() !== vendorId.toString() || pkg.user.toString() !== userId.toString()) {
-            throw AppError.forbidden(RESPONSE_MESSAGES.PACKAGE.CATALOG_UNAUTHORIZED);
-        }
-        return pkg;
     }
 
     // Helper: Formats inventory items for a vendor catalog
@@ -88,15 +78,64 @@ class PackageService {
         return { catalog, vendorCategories, itemsByCategory, allItems };
     }
 
-    // Get Catalog
-    async getCatalog(userId, vendorId) {
-        return await this.ensureCatalog(userId, vendorId);
-    }
-
     // Get Inventory
     async getInventory(userId, vendorId) {
         const { itemsByCategory } = await this._getFormattedInventory(userId, vendorId);
         return itemsByCategory;
+    }
+
+    // Helper to format a single catalog item
+    _formatItem(item, categorySlug, vendorCategories = []) {
+        return vendorPackagePayload(item, categorySlug, vendorCategories);
+    }
+
+    // Add Item
+    async addItem(userId, category, data) {
+        const result = await item(userId, category, data);
+        const vendor = await getBusinessByUserId(userId, '_id');
+        await this._invalidateCaches(vendor?._id, result?._id);
+        return result;
+    }
+
+    // Update Item
+    async updateItem(userId, category, data, itemId) {
+        const result = await item(userId, category, data, itemId);
+        const vendor = await getBusinessByUserId(userId, '_id');
+        await this._invalidateCaches(vendor?._id, itemId || result?._id);
+        return result;
+    }
+
+    async updateServiceItem(userId, category, data, itemId) {
+        return await this.updateItem(userId, category, data, itemId);
+    }
+
+    // Find Item Details (Unified)
+    async findItem(itemId) {
+        return await getPackageItemById(itemId);
+    }
+
+    async getPackageItem(itemId) {
+        return await this.findItem(itemId);
+    }
+
+    // =========================================================================
+    // Unused / Legacy Methods (commented out after codebase usage audit)
+    // =========================================================================
+
+    /*
+    // Helper: Internal catalog ownership verifier
+    async _verifyOwnership(id, userId, vendorId) {
+        const pkg = await fetchPackageById(id, '', null, { lean: false });
+        if (!pkg) throw AppError.notFound(RESPONSE_MESSAGES.PACKAGE.CATALOG_NOT_FOUND);
+        if (pkg.vendor.toString() !== vendorId.toString() || pkg.user.toString() !== userId.toString()) {
+            throw AppError.forbidden(RESPONSE_MESSAGES.PACKAGE.CATALOG_UNAUTHORIZED);
+        }
+        return pkg;
+    }
+
+    // Get Catalog
+    async getCatalog(userId, vendorId) {
+        return await this.ensureCatalog(userId, vendorId);
     }
 
     // Find All
@@ -162,36 +201,8 @@ class PackageService {
         return saved;
     }
 
-    // Helper to format a single catalog item
-    _formatItem(item, categorySlug, vendorCategories = []) {
-        return vendorPackagePayload(item, categorySlug, vendorCategories);
-    }
-
-    // November 21, 2026
-    // Add Item
-    async addItem(userId, category, data) {
-        const result = await item(userId, category, data);
-        const vendor = await getBusinessByUserId(userId, '_id');
-        await this._invalidateCaches(vendor?._id, result?._id);
-        return result;
-    }
-
-    // Update Item
-    async updateItem(userId, category, data, itemId) {
-        const result = await item(userId, category, data, itemId);
-        const vendor = await getBusinessByUserId(userId, '_id');
-        await this._invalidateCaches(vendor?._id, itemId || result?._id);
-        return result;
-    }
-
-
-    // Vendor Package November 21, 2026
     async addServiceItem(userId, category, data) {
         return await this.addItem(userId, category, data);
-    }
-
-    async updateServiceItem(userId, category, data, itemId) {
-        return await this.updateItem(userId, category, data, itemId);
     }
 
     // Remove Item
@@ -258,19 +269,11 @@ class PackageService {
         return saved;
     }
 
-    // Find Item Details (Unified)
-    async findItem(itemId) {
-        return await getPackageItemById(itemId);
-    }
-
-    async getPackageItem(itemId) {
-        return await this.findItem(itemId);
-    }
-
     // Helper for controller
     async getPackageById(id) {
         return await fetchPackageById(id);
     }
+    */
 }
 
 export default new PackageService();

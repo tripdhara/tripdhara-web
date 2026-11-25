@@ -82,9 +82,8 @@ class ProfileController extends Controller {
 
             // 6. Delegate profile update to BaseAuthService for standardized response payload & Redis caching
             const updatedProfile = await BaseAuthService.updateUserProfile(req.user.id, updates);
-
-            if (updatedProfile?.email) UserEvents.emit(NOTIFICATION.KEY.USER.PROFILE.UPDATED, { identifier: updatedProfile.email, details: updatedProfile });
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.USER.UPDATED, updatedProfile);
+            if (updatedProfile?.email) await UserEvents.emitAsync(NOTIFICATION.KEY.USER.PROFILE.UPDATED, { identifier: updatedProfile.email, details: updatedProfile });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.USER.UPDATED);
         } catch (error) {
             if (error?.isOperational) return this.error(error.statusCode, error.message);
             getLogger().error({ err: error, userId: req.user?.id }, '[ProfileController:updateProfile] Error');

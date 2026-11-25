@@ -7,7 +7,6 @@ import { BaseAuthService, UserAuthService } from '@/core/Services/Auth/index.js'
 import { HTTP_STATUS, RESPONSE_MESSAGES, STATUS, BOOKING_STATUS, PAYMENT_STATUS, PAYOUT_STATUS } from '@/core/Constants/index.js';
 import { uploadToCloudinary } from '@/core/Helpers/cloudinary.js';
 import { businessPayload, getBusinessById, getBusinessByUserId, getPackageBy, getUserById, getVendorDocumentsBy, updateById, itemsFormate, transformAuthResponse, userAuthResponse, itemBusinessPayload } from '@/core/Helpers/index.js';
-import { mapToGeoJSON } from '@/core/Helpers/geoUtils.js';
 import Controller from '@/core/Controllers/Controller.js';
 import UserEvents from '@/core/Events/UserEvents.js';
 
@@ -17,34 +16,8 @@ import NotificationService from '@/core/Services/General/NotificationService.js'
 import { getLogger } from '@/core/Lib/logger.js';
 import { NOTIFICATION } from '@/core/Constants/notification.js';
 
-/**
- * @file ProfileController.js
- * @module Http/Controllers/Auth/User/ProfileController
- * @description Centralized controller managing user profiles, account state, role transitions,
- * emergency safety (SOS), and vendor verification/operational dashboard analytics.
- * Supports dual contexts for Travellers and Vendors with optimized MongoDB aggregation pipelines,
- * selective subdocument projections, and Redis caching integration.
- */
-
-/**
- * @class ProfileController
- * @extends Controller
- * @classdesc Orchestrates user profile lifecycle operations for both Travellers and Vendors.
- * Handles identity verification, security statuses, profile photo uploads to Cloudinary,
- * GeoJSON coordinate parsing, role elevation/downgrade, and financial withholding metrics.
- */
 class ProfileController extends Controller {
 
-    /**
-     * Fetch the authenticated user's profile.
-     * 
-     * @route GET /api/traveller/me
-     * @route GET /api/vendor/me
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string, role: string } }} req - Incoming Next.js request with decoded auth payload.
-     * @returns {Promise<import('next/server').NextResponse>} JSON response containing sanitized user profile data.
-     * @throws {500} Internal server error if database lookup fails.
-     */
     async getProfile(req) {
         try {
             const userId = req.user.id;
@@ -57,21 +30,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Toggle the account active/inactive status of the authenticated user.
-     * Blocks activation if the user account is suspended or blocked by administration.
-     * Automatically adjusts status to PENDING if activating an unverified account.
-     * 
-     * @route PATCH /api/traveller/status
-     * @route PATCH /api/vendor/status
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string }, payload: { status: boolean } }} req - Request containing target status boolean.
-     * @returns {Promise<import('next/server').NextResponse>} Success message confirming activation or deactivation.
-     * @throws {400} If status is not a boolean.
-     * @throws {403} If account is currently suspended or blocked.
-     * @throws {404} If user record is not found.
-     * @throws {500} On database or execution failure.
-     */
     async toggleAccountStatus(req) {
         try {
             const { status } = req.payload;
@@ -79,14 +37,9 @@ class ProfileController extends Controller {
 
             const user = await getUserById(req.user.id, 'status isVerified');
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ERROR.NOT_FOUND);
-            if (status === true && (user.status === STATUS.BLOCKED || user.status === STATUS.SUSPENDED)) {
-                return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.VENDOR.ACCOUNT_RESTRICTED);
-            }
+            if ([STATUS.BLOCKED, STATUS.SUSPENDED, STATUS.DELETED].includes(user.status)) return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.ERROR.FORBIDDEN);
 
-            const newStatus = status === true
-                ? (user.isVerified === true ? STATUS.ACTIVE : STATUS.PENDING)
-                : STATUS.INACTIVE;
-
+            const newStatus = status ? (user.isVerified ? STATUS.ACTIVE : STATUS.PENDING) : STATUS.INACTIVE;
             await updateById(User, req.user.id, { status: newStatus });
 
             try {
@@ -95,94 +48,39 @@ class ProfileController extends Controller {
             } catch (cacheError) {
                 getLogger().warn({ err: cacheError, userId: req.user.id }, '[ProfileController:toggleStatus] Cache invalidation failed');
             }
-
-            const message = status ? RESPONSE_MESSAGES.AUTH.ACTIVATED : RESPONSE_MESSAGES.AUTH.DEACTIVATED;
-            return this.success(HTTP_STATUS.OK, message, { status: newStatus });
+            const message = newStatus === STATUS.ACTIVE ? RESPONSE_MESSAGES.AUTH.ACTIVATED : (newStatus === STATUS.INACTIVE ? RESPONSE_MESSAGES.AUTH.DEACTIVATED : RESPONSE_MESSAGES.SUCCESS.UPDATED);
+            return this.success(HTTP_STATUS.OK, message);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
         }
     }
 
-    /**
-     * Update the authenticated user's profile details.
-     * Sanitizes inputs via an explicit field whitelist, parses Cloudinary file uploads or direct URLs,
-     * normalizes Date of Birth to prevent CastErrors, formats emergency contacts,
-     * generates GeoJSON Point coordinates for addresses, updates Redis cache, and emits profile update events.
-     * 
-     * @route PATCH /api/traveller/update
-     * @route PATCH /api/vendor/update
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string }, payload: Object }} req - Request containing partial profile fields.
-     * @returns {Promise<import('next/server').NextResponse>} Standardized updated profile payload.
-     * @throws {500} If profile update or image upload fails.
-     */
     async updateProfile(req) {
         try {
             const body = req.payload;
-            const allowedFields = [
-                'name', 'phone', 'gender', 'dateOfBirth', 'bloodGroup',
-                'designation', 'bio', 'website', 'socialLinks', 'emergencyContacts',
-                'address', 'preferences', 'profileImage', 'expertise',
-                'medicalConditions', 'experience'
-            ];
+            const allowedFields = ['name', 'phone', 'gender', 'dateOfBirth', 'bloodGroup', 'designation', 'bio', 'website', 'socialLinks', 'emergencyContacts', 'address', 'preferences', 'profileImage', 'expertise', 'medicalConditions', 'experience'];
             const updates = {};
             Object.keys(body).forEach(key => {
                 if (allowedFields.includes(key) && body[key] !== undefined) updates[key] = body[key];
             });
 
-            // 1. Safe profile image handling (Upload to Cloudinary ONLY if it is an actual file object; if string URL, keep as is)
-            const profileImgFile = body.profileImage;
-            if (profileImgFile) {
-                const isFile = typeof profileImgFile === 'object' && typeof profileImgFile.arrayBuffer === 'function';
-                if (isFile) {
-                    const res = await uploadToCloudinary(profileImgFile, `profile/${req.user.id}`);
-                    updates.profileImage = res.url;
-                } else if (typeof profileImgFile === 'string' && profileImgFile.trim().length > 0) {
-                    updates.profileImage = profileImgFile.trim();
-                }
-            }
-
-            // 2. Safe Date of Birth handling (prevent Mongoose CastError on empty strings)
-            if (updates.dateOfBirth !== undefined) {
-                if (!updates.dateOfBirth || updates.dateOfBirth === '') {
-                    updates.dateOfBirth = null;
-                } else {
-                    const parsedDate = new Date(updates.dateOfBirth);
-                    if (!isNaN(parsedDate.getTime())) {
-                        updates.dateOfBirth = parsedDate;
-                    } else {
-                        delete updates.dateOfBirth;
-                    }
-                }
-            }
-
             // 3. Emergency contacts normalization
-            if (updates.emergencyContacts) {
-                const list = Array.isArray(updates.emergencyContacts) ? updates.emergencyContacts : [updates.emergencyContacts];
-                updates.emergencyContacts = list.map(c => ({
-                    name: c?.name,
-                    phone: c?.phone,
-                    relationship: c?.relationship
-                }));
-            }
-
-            // 4. Comma-separated array & primitive conversions
-            if (updates.expertise && typeof updates.expertise === 'string') updates.expertise = updates.expertise.split(',').map(item => item.trim()).filter(Boolean);
-            if (updates.medicalConditions && typeof updates.medicalConditions === 'string') updates.medicalConditions = updates.medicalConditions.split(',').map(item => item.trim()).filter(Boolean);
+            if (updates.emergencyContacts && !Array.isArray(updates.emergencyContacts)) updates.emergencyContacts = [updates.emergencyContacts];
+            if (typeof updates.expertise === 'string') updates.expertise = updates.expertise.split(',').map(item => item.trim()).filter(Boolean);
+            if (typeof updates.medicalConditions === 'string') updates.medicalConditions = updates.medicalConditions.split(',').map(item => item.trim()).filter(Boolean);
             if (updates.experience !== undefined) updates.experience = Number(updates.experience) || 0;
 
             // 5. Notifications boolean normalization
             if (updates.preferences?.notifications) {
-                Object.keys(updates.preferences.notifications).forEach(key => {
-                    const val = updates.preferences.notifications[key];
-                    updates.preferences.notifications[key] = val === true || val === 'true' || val === '1' || val === 1;
-                });
+                updates.preferences = {
+                    ...updates.preferences,
+                    notifications: Object.fromEntries(
+                        Object.entries(updates.preferences.notifications).map(([key, val]) => [key, [true, 'true', '1', 1].includes(val)])
+                    )
+                };
             }
 
-            // 6. GeoJSON Point calculation
-            if (updates.address) mapToGeoJSON(updates.address, 'location');
-
-            // 7. Delegate profile update to BaseAuthService for standardized response payload & Redis caching
+            // 6. Delegate profile update to BaseAuthService for standardized response payload & Redis caching
             const updatedProfile = await BaseAuthService.updateUserProfile(req.user.id, updates);
 
             if (updatedProfile?.email) UserEvents.emit(NOTIFICATION.KEY.USER.PROFILE.UPDATED, { identifier: updatedProfile.email, details: updatedProfile });
@@ -192,19 +90,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Dedicated endpoint to upload and update the user's avatar image.
-     * Uploads the image binary directly to Cloudinary under the user's folder
-     * and persists the secure image URL to the user profile and Redis cache.
-     * 
-     * @route POST /api/traveller/avatar
-     * @route POST /api/vendor/avatar
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string }, payload: { profileImage: File } }} req - Multipart request containing `profileImage`.
-     * @returns {Promise<import('next/server').NextResponse>} Updated user profile data with new avatar URL.
-     * @throws {400} If profileImage file is missing.
-     * @throws {500} On Cloudinary upload or database update failure.
-     */
     async updateProfileImage(req) {
         try {
             const file = req.payload?.profileImage;
@@ -218,27 +103,16 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Public profile lookup for a vendor's personal user identity.
-     * Allows travellers or other users to view verified vendor credentials.
-     * 
-     * @route GET /api/traveller/profile/vendor/info/:userId
-     * @access Public / Authenticated
-     * @param {import('next/server').NextRequest} req - Incoming request.
-     * @param {{ params: { userId: string } }} context - Route parameters containing vendor's user ID.
-     * @returns {Promise<import('next/server').NextResponse>} Sanitized vendor user details.
-     * @throws {404} If vendor user record does not exist.
-     * @throws {500} On unexpected database error.
-     */
     async getVendorProfile(req, { params }) {
         try {
-            const userId = params.userId;
-            const business = await getBusinessByUserId(userId);
+            const userId = req.user.id;
+            const vendorId = params.userId;
+            const business = await getBusinessByUserId(vendorId);
             if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             const businessId = business._id.toString();
             const categories = business.category;
             const packages = await getPackageBy({ vendor: businessId }) || {};
-            const items = await itemsFormate(packages, categories);
+            const items = await itemsFormate(packages, categories, userId);
             const responseData = {
                 ...itemBusinessPayload(business),
                 items
@@ -249,26 +123,15 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Public lookup for a vendor's business entity and active package catalog.
-     * Populates user details, associated inventory, and categorizes packages (homestay, hotel, trekking, etc.).
-     * 
-     * @route GET /api/traveller/profile/vendor/:businessId
-     * @access Public / Authenticated
-     * @param {import('next/server').NextRequest} req - Incoming request.
-     * @param {{ params: { businessId: string } }} context - Route parameters containing vendor business ID.
-     * @returns {Promise<import('next/server').NextResponse>} Business details along with catalog package items.
-     * @throws {404} If business entity is not found.
-     * @throws {500} On database query error.
-     */
     async getBusinessProfile(req, { params }) {
         try {
+            const userId = req.user.id;
             const businessId = params.businessId;
             const business = await getBusinessById(businessId);
             if (!business) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             const categories = business.category;
             const packages = await getPackageBy({ vendor: businessId }) || {};
-            const items = await itemsFormate(packages, categories);
+            const items = await itemsFormate(packages, categories, userId);
             const responseData = {
                 ...itemBusinessPayload(business),
                 items
@@ -279,17 +142,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Upgrade the authenticated user's account role from Traveller to Vendor.
-     * Initiates vendor onboarding and creates associated business records if absent.
-     * 
-     * @route POST /api/user/role/upgrade
-     * @access Private (Authenticated Traveller)
-     * @param {import('next/server').NextRequest & { user: { id: string } }} req - Authenticated request.
-     * @returns {Promise<import('next/server').NextResponse>} Success message confirming role promotion.
-     * @throws {401} If request is unauthenticated.
-     * @throws {400} If role transition validation fails.
-     */
     async upgradeToVendor(req) {
         try {
             if (!req.user?.id) return this.error(HTTP_STATUS.UNAUTHORIZED, RESPONSE_MESSAGES.AUTH.UNAUTHORIZED);
@@ -300,16 +152,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Downgrade the authenticated user's account role from Vendor to Traveller.
-     * 
-     * @route POST /api/user/role/downgrade
-     * @access Private (Authenticated Vendor)
-     * @param {import('next/server').NextRequest & { user: { id: string } }} req - Authenticated request.
-     * @returns {Promise<import('next/server').NextResponse>} Success message confirming role demotion.
-     * @throws {401} If request is unauthenticated.
-     * @throws {400} If role transition validation fails.
-     */
     async downgradeToTraveller(req) {
         try {
             if (!req.user?.id) return this.error(HTTP_STATUS.UNAUTHORIZED, RESPONSE_MESSAGES.AUTH.UNAUTHORIZED);
@@ -320,17 +162,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Configure emergency contacts for the authenticated user for safety and SOS dispatch.
-     * 
-     * @route PUT /api/traveller/emergency-contacts
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string }, payload: { emergencyContact: Array<{ name: string, phone: string, relationship?: string }> } }} req - Request containing contacts array.
-     * @returns {Promise<import('next/server').NextResponse>} Success message confirming updated emergency contacts.
-     * @throws {401} If unauthenticated.
-     * @throws {400} If emergencyContact array is invalid or missing.
-     * @throws {500} If update fails.
-     */
     async updateEmergencyContacts(req) {
         try {
             const user = req.user;
@@ -350,18 +181,6 @@ class ProfileController extends Controller {
         }
     }
 
-    /**
-     * Trigger a critical emergency SOS alert for the authenticated user.
-     * Captures real-time GPS coordinates, notifies registered emergency contacts,
-     * and alerts the Tripdhara safety response team.
-     * 
-     * @route POST /api/traveller/sos
-     * @route POST /api/vendor/sos
-     * @access Private (Authenticated User)
-     * @param {import('next/server').NextRequest & { user: { id: string }, payload: { latitude: number, longitude: number, accuracy?: number, address?: string } }} req - Request containing GPS location data.
-     * @returns {Promise<import('next/server').NextResponse>} Created SOS alert payload with dispatch status.
-     * @throws {500} On SOS dispatch error.
-     */
     async triggerSOS(req) {
         try {
             const location = req.payload;
@@ -372,30 +191,6 @@ class ProfileController extends Controller {
         }
     }
 
-
-    /**
-     * Diagnostic and operational dashboard overview for the authenticated vendor.
-     * Aggregates verification state, catalog inventory readiness, financial withholding metrics,
-     * review ratings, dispute counters, closure periods, and onboarding checklist.
-     * 
-     * ### Financial Metrics & Rules:
-     * - **withdrawnAmount**: Total payout eligible for release. Criteria:
-     *   - Booking status: `COMPLETED`
-     *   - Completion cutoff: `endDate` or `verification.endVerifiedAt` <= 3 days ago
-     *   - Payout status: Not already `paid`
-     *   - Net calculation: Deducts 10% platform commission + 18% GST on commission (1.8%), yielding `amount * 0.882`
-     * - **pendingAmount**: Funds in holding (completed < 3 days ago or active paid bookings), net of 11.8% commission & GST (`amount * 0.882`).
-     * - **totalRevenue**: Gross transaction volume of all paid bookings.
-     * - **earnings**: Gross sum of completed booking revenues.
-     * 
-     * @route GET /api/vendor/profile/check
-     * @access Private (Authenticated Vendor)
-     * @param {import('next/server').NextRequest & { user: { id: string } }} req - Authenticated vendor request.
-     * @returns {Promise<import('next/server').NextResponse>} Comprehensive operational & onboarding dashboard payload:
-     * `{ isVerified: boolean, status: boolean, vendor: { isOperating, isApproved, status, trustBadge, category, bankDetails, documents, packages, packageSummary, bookingStats, closurePeriods, rating, disputes, onboarding, payoutSetup, unreadNotifications } | null }`
-     * @throws {404} If user record is not found.
-     * @throws {500} On database aggregation or server error.
-     */
     async checkProfile(req) {
         try {
             let userId = req.user?.id;

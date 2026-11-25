@@ -13,6 +13,7 @@ import { getLocationPoint } from './addressHelper.js';
 // import { getLogger } from '@/core/Lib/logger.js';
 import { getPackageBy, getBusinessByUserId } from './queryHelpers.js';
 import Review from '../Models/Review.js';
+import Wishlist from '@/core/Models/Wishlist.js';
 import mongoose from 'mongoose';
 
 /**
@@ -186,30 +187,37 @@ export function normalizePackageItem(item, reviews = []) {
     };
 }
 
-export async function itemsFormate(packages, categories) {
-    if (!packages || packages.deletedAt) return {};
+export async function itemsFormate(packages, categories, userId = null) {
+    if (!packages || packages.deletedAt || !categories?.length) return {};
     const items = {};
-    for (const { slug } of categories) {
-        const list = packages[CATEGORY_MAP[slug]];
+    for (const category of categories) {
+        const list = packages[CATEGORY_MAP[category.slug]];
         if (!list?.length) continue;
-        const activeItems = await Promise.all(list.filter(item => !item.deletedAt && item.isActive).map(item => packageItemPayload(item)));
-        if (activeItems.length) items[slug] = activeItems;
+        const activeItems = await Promise.all(list.filter(item => !item.deletedAt && item.isActive).map(item => packageItemPayload(item, category, userId)));
+        if (activeItems.length) items[category.slug] = activeItems;
     }
     return items;
 }
 
-export async function packageItemPayload(item) {
+export async function packageItemPayload(item, category, userId = null) {
     if (!item) return null;
-    const [stat] = mongoose.Types.ObjectId.isValid(item._id) ? await Review.aggregate([
-        { $match: { 'item.itemId': new mongoose.Types.ObjectId(item._id), isVisible: true } },
-        {
-            $group: {
-                _id: '$item.itemId',
-                average: { $avg: '$rating' },
-                count: { $sum: 1 }
+    const isValidItemId = mongoose.Types.ObjectId.isValid(item._id);
+    const isValidUserId = mongoose.Types.ObjectId.isValid(userId);
+
+    const [[stat], wishlisted] = await Promise.all([
+        isValidItemId ? Review.aggregate([
+            { $match: { 'item.itemId': new mongoose.Types.ObjectId(item._id), isVisible: true } },
+            {
+                $group: {
+                    _id: '$item.itemId',
+                    average: { $avg: '$rating' },
+                    count: { $sum: 1 }
+                }
             }
-        }
-    ]) : [];
+        ]) : [],
+        isValidItemId && isValidUserId ? Wishlist.exists({ user: userId, itemId: item._id }) : false
+    ]);
+
     const rating = stat ? { average: Math.round(stat.average * 10) / 10, count: stat.count } : { average: 0, count: 0 };
     return {
         id: item._id?.toString(),
@@ -224,7 +232,11 @@ export async function packageItemPayload(item) {
         address: item.location?.address,
         location: getLocationPoint(item.location),
         image: item.photos?.[0]?.url,
-        rating
+        category_id: category?._id?.toString(),
+        category_name: category?.name,
+        category_slug: category?.slug,
+        rating,
+        wishlist: Boolean(wishlisted)
     };
 }
 

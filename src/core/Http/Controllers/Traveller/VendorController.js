@@ -16,7 +16,7 @@ class VendorController extends Controller {
             const responseData = userBusinessPayload(user, business);
             if (business && responseData?.businessDetails) {
                 const packages = await getPackageBy({ vendor: business._id }) || {};
-                responseData.businessDetails.items = itemsFormate(packages);
+                responseData.businessDetails.items = await itemsFormate(packages, business.category, req.user?.id);
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.USER.FETCHED, responseData);
         } catch (error) {

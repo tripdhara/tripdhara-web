@@ -19,10 +19,6 @@ class TravellerController extends Controller {
     async getRecentSearches(req) {
         try {
             const searches = await getSearchLogsBy({ user: req.user.id }, '', null, { lastSearched: -1 }, { limit: 20 });
-
-
-
-
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SEARCH.FETCHED, searches);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
@@ -49,9 +45,7 @@ class TravellerController extends Controller {
             const isEmpty = !result || (Array.isArray(result.items) && result.items.length === 0);
             const message = isEmpty ? RESPONSE_MESSAGES.WISHLIST.EMPTY : RESPONSE_MESSAGES.WISHLIST.FETCHED;
 
-            if (result && result.pagination) {
-                return this.paginatedSuccess(HTTP_STATUS.OK, message, result.items, result.pagination);
-            }
+            if (result && result.pagination) return this.paginatedSuccess(HTTP_STATUS.OK, message, result.items, result.pagination);
             return this.success(HTTP_STATUS.OK, message, result);
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);

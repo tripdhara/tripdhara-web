@@ -100,9 +100,12 @@ export function proxy(request) {
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    const scriptSrc = process.env.NODE_ENV === 'development'
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com"
+        : "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com";
     response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://media.tripdhara.com https://images.unsplash.com https://upload.wikimedia.org; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.r2.cloudflarestorage.com; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://media.tripdhara.com https://images.unsplash.com https://upload.wikimedia.org; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.r2.cloudflarestorage.com; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`
     );
 
     // CORS Headers for API routes (explicit allowlist only — never reflect arbitrary origins)

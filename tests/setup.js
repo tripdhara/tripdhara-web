@@ -2,6 +2,7 @@
 process.env.MONGODB_URI = 'mongodb://localhost:27017/test'; // Placeholder, will be overwritten by memory server
 process.env.JWT_SECRET = 'test_secret';
 process.env.NODE_ENV = 'test';
+process.env.LOG_LEVEL = process.env.LOG_LEVEL || 'silent';
 
 import mongoose from 'mongoose';
 import { jest } from '@jest/globals';

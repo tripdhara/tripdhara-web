@@ -21,7 +21,7 @@ class BankController extends Controller {
             if (!vendor) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_FETCHED, vendor.bankDetails);
         } catch (error) {
-            getLogger().error({ err: error });
+            getLogger().error({ err: error }, '[BankController] getBankDetails error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -35,7 +35,7 @@ class BankController extends Controller {
             if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.BANK_CREATED);
         } catch (error) {
-            getLogger().error({ err: error });
+            getLogger().error({ err: error }, '[BankController] createBankDetails error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -48,7 +48,7 @@ class BankController extends Controller {
             if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.UPDATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_UPDATED);
         } catch (error) {
-            getLogger().error({ err: error });
+            getLogger().error({ err: error }, '[BankController] updateBankDetails error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -60,7 +60,7 @@ class BankController extends Controller {
             if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.BANK.DELETED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_DELETED);
         } catch (error) {
-            getLogger().error({ err: error });
+            getLogger().error({ err: error }, '[BankController] deleteBankDetails error');
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

@@ -10,7 +10,12 @@ async function connectDB() {
         validateEnv();
         const uri = process.env.MONGODB_URI;
         if (!uri) throw new Error(RESPONSE_MESSAGES.ERROR.GENERIC);
-        const opts = { bufferCommands: false };
+        const opts = {
+            bufferCommands: false,
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 20000
+        };
         cached.promise = mongoose.connect(uri, opts).then((mongoose) => mongoose);
     }
     try {

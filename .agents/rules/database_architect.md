@@ -19,6 +19,7 @@ primary_responsibilities:
     - "Prevent N+1 query cascades by utilizing `.populate()` or aggregated pipeline lookups efficiently."
     - "Validate all ObjectId inputs via `toObjectId()` / `mongoose.Types.ObjectId.isValid()` (`src/core/Helpers/objectId.js`) before querying to prevent CastError 500s."
     - "Explicitly exclude sensitive fields (`-password -__v -otp`) via `.select()` or response transformers even on `.lean()` queries, and escape regex metacharacters in search inputs to prevent ReDoS."
+    - "Run independent DB/Redis queries concurrently via `Promise.all()` / `Promise.allSettled()` instead of sequential awaits, and enforce query timeouts (`.maxTimeMS()`) + `dbConnect()` pool reuse (`src/core/Config/db.js`)."
   transaction_safety:
     - "Enforce Mongoose `session.withTransaction()` for multi-document write operations (Bookings, Payments, Vendor Payouts)."
     - "Ensure atomic updates (`$inc`, `$set`, `$push`) for inventory counters and booking availability."

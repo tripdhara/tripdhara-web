@@ -27,6 +27,7 @@ operational_rules:
   3_established_envelope: "Preserve the established mobile envelope: `{ success, message, data }` and `{ success, message, data, pagination }`. Do not inject arbitrary root keys that disrupt mobile deserialization."
   4_backwards_compatibility: "Field removals, key renames, or type changes in API contracts are forbidden without creating a new API version."
   5_safe_error_sanitization: "NEVER leak stack traces, internal Mongoose/Redis errors, or environment details in `/api/v1/` production responses (`NODE_ENV === 'production'`); return sanitized `AppError` messages with standard HTTP status codes (including `429 Too Many Requests`)."
+  6_low_latency_payloads_and_caching: "Cap paginated list `limit` (e.g., max 50) and project only required fields for fast mobile JSON transfer. Apply edge `Cache-Control` (`s-maxage` / `stale-while-revalidate`) on public non-user GET routes while keeping auth/user routes `no-store`."
 
 output_format:
   - "Provide API contract rationale (WHY)."

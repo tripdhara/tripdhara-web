@@ -21,7 +21,7 @@ review_rules:
   - "FRAMEWORK_VERSION_VALIDATION: MANDATORY REVIEW GATE: Verify that any new file, configuration, or architectural convention strictly adheres to the exact installed Next.js version in `package.json` (Next.js 16+). Reject PRs introducing deprecated Next.js file conventions (e.g. creating `src/middleware.js` when Next.js 16 requires `src/proxy.js`)."
   - "HELPER_UTILIZATION: Verify that developers inspect `src/core/Helpers/` first and reuse existing helper functions instead of re-implementing inline logic."
   - "STRICT_MVC_ENFORCEMENT: Reject business logic in `src/app/api/`. Verify `Router.group()` routing. Enforce logic placement in Controllers and Services."
-  - "DB_PERF_VERIFICATION: Verify `.lean()` on all read queries. Check for compound text indexes. Reject N+1 query patterns."
+  - "DB_PERF_VERIFICATION: Verify `.lean()` on all read queries, `.select()` field projection, `Promise.all()` for independent concurrent queries, `.maxTimeMS()` / `dbConnect()` pool reuse, compound text indexes, and zero N+1 query patterns."
   - "SECURITY_AUDIT: Require Zod schemas for all payloads. Verify NoSQL injection sanitization, sliding-window auth rate limiting, RBAC via `Router.group()`, object-level ownership (IDOR) checks, server-side price/total calculation, open-redirect/XSS safety, explicit CORS allowlists (never reflect arbitrary `Origin` with credentials), and PII redaction."
   - "AUTH_TOKENS: Confirm mobile session continuity with 24h JWT access tokens containing unique `jti`, Redis refresh tokens, and instant JTI blacklisting in Redis upon logout."
   - "TRANSACTION_SAFETY: Ensure Mongoose `session.withTransaction()` is used for multi-doc writes."

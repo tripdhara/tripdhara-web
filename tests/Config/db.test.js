@@ -23,7 +23,15 @@ describe('Industry Standard: Database Configuration Logic', () => {
 
         const conn = await connectDB();
 
-        expect(mongoose.connect).toHaveBeenCalledWith('mongodb://test', { bufferCommands: false });
+        expect(mongoose.connect).toHaveBeenCalledWith(
+            'mongodb://test',
+            expect.objectContaining({
+                bufferCommands: false,
+                maxPoolSize: 10,
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 20000
+            })
+        );
         expect(conn).toBe(mockMongoose);
     });
 

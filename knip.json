@@ -1,5 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/core/Database/Seeders/Run*.js"
+  ],
   "project": [
     "src/**/*.{js,jsx,mjs,css}",
     "tests/**/*.{js,jsx,mjs}"
@@ -7,6 +10,7 @@
   "ignore": [
     "tests/load/**"
   ],
+  "ignoreExportsUsedInFile": true,
   "rules": {
     "duplicates": "off"
   },

@@ -9,55 +9,55 @@ import { useToast } from '@/components/ui/ToastContext.js';
 import Loading from '@/components/admin/Loading.js';
 import { ArrowLeft, Save, Server, Code, Settings, Activity, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
+const buildItemFormState = (targetItem) => {
+    if (!targetItem) {
+        return {
+            formData: { title: '', isActive: false },
+            rawJson: '{}'
+        };
+    }
+
+    const extractedTitle = targetItem.title || targetItem.tourDetails?.tourName || targetItem.details?.jumpName || targetItem.vehicleDetails?.model || '';
+    const cleanObj = { ...targetItem };
+    delete cleanObj.serviceType;
+    delete cleanObj.vendorId;
+    delete cleanObj.vendor;
+    delete cleanObj._id;
+
+    return {
+        formData: {
+            title: extractedTitle,
+            isActive: targetItem.isActive || false,
+        },
+        rawJson: JSON.stringify(cleanObj, null, 2)
+    };
+};
+
 export default function PackageItemClientWrapper({ initialItem = null, itemId }) {
     const router = useRouter();
     const toast = useToast();
 
     const [item, setItem] = useState(initialItem);
-    const [loading, setLoading] = useState(!initialItem);
+    const [loading, setLoading] = useState(Boolean(!initialItem && itemId));
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState(!initialItem && !itemId ? 'No package item ID specified' : null);
 
-    const [formData, setFormData] = useState({
-        title: '',
-        isActive: false,
-    });
-    const [rawJson, setRawJson] = useState('{}');
+    const [formData, setFormData] = useState(() => buildItemFormState(initialItem).formData);
+    const [rawJson, setRawJson] = useState(() => buildItemFormState(initialItem).rawJson);
 
     // Sync item helper
     const syncItemData = (targetItem) => {
         if (!targetItem) return;
-        const extractedTitle = targetItem.title || targetItem.tourDetails?.tourName || targetItem.details?.jumpName || targetItem.vehicleDetails?.model || '';
-        setFormData({
-            title: extractedTitle,
-            isActive: targetItem.isActive || false,
-        });
-
-        const cleanObj = { ...targetItem };
-        delete cleanObj.serviceType;
-        delete cleanObj.vendorId;
-        delete cleanObj.vendor;
-        delete cleanObj._id;
-        setRawJson(JSON.stringify(cleanObj, null, 2));
+        const nextState = buildItemFormState(targetItem);
+        setFormData(nextState.formData);
+        setRawJson(nextState.rawJson);
     };
 
     // Client-side fetch if initialItem was not provided
     useEffect(() => {
-        if (initialItem) {
-            setItem(initialItem);
-            syncItemData(initialItem);
-            setLoading(false);
-            return;
-        }
-
-        if (!itemId) {
-            setError('No package item ID specified');
-            setLoading(false);
-            return;
-        }
+        if (initialItem || !itemId) return;
 
         let isMounted = true;
-        setLoading(true);
 
         api.admin.packages.getItem(itemId)
             .then(res => {

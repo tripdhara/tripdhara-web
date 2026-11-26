@@ -26,6 +26,7 @@ operational_rules:
   2_strict_versioning: "All mobile endpoints MUST include `/api/v1/` prefix. Any breaking change requires `/api/v2/`."
   3_established_envelope: "Preserve the established mobile envelope: `{ success, message, data }` and `{ success, message, data, pagination }`. Do not inject arbitrary root keys that disrupt mobile deserialization."
   4_backwards_compatibility: "Field removals, key renames, or type changes in API contracts are forbidden without creating a new API version."
+  5_safe_error_sanitization: "NEVER leak stack traces, internal Mongoose/Redis errors, or environment details in `/api/v1/` production responses (`NODE_ENV === 'production'`); return sanitized `AppError` messages with standard HTTP status codes (including `429 Too Many Requests`)."
 
 output_format:
   - "Provide API contract rationale (WHY)."

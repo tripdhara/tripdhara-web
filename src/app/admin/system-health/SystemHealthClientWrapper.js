@@ -62,8 +62,7 @@ export default function SystemHealthClientWrapper({ initialHealth = null }) {
     };
 
     // Client-side telemetry fetch without page re-render flicker
-    const fetchTelemetry = useCallback(async (isManual = false) => {
-        if (isManual) setIsFetching(true);
+    const loadTelemetry = useCallback(async () => {
         try {
             const res = await api.admin.stats.getSystemHealth();
             const payload = res?.data?.analytics || res?.analytics || res?.data || res;
@@ -72,7 +71,7 @@ export default function SystemHealthClientWrapper({ initialHealth = null }) {
                 setInitialLoading(false);
                 const mem = payload.memory?.percentage ?? 0;
                 const cpuVal = payload.cpu?.usagePercent ?? (Math.round((payload.cpu?.load?.[0] || 0) * 100));
-                
+
                 const newPoint = {
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                     memory: mem,
@@ -84,23 +83,37 @@ export default function SystemHealthClientWrapper({ initialHealth = null }) {
             console.error('[SystemHealth] Telemetry poll failed:', err);
         } finally {
             setInitialLoading(false);
-            if (isManual) setIsFetching(false);
         }
     }, []);
 
+    const fetchTelemetry = useCallback(async (isManual = false) => {
+        if (isManual) setIsFetching(true);
+        try {
+            await loadTelemetry();
+        } finally {
+            if (isManual) setIsFetching(false);
+        }
+    }, [loadTelemetry]);
+
     // Initial fetch on mount
     useEffect(() => {
-        fetchTelemetry(false);
-    }, [fetchTelemetry]);
+        let isMounted = true;
+        Promise.resolve().then(() => {
+            if (isMounted) loadTelemetry();
+        });
+        return () => {
+            isMounted = false;
+        };
+    }, [loadTelemetry]);
 
     // Live background polling
     useEffect(() => {
         if (!isStreaming) return;
         const timer = setInterval(() => {
-            fetchTelemetry(false);
+            loadTelemetry();
         }, intervalSec * 1000);
         return () => clearInterval(timer);
-    }, [isStreaming, intervalSec, fetchTelemetry]);
+    }, [isStreaming, intervalSec, loadTelemetry]);
 
     // On-demand Ping diagnostic
     const handlePingTest = async () => {

@@ -45,25 +45,31 @@ export default function PayoutsTab({ vendor, id, activeTab, setActiveTab, onRefr
     const vendorProfileId = vendorProfile._id || vendor?._id || id;
 
     // Fetch payment history for this vendor
-    const fetchPaymentHistory = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { vendor: vendorProfileId };
-            if (searchQuery.trim()) params.search = searchQuery.trim();
-            const res = await api.admin.payments.getHistory(params);
-            const list = res?.data?.history?.payments || res?.data?.payments || res?.history?.payments || res?.payments || [];
-            setPayments(Array.isArray(list) ? list : []);
-        } catch (err) {
-            toast(err?.message || 'Failed to load payout history', 'error');
-            setPayments([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [vendorProfileId, searchQuery, toast]);
-
     useEffect(() => {
-        fetchPaymentHistory();
-    }, [fetchPaymentHistory, refreshKey]);
+        let isMounted = true;
+        const loadPaymentHistory = async () => {
+            try {
+                const params = { vendor: vendorProfileId };
+                if (searchQuery.trim()) params.search = searchQuery.trim();
+                const res = await api.admin.payments.getHistory(params);
+                if (!isMounted) return;
+                const list = res?.data?.history?.payments || res?.data?.payments || res?.history?.payments || res?.payments || [];
+                setPayments(Array.isArray(list) ? list : []);
+            } catch (err) {
+                if (isMounted) {
+                    toast(err?.message || 'Failed to load payout history', 'error');
+                    setPayments([]);
+                }
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadPaymentHistory();
+        return () => {
+            isMounted = false;
+        };
+    }, [vendorProfileId, searchQuery, refreshKey, toast]);
 
     // Financial KPIs
     const stats = useMemo(() => {
@@ -115,18 +121,21 @@ export default function PayoutsTab({ vendor, id, activeTab, setActiveTab, onRefr
     };
 
     // Open Payout Settlement Modal
-    const handleOpenSettleModal = (b) => {
+    const handleOpenSettleModal = useCallback((b) => {
         const total = Number(b.pricing?.total) || 0;
         const fee = Number(b.pricing?.serviceFee) || Math.round(total * 0.1);
         const defaultNet = b.pricing?.basePrice ? Number(b.pricing.basePrice) : total - fee;
+        const suffix = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID().slice(0, 8).toUpperCase()
+            : String(b._id || '').slice(-8).toUpperCase();
 
         setSelectedBookingForPayout(b);
         setPayoutForm({
             amount: defaultNet,
-            transactionId: `TXN_${Date.now().toString().slice(-8)}`,
+            transactionId: `TXN_${suffix}`,
             note: `Vendor Payout Settlement for #${b.bookingCode || b._id?.slice(-8).toUpperCase()}`
         });
-    };
+    }, []);
 
     // Submit Payout
     const handleAuthorizePayout = async (e) => {

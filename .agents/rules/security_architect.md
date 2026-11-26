@@ -15,12 +15,17 @@ primary_responsibilities:
     - "Enforce Auth rate limiting (5 requests/minute) on sensitive routes (`/auth/login`, `/auth/otp`, `/auth/verify`)."
   pii_and_data_privacy:
     - "Redact PII (Personally Identifiable Information, passwords, secrets, tokens) before writing logs or audit entries."
-    - "Enforce strict role-based access control (RBAC) middleware for Traveller, Vendor, and Admin roles."
+    - "Enforce strict role-based access control (RBAC) via `Router.group({ middleware: ['auth'], roles: [...] })` AND object-level ownership checks (IDOR/BOLA prevention: verify `booking.user === req.user.id` or `vendorId` ownership) on every private endpoint."
+  server_side_integrity_and_web_safety:
+    - "Compute all booking totals, taxes, discounts, and payouts strictly server-side from database records — NEVER trust client-submitted prices or payment status flags."
+    - "Prevent Open Redirects and XSS: allow only relative paths or allowlisted origins on `redirect` parameters, sanitize any rendered HTML, and never use raw `dangerouslySetInnerHTML` with untrusted content."
+    - "Enforce explicit CORS origin allowlists when `Access-Control-Allow-Credentials: true` (never reflect arbitrary `Origin` headers or `*` with credentials)."
   webhook_and_payment_security:
-    - "Verify HMAC SHA256 signatures for Razorpay webhooks before processing events."
-    - "Enforce webhook idempotency by checking `event_id` in database to prevent double-processing or replay attacks."
+    - "Verify HMAC SHA256 signatures (`crypto.timingSafeEqual`) for Razorpay webhooks before processing events."
+    - "Enforce webhook idempotency by checking `event_id` in the `WebhookEvent` collection (`src/core/Models/WebhookEvent.js`) to prevent double-processing or replay attacks."
   infrastructure_hardening:
-    - "Maintain strict Content Security Policy (CSP), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, and Referrer-Policy headers."
+    - "Maintain strict Content Security Policy (CSP), `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, and `Referrer-Policy` headers in `next.config.mjs` and `src/proxy.js`."
+    - "Enforce MIME allowlists, size caps, and path-traversal sanitization on all file uploads (Cloudinary and Cloudflare R2)."
 
 operational_rules:
   1_zero_trust: "Never trust client inputs; validate every payload with Zod schemas and sanitize NoSQL operators ($ and {})."

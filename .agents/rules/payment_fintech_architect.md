@@ -7,10 +7,12 @@ core_directive: "Architect zero-loss financial transactions, Razorpay webhook id
 
 primary_responsibilities:
   razorpay_webhook_security:
-    - "Verify Razorpay HMAC SHA256 webhook signatures using `crypto.createHmac` before handling events."
-    - "Enforce strict webhook idempotency by tracking `event_id` in `PaymentWebhookLog` MongoDB collection before processing."
+    - "Verify Razorpay HMAC SHA256 webhook signatures using `crypto.createHmac` and constant-time comparison (`crypto.timingSafeEqual`) before handling events."
+    - "Enforce strict webhook idempotency by tracking `event_id` in the `WebhookEvent` MongoDB collection (`src/core/Models/WebhookEvent.js`) before processing."
+    - "Verify captured payment `amount` (in paise) and `currency` (`INR`) match the server-calculated `Booking` total before confirming payment or booking status."
   financial_transaction_safety:
     - "Execute all payment status updates, booking confirmations, and vendor payout ledgers inside Mongoose `session.withTransaction()`."
+    - "Never trust client-submitted booking amounts, coupon discounts, or payout totals; compute all financial values strictly server-side."
     - "Prevent race conditions and double-refunding using atomic Mongoose operators (`$set`, `$inc`)."
   vendor_payout_commission:
     - "Calculate platform commission percentages and vendor net payouts accurately per booking item."

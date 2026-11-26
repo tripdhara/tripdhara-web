@@ -155,32 +155,36 @@ export default function AuditLogsClientWrapper({
     }, [ipIntelMap, loadingIps]);
 
     // Fetch Audit Logs
-    const fetchLogs = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = {
-                page: String(currentPage),
-                limit: String(limit)
-            };
-            if (selectedAction) params.action = selectedAction;
-            if (selectedTarget) params.target = selectedTarget;
-
-            const res = await api.admin.auditLogs.getAll(params);
-            const result = res.data || {};
-
-            setLogs(Array.isArray(result.logs) ? result.logs : []);
-            setTotal(result.total || 0);
-            setTotalPages(result.totalPages || 1);
-        } catch (err) {
-            toast(err.message || 'Failed to load system audit telemetry', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [currentPage, limit, selectedAction, selectedTarget, toast]);
-
     useEffect(() => {
-        fetchLogs();
-    }, [fetchLogs, refreshKey]);
+        let isMounted = true;
+        const loadLogs = async () => {
+            try {
+                const params = {
+                    page: String(currentPage),
+                    limit: String(limit)
+                };
+                if (selectedAction) params.action = selectedAction;
+                if (selectedTarget) params.target = selectedTarget;
+
+                const res = await api.admin.auditLogs.getAll(params);
+                if (!isMounted) return;
+                const result = res.data || {};
+
+                setLogs(Array.isArray(result.logs) ? result.logs : []);
+                setTotal(result.total || 0);
+                setTotalPages(result.totalPages || 1);
+            } catch (err) {
+                if (isMounted) toast(err.message || 'Failed to load system audit telemetry', 'error');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadLogs();
+        return () => {
+            isMounted = false;
+        };
+    }, [currentPage, limit, selectedAction, selectedTarget, refreshKey, toast]);
 
     // Automatically resolve real IP intelligence for all unique IPs in current view
     useEffect(() => {

@@ -1,7 +1,7 @@
 name: "Tripdhara-DevOps-SRE-Architect"
 role: "Principal SRE & Cloud Infrastructure Architect (15+ YOE)"
 project: "Tripdhara (Travel Platform: Async Queues, Pino Logging & Cloud Infrastructure)"
-stack: "Next.js 16+, Upstash QStash, Cloudinary, Sharp, Pino, Vercel"
+stack: "Next.js 16+, Upstash QStash, Cloudinary, Cloudflare R2, Sharp, Pino, Vercel"
 
 core_directive: "Architect reliable background queue processing, cloud media processing, structured Pino logging, environment variable safety, and Vercel edge deployment workflows for Tripdhara."
 
@@ -9,12 +9,13 @@ primary_responsibilities:
   async_queue_management:
     - "Offload long-running background tasks (OCR via Tesseract.js, Sharp image compression, email dispatch via Nodemailer) to Upstash QStash queues."
     - "Ensure API routes return early `202 Accepted` status while QStash handles asynchronous background execution."
+    - "Require `QSTASH_CURRENT_SIGNING_KEY` and `QSTASH_NEXT_SIGNING_KEY` verification (`verifySignatureAppRouter`) in production (`NODE_ENV === 'production'`); fail closed on unsigned webhook requests."
   structured_logging_monitoring:
     - "Ban `console.log` across the entire codebase."
     - "Enforce Pino logger usage (`getLogger(requestId)`) with `x-request-id` header context attached to every log entry."
   media_processing_pipeline:
-    - "Reject Base64 image payloads; enforce `multipart/form-data` uploads."
-    - "Compress all uploaded images via Sharp before sending to Cloudinary."
+    - "Reject Base64 image payloads; enforce `multipart/form-data` uploads (Cloudinary via `src/core/Helpers/cloudinary.js`) or direct Cloudflare R2 presigned uploads (`src/core/Helpers/r2.js`, `/api/v1/media/presigned-url`)."
+    - "Compress uploaded images via Sharp before sending to Cloudinary, and enforce strict MIME allowlists, max file size caps, and path-traversal sanitization (`..`) on both Cloudinary and R2 keys."
     - "Enforce structured Cloudinary directory paths: `/Tripdhara/cabs/`, `/Tripdhara/homestays/`, `/Tripdhara/packages/`, `/Tripdhara/documents/`."
   deployment_env_validation:
     - "Validate process environment variables at boot using Zod (`envValidator.js`)."

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Users,
@@ -27,6 +28,7 @@ import Loading from '@/components/admin/Loading.js';
 import { useToast } from '@/components/ui/ToastContext.js';
 
 export default function TravellersClientWrapper() {
+    const router = useRouter();
     const toast = useToast();
 
     // Data States
@@ -61,22 +63,26 @@ export default function TravellersClientWrapper() {
     ];
 
     // Fetch travellers from API
-    const fetchTravellers = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await api.admin.travellers.getAll();
-            const list = res.data?.travellers || res.data || [];
-            setTravellers(Array.isArray(list) ? list : []);
-        } catch (err) {
-            toast(err.message || 'Failed to fetch travellers', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [toast]);
-
     useEffect(() => {
-        fetchTravellers();
-    }, [fetchTravellers, refreshKey]);
+        let isMounted = true;
+        const loadTravellers = async () => {
+            try {
+                const res = await api.admin.travellers.getAll();
+                if (!isMounted) return;
+                const list = res.data?.travellers || res.data || [];
+                setTravellers(Array.isArray(list) ? list : []);
+            } catch (err) {
+                if (isMounted) toast(err.message || 'Failed to fetch travellers', 'error');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadTravellers();
+        return () => {
+            isMounted = false;
+        };
+    }, [refreshKey, toast]);
 
     // KPI Metrics
     const metrics = useMemo(() => {
@@ -392,7 +398,7 @@ export default function TravellersClientWrapper() {
                 showAction={true}
                 actionLabel="Register Traveller"
                 actionIcon={Plus}
-                onAction={() => window.location.href = '/admin/travellers/add'}
+                onAction={() => router.push('/admin/travellers/add')}
             />
 
             {/* KPI Cards */}

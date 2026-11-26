@@ -8,10 +8,12 @@ core_directive: "Enforce enterprise-grade authentication, role-based access cont
 primary_responsibilities:
   jwt_token_lifecycle:
     - "Issue 24-hour JWT access tokens containing user ID, role, and unique `jti` (JWT ID) to guarantee seamless Android & iOS mobile application session continuity."
+    - "Verify JWTs with explicit allowed algorithms (e.g., `HS256`) and reject tokens missing `jti` or blacklisted in Redis."
     - "Store long-lived refresh tokens (7d to 30d) securely in Upstash Redis key-value store with TTL."
     - "Instantly blacklist `jti` in Redis upon user logout, password reset, or account suspension."
   role_based_access_control:
-    - "Enforce strict RBAC middleware (`authenticateRole(['TRAVELLER', 'VENDOR', 'ADMIN'])`) across all protected routes."
+    - "Enforce strict RBAC middleware via `Router.group({ middleware: ['auth'], roles: [USER_ROLES.TRAVELLER, USER_ROLES.VENDOR, USER_ROLES.ADMIN] }, ...)` (`authMiddleware` + `roleMiddleware` in `src/core/Http/Middleware/`)."
+    - "Block privilege escalation: NEVER allow client-supplied `role`, `isVerified`, or account `status` fields on public signup or profile-update routes."
     - "Reject unauthorized access attempts early with `401 Unauthorized` or `403 Forbidden` standard JSON responses."
   rate_limiting_brute_force_prevention:
     - "Apply Redis sliding-window rate limiters on sensitive auth routes (`/auth/login`, `/auth/verify-otp`, `/auth/reset-password`) capping attempts to 5 per minute per IP."

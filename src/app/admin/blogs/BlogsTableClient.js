@@ -48,9 +48,31 @@ export default function BlogsTableClient({
 
     // Initial fetch if no initialBlogs passed
     useEffect(() => {
-        if (initialBlogs.length === 0) {
-            fetchBlogs(1, searchQuery, statusFilter);
-        }
+        if (initialBlogs.length > 0) return;
+        let isMounted = true;
+        const loadInitialBlogs = async () => {
+            try {
+                const params = { page: 1, limit: 10 };
+                if (searchQuery && searchQuery.trim()) params.search = searchQuery.trim();
+                if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+
+                const res = await api.admin.blogs.getAll(params);
+                if (!isMounted) return;
+                const payload = res?.data || res;
+                setBlogs(payload?.docs || []);
+                setTotal(payload?.total || 0);
+                setCurrentPage(1);
+            } catch (error) {
+                console.error('[BlogsTableClient] Failed to fetch blogs:', error);
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadInitialBlogs();
+        return () => {
+            isMounted = false;
+        };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Debounce search input

@@ -35,23 +35,29 @@ export default function ReviewsTab({ vendor, id, activeTab, setActiveTab, onRefr
     const vendorProfileId = vendor?.vendorProfile?._id || vendor?._id || id;
 
     // Fetch reviews for this vendor
-    const fetchReviews = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await api.admin.reviews.getPending({ vendor: vendorProfileId });
-            const list = res?.data?.reviews || res?.reviews || [];
-            setReviews(Array.isArray(list) ? list : []);
-        } catch (err) {
-            toast(err?.message || 'Failed to load vendor reviews', 'error');
-            setReviews([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [vendorProfileId, toast]);
-
     useEffect(() => {
-        fetchReviews();
-    }, [fetchReviews, refreshKey]);
+        let isMounted = true;
+        const loadReviews = async () => {
+            try {
+                const res = await api.admin.reviews.getPending({ vendor: vendorProfileId });
+                if (!isMounted) return;
+                const list = res?.data?.reviews || res?.reviews || [];
+                setReviews(Array.isArray(list) ? list : []);
+            } catch (err) {
+                if (isMounted) {
+                    toast(err?.message || 'Failed to load vendor reviews', 'error');
+                    setReviews([]);
+                }
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadReviews();
+        return () => {
+            isMounted = false;
+        };
+    }, [vendorProfileId, refreshKey, toast]);
 
     // Rating Statistics
     const stats = useMemo(() => {

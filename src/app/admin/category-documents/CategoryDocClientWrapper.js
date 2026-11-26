@@ -30,29 +30,33 @@ export default function CategoryDocClientWrapper() {
     });
 
     // Fetch documents and categories via Api client
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [docRes, catRes] = await Promise.all([
-                api.admin.documents.getAll({ limit: 100 }),
-                api.admin.categories.getAll()
-            ]);
-
-            const docList = docRes?.data?.docs || docRes?.data || [];
-            const catList = catRes?.data?.categories || catRes?.data || [];
-
-            setDocuments(Array.isArray(docList) ? docList : []);
-            setCategories(Array.isArray(catList) ? catList : []);
-        } catch (err) {
-            toast(err?.message || 'Failed to load category documents', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [toast]);
-
     useEffect(() => {
-        fetchData();
-    }, [fetchData, refreshKey]);
+        let isMounted = true;
+        const loadData = async () => {
+            try {
+                const [docRes, catRes] = await Promise.all([
+                    api.admin.documents.getAll({ limit: 100 }),
+                    api.admin.categories.getAll()
+                ]);
+                if (!isMounted) return;
+
+                const docList = docRes?.data?.docs || docRes?.data || [];
+                const catList = catRes?.data?.categories || catRes?.data || [];
+
+                setDocuments(Array.isArray(docList) ? docList : []);
+                setCategories(Array.isArray(catList) ? catList : []);
+            } catch (err) {
+                if (isMounted) toast(err?.message || 'Failed to load category documents', 'error');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadData();
+        return () => {
+            isMounted = false;
+        };
+    }, [refreshKey, toast]);
 
     // Modal Fields Configuration
     const modalFields = useMemo(() => [

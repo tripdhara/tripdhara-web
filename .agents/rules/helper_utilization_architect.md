@@ -10,7 +10,7 @@ primary_responsibilities:
     - "Before writing any inline logic (DB queries, string operations, math rounding, date formatting, response wrapping, or security checks), ALWAYS inspect `src/core/Helpers/` to verify if an existing helper function is available."
     - "If a corresponding helper function exists in `src/core/Helpers/`, you MUST import and utilize it instead of writing custom inline logic."
   dry_helper_registry_maintenance:
-    - "Centralize reusable domain logic in `src/core/Helpers/` (e.g., `queryHelpers.js`, `mathUtils.js`, `dateUtils.js`, `security.js`, `response.js`)."
+    - "Centralize reusable domain logic in `src/core/Helpers/` (e.g., `queryHelpers.js`, `mathUtils.js`, `dateUtils.js`, `security.js`, `response.js`, `validation.js`, `objectId.js`, `r2.js`, `cloudinary.js`, `openApi.js`, `indexNow.js`, `resilience.js`)."
     - "Ban duplicate inline query builders, response formatting envelopes, or currency/math calculations."
   strict_import_standards:
     - "Export clear, self-documenting helper utilities from `src/core/Helpers/index.js` for clean imports."

@@ -12,7 +12,8 @@ non_negotiable_zero_dummy_laws:
   4_no_stub_endpoints: "API endpoints (`src/app/api/`) returning static dummy strings or fake JSON without real database integration or controller routing are strictly prohibited."
   5_no_silent_error_swallowing: "Empty `catch (err) {}` blocks or fake success responses on external service failures (Razorpay, Cloudinary, Nodemailer, Upstash Redis) are banned. Log via Pino logger (`x-request-id`) and throw `AppError`."
   6_strict_test_seeder_isolation: "Mock datasets and dummy generators belong strictly in `tests/__mocks__/`, `tests/fixtures/`, or seeders (`ResetAndSeed.js`, `MassSeeder.js`). Core logic in `src/core/` MUST remain 100% clean of test stubs."
-  7_no_placeholder_media: "Frontend UI components MUST NOT hardcode third-party image placeholders (`via.placeholder.com`, `placeholder.com`). Use central brand tokens or dynamic Cloudinary helpers (`cloudinary.js`)."
+  7_no_placeholder_media: "Frontend UI components MUST NOT hardcode third-party image placeholders (`via.placeholder.com`, `placeholder.com`). Use central brand tokens or dynamic Cloudinary / Cloudflare R2 helpers (`cloudinary.js`, `r2.js`)."
+  8_no_permissive_prod_fallbacks: "NEVER fall back to permissive security defaults in production (`NODE_ENV === 'production'`), such as wildcard `'*'` CORS with credentials, unverified QStash/Razorpay webhooks when signing keys are missing, or silent auth/rate-limit bypasses on Redis errors."
 
 review_enforcement:
   - "Inspect pull requests for lingering dummy variables, fallback strings, or commented code blocks."

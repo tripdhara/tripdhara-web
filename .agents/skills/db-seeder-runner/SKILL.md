@@ -6,22 +6,25 @@ description: Standard operational procedure for running Tripdhara MongoDB seeder
 # Tripdhara Database Seeder & Data Management Workflow
 
 ## Overview
-This skill guides the execution of MongoDB seed scripts (`ResetAndSeed.js` and `MassSeeder.js`) for staging and local development environments without risking production data loss.
+This skill guides the execution of MongoDB seed scripts (`src/core/Database/Seeders/ResetAndSeed.js` and `src/core/Database/Seeders/MassSeeder.js`) for local and staging environments without risking production data loss.
 
 ## Seeder Commands
 
 1. **Reset & Clean Database**:
-   - Clears test collections and populates baseline admin, sample vendors, and default categories.
+   - Clears collections and populates baseline categories, category documents, users, settings, locations, and policies:
      ```bash
-     node src/core/Database/Seeders/ResetAndSeed.js
+     npm run seed
      ```
+     *(Equivalent: `node src/core/Database/Seeders/ResetAndSeed.js`)*
 
 2. **Mass Populate Demo Data**:
-   - Generates realistic Himachali and Himalayan packages (Tour Packages, Cab Routes, Kasol Homestays, Trekking Expeditions) with reviews, pricing, and geo-coordinates.
+   - Generates large-scale synthetic users, vendors, and packages using `@faker-js/faker` and batched writes:
      ```bash
-     node src/core/Database/Seeders/MassSeeder.js
+     npm run seed:mass
      ```
+     *(Supports optional flags: `node src/core/Database/Seeders/MassSeeder.js --vendors=5000 --users=10000 --batchSize=500`)*
 
 ## Safety Constraints
-- **NEVER** run seeder scripts when `NODE_ENV=production` or `MONGODB_URI` points to the production cluster.
-- Seeders must wrap writes in Mongoose `.lean()` or bulk write operations (`bulkWrite()`) for performance.
+- **NEVER** run seeder scripts when `NODE_ENV=production`, `APP_ENV=production`, or `MONGODB_URI` points to a production cluster.
+- `ResetAndSeed.js` deletes all documents across collections (`collection.deleteMany({})`) before seeding — verify `.env` points to a local or disposable test database first.
+- For high-volume writes in custom seeders, use batched `insertMany()` or `bulkWrite()` operations (reserve `.lean()` strictly for read queries).

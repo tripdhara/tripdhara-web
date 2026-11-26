@@ -69,32 +69,36 @@ export default function PackagesClientWrapper({
     const [addLoading, setAddLoading] = useState(false);
 
     // Fetch platform inventory, categories, and vendors via API client
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [pkgRes, catRes, venRes] = await Promise.all([
-                api.admin.packages.getAll(),
-                api.admin.categories.getAll(),
-                api.admin.vendors.getAll()
-            ]);
-
-            const pkgList = pkgRes?.data?.packages || pkgRes?.data || [];
-            const catList = catRes?.data?.categories || catRes?.data || [];
-            const venList = venRes?.data?.vendors || venRes?.data || [];
-
-            setPackages(Array.isArray(pkgList) ? pkgList : []);
-            setCategories(Array.isArray(catList) ? catList : []);
-            setVendors(Array.isArray(venList) ? venList : []);
-        } catch (err) {
-            toast(err?.message || 'Failed to fetch platform package inventory', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [toast]);
-
     useEffect(() => {
-        fetchData();
-    }, [fetchData, refreshKey]);
+        let isMounted = true;
+        const loadData = async () => {
+            try {
+                const [pkgRes, catRes, venRes] = await Promise.all([
+                    api.admin.packages.getAll(),
+                    api.admin.categories.getAll(),
+                    api.admin.vendors.getAll()
+                ]);
+                if (!isMounted) return;
+
+                const pkgList = pkgRes?.data?.packages || pkgRes?.data || [];
+                const catList = catRes?.data?.categories || catRes?.data || [];
+                const venList = venRes?.data?.vendors || venRes?.data || [];
+
+                setPackages(Array.isArray(pkgList) ? pkgList : []);
+                setCategories(Array.isArray(catList) ? catList : []);
+                setVendors(Array.isArray(venList) ? venList : []);
+            } catch (err) {
+                if (isMounted) toast(err?.message || 'Failed to fetch platform package inventory', 'error');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadData();
+        return () => {
+            isMounted = false;
+        };
+    }, [refreshKey, toast]);
 
     // Status Toggle Handler
     const toggleStatus = useCallback(async (pkg, statusToSet) => {

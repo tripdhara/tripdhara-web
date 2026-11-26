@@ -14,6 +14,20 @@ import api from '@/core/Api/index.js';
 import { useToast } from '@/components/ui/ToastContext.js';
 import Button from '@/components/ui/Button.js';
 
+const MARKDOWN_TOOLS = [
+    { icon: Bold, label: 'Bold', before: '**', after: '**', title: 'Bold (**text**)' },
+    { icon: Italic, label: 'Italic', before: '*', after: '*', title: 'Italic (*text*)' },
+    { icon: Heading2, label: 'H2', before: '## ', after: '\n', title: 'Heading 2 (## Title)' },
+    { icon: Heading3, label: 'H3', before: '### ', after: '\n', title: 'Heading 3 (### Subtitle)' },
+    { icon: List, label: 'Bullet List', before: '- ', after: '\n', title: 'Bullet list (- item)' },
+    { icon: ListOrdered, label: 'Numbered List', before: '1. ', after: '\n', title: 'Numbered list (1. item)' },
+    { icon: Quote, label: 'Quote', before: '> ', after: '\n', title: 'Blockquote (> quote)' },
+    { icon: Code, label: 'Code', before: '`', after: '`', title: 'Inline code (`code`)' },
+    { icon: Link2, label: 'Link', before: '[Link text](', after: ')', title: 'Link ([text](url))' },
+    { icon: ImageIcon, label: 'Image', before: '![Image description](', after: ')', title: 'Image (![alt](url))' },
+    { icon: Minus, label: 'Divider', before: '\n---\n', after: '', title: 'Horizontal rule (---)' }
+];
+
 export default function BlogForm({ initialData = null, blogId = null }) {
     const router = useRouter();
     const textareaRef = useRef(null);
@@ -36,29 +50,32 @@ export default function BlogForm({ initialData = null, blogId = null }) {
 
     // Fetch blog details when blogId is passed (Clean Architecture, no DB calls in page.js)
     useEffect(() => {
-        if (blogId && !initialData) {
-            setIsLoading(true);
-            api.admin.blogs.getById(blogId)
-                .then(res => {
-                    const data = res?.data?.blog || res?.data || res;
-                    if (data) {
-                        setFormData({
-                            title: data.title || '',
-                            excerpt: data.excerpt || '',
-                            content: data.content || '',
-                            coverImage: data.coverImage || '',
-                            tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
-                            status: data.status || 'draft'
-                        });
-                    }
-                })
-                .catch((err) => {
-                    toast(err?.message || 'Failed to load blog publication', 'error');
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        }
+        if (!blogId || initialData) return;
+        let isMounted = true;
+        api.admin.blogs.getById(blogId)
+            .then(res => {
+                if (!isMounted) return;
+                const data = res?.data?.blog || res?.data || res;
+                if (data) {
+                    setFormData({
+                        title: data.title || '',
+                        excerpt: data.excerpt || '',
+                        content: data.content || '',
+                        coverImage: data.coverImage || '',
+                        tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
+                        status: data.status || 'draft'
+                    });
+                }
+            })
+            .catch((err) => {
+                if (isMounted) toast(err?.message || 'Failed to load blog publication', 'error');
+            })
+            .finally(() => {
+                if (isMounted) setIsLoading(false);
+            });
+        return () => {
+            isMounted = false;
+        };
     }, [blogId, initialData, toast]);
 
     // Live slug generation preview
@@ -334,25 +351,13 @@ export default function BlogForm({ initialData = null, blogId = null }) {
                         {/* Markdown Formatting Action Toolbar */}
                         {activeTab === 'write' && (
                             <div className="px-4 py-2 border-b border-white/5 bg-black/40 flex flex-wrap items-center gap-1">
-                                {[
-                                    { icon: Bold, label: 'Bold', action: () => insertMarkdown('**', '**'), title: 'Bold (**text**)' },
-                                    { icon: Italic, label: 'Italic', action: () => insertMarkdown('*', '*'), title: 'Italic (*text*)' },
-                                    { icon: Heading2, label: 'H2', action: () => insertMarkdown('## ', '\n'), title: 'Heading 2 (## Title)' },
-                                    { icon: Heading3, label: 'H3', action: () => insertMarkdown('### ', '\n'), title: 'Heading 3 (### Subtitle)' },
-                                    { icon: List, label: 'Bullet List', action: () => insertMarkdown('- ', '\n'), title: 'Bullet list (- item)' },
-                                    { icon: ListOrdered, label: 'Numbered List', action: () => insertMarkdown('1. ', '\n'), title: 'Numbered list (1. item)' },
-                                    { icon: Quote, label: 'Quote', action: () => insertMarkdown('> ', '\n'), title: 'Blockquote (> quote)' },
-                                    { icon: Code, label: 'Code', action: () => insertMarkdown('`', '`'), title: 'Inline code (`code`)' },
-                                    { icon: Link2, label: 'Link', action: () => insertMarkdown('[Link text](', ')'), title: 'Link ([text](url))' },
-                                    { icon: ImageIcon, label: 'Image', action: () => insertMarkdown('![Image description](', ')'), title: 'Image (![alt](url))' },
-                                    { icon: Minus, label: 'Divider', action: () => insertMarkdown('\n---\n'), title: 'Horizontal rule (---)' }
-                                ].map((tool, idx) => {
+                                {MARKDOWN_TOOLS.map((tool, idx) => {
                                     const IconComponent = tool.icon;
                                     return (
                                         <button
                                             key={idx}
                                             type="button"
-                                            onClick={tool.action}
+                                            onClick={() => insertMarkdown(tool.before, tool.after)}
                                             title={tool.title}
                                             className="p-1.5 hover:bg-white/10 text-slate-400 hover:text-indigo-300 rounded-lg transition-colors"
                                         >

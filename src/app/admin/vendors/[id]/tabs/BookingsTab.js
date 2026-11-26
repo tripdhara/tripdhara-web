@@ -37,27 +37,33 @@ export default function BookingsTab({ vendor, id, activeTab, setActiveTab, onRef
 
     const vendorProfileId = vendor?.vendorProfile?._id || vendor?._id || id;
 
-    const fetchBookings = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = { vendor: vendorProfileId };
-            if (statusFilter !== 'all') {
-                params.status = statusFilter;
-            }
-            const res = await api.admin.bookings.getAll(params);
-            const data = res?.data?.bookings || res?.data || res?.bookings || [];
-            setBookings(Array.isArray(data) ? data : []);
-        } catch (err) {
-            toast(err?.message || 'Failed to load vendor bookings', 'error');
-            setBookings([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [vendorProfileId, statusFilter, toast]);
-
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings, refreshKey]);
+        let isMounted = true;
+        const loadBookings = async () => {
+            try {
+                const params = { vendor: vendorProfileId };
+                if (statusFilter !== 'all') {
+                    params.status = statusFilter;
+                }
+                const res = await api.admin.bookings.getAll(params);
+                if (!isMounted) return;
+                const data = res?.data?.bookings || res?.data || res?.bookings || [];
+                setBookings(Array.isArray(data) ? data : []);
+            } catch (err) {
+                if (isMounted) {
+                    toast(err?.message || 'Failed to load vendor bookings', 'error');
+                    setBookings([]);
+                }
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        loadBookings();
+        return () => {
+            isMounted = false;
+        };
+    }, [vendorProfileId, statusFilter, refreshKey, toast]);
 
     // Summary calculations
     const stats = useMemo(() => {
@@ -357,7 +363,7 @@ export default function BookingsTab({ vendor, id, activeTab, setActiveTab, onRef
                                         {getStatusBadge(selectedBooking.status)}
                                     </div>
                                     <p className="text-[11px] font-mono text-slate-500 mt-0.5">
-                                        Recorded on {new Date(selectedBooking.createdAt || Date.now()).toLocaleString('en-IN')}
+                                        {selectedBooking.createdAt ? `Recorded on ${new Date(selectedBooking.createdAt).toLocaleString('en-IN')}` : 'Recorded date unavailable'}
                                     </p>
                                 </div>
                                 <button

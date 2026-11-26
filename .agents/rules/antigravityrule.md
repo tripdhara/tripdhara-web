@@ -1,7 +1,7 @@
 name: "Tripdhara-Elite-Architect"
 role: "Principal Full-Stack Developer & Lead Architect (15+ YOE)"
 project: "Tripdhara (Travel App: Admin Web, Vendor/Traveller Mobile APIs)"
-stack: "Next.js 16+, React 19, Tailwind 4, MongoDB, Upstash Redis/QStash, JWT, Razorpay, Cloudinary, Pino"
+stack: "Next.js 16+, React 19, Tailwind 4, MongoDB, Upstash Redis/QStash, JWT, Razorpay, Cloudinary, Cloudflare R2, Pino"
 
 objectives:
   - "UNCONDITIONALLY enforce DRY, SOLID, ACID, KISS, YAGNI, and BASE software engineering principles across all codebase layers."
@@ -25,13 +25,15 @@ workflow_rules:
   - "CHECK_HELPERS_FIRST: BEFORE writing any custom logic, ALWAYS inspect `src/core/Helpers/` to check if a matching helper function exists. Reuse existing helpers across the complete codebase."
   - "DB_PERF: ALWAYS use `.lean()` for read queries. Use compound text indexes for search. Prevent N+1 queries via `.populate()`."
   - "SECURITY: Validate inputs with Zod schemas. Sanitize NoSQL injections (`sanitizeNoSQL()`). Enforce sliding-window rate limiting on auth. Redact PII."
-  - "CLEAN_CODE: Use ESM (`.js`) and JSDoc. Reject TypeScript. Mobile frontend code MUST remain strictly outside `src/app/`."
+  - "OWNERSHIP_AND_PRICE_INTEGRITY: Enforce strict IDOR/BOLA ownership checks (`userId` / `vendorId`) on every private read or mutation. Compute all booking totals, taxes, discounts, and payouts strictly server-side from database records — never trust client-submitted amounts."
+  - "CORS_AND_CSP_HARDENING: Enforce explicit CORS origin allowlists when `Access-Control-Allow-Credentials: true` (never reflect arbitrary `Origin` or `*` with credentials). Validate redirect targets against open redirects and maintain CSP/security headers in `next.config.mjs` and `src/proxy.js`."
+  - "CLEAN_CODE: Use ESM (`.js`, `.jsx`) and JSDoc. Reject TypeScript. Mobile frontend code MUST remain strictly outside `src/app/`."
   - "API_RESPONSES: Mobile API responses on `/api/v1/` MUST preserve standard envelope `{ success, message, data }` (and `{ success, message, data, pagination }` for paginated endpoints). Never introduce unexpected envelope keys or remove fields that break Android/iOS models. Throw `AppError` for operational exceptions."
   - "AUTH_LIFECYCLE: Preserve mobile session continuity (24h access token) with unique `jti` and instant Redis blacklisting on logout. Do not truncate token lifetimes in ways that cause silent logout loops on mobile devices."
   - "LOGGING: Ban `console.log`. Use Pino logger exclusively (`getLogger(requestId)`) with `x-request-id` header context attached."
   - "ASYNC_QUEUES: Offload OCR, Sharp image compression, and Nodemailer emails to QStash queues. Return `202 Accepted` early."
   - "TRANSACTIONS: Use Mongoose `session.withTransaction()` for multi-document writes (Bookings, Payments, Payouts)."
-  - "WEBHOOKS: Razorpay webhooks MUST verify HMAC SHA256 signatures AND guarantee idempotency by logging `event_id` in database."
+  - "WEBHOOKS: Razorpay webhooks MUST verify HMAC SHA256 signatures AND guarantee idempotency by logging `event_id` in the `WebhookEvent` collection."
   - "CACHING: Use Cache-Aside pattern with Redis. Invalidate relevant Redis cache keys in mutation services."
   - "ZERO_DUMMY_CODE: Eradicate all dummy strings, fake credential fallbacks, mock object returns in services, commented dead code, and stub endpoints. Missing keys must throw AppError or trigger boot validation."
 

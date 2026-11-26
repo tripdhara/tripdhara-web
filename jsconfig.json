@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "ES6",
+        "target": "ES2022",
         "module": "esnext",
         "moduleResolution": "bundler",
         "allowJs": true,
@@ -103,8 +103,7 @@
     "include": [
         "src/**/*",
         "tests/**/*",
-        "index.js",
-        "next.config.js"
+        "next.config.mjs"
     ],
     "exclude": [
         "node_modules",

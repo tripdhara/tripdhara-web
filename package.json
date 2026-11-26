@@ -95,7 +95,7 @@
         "google-auth-library": "^11.3.4",
         "js-cookie": "^3.0.8",
         "jsonwebtoken": "^9.0.3",
-        "lucide-react": "^1.80.0",
+        "lucide-react": "^1.81.0",
         "mongoose": "^9.13.1",
         "next": "^16.4.6",
         "nodemailer": "^10.6.1",

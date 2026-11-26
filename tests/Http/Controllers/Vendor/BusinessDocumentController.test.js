@@ -58,15 +58,14 @@ describe('Industry Standard: BusinessDocumentController API Controller', () => {
             const body = await response.json();
 
             expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-            expect(body.message).toBe('Service failure');
+            expect(body.message).toBe(RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         });
     });
 
     describe('uploadDocuments', () => {
         it('[Success] should upload documents and emit event', async () => {
-            const mockVendor = { user: { email: 'vendor@test.com' }, businessName: 'Test Biz' };
-            BusinessService.getBusinessByUserId = jest.fn().mockResolvedValue(mockVendor);
-            DocumentService.uploadVerificationFiles = jest.fn().mockResolvedValue(true);
+            const mockResult = { email: 'vendor@test.com', businessName: 'Test Biz' };
+            DocumentService.uploadVerificationFiles = jest.fn().mockResolvedValue(mockResult);
             BusinessEvents.emit = jest.fn();
 
             const req = createMockReq({ user: { id: 'user123' } });
@@ -75,24 +74,21 @@ describe('Industry Standard: BusinessDocumentController API Controller', () => {
             const response = await MockedBusinessDocumentController.uploadDocuments(req);
             const body = await response.json();
 
-            expect(BusinessService.getBusinessByUserId).toHaveBeenCalledWith('user123');
             expect(DocumentService.uploadVerificationFiles).toHaveBeenCalledWith('user123', { file: 'data' });
-            expect(BusinessEvents.emit).toHaveBeenCalledWith('vendor.documents_uploaded', { identifier: 'vendor@test.com', businessName: 'Test Biz' });
+            expect(BusinessEvents.emit).toHaveBeenCalledWith('vendor.document_uploaded', { identifier: 'vendor@test.com', details: mockResult });
             expect(response.status).toBe(HTTP_STATUS.OK);
             expect(body.message).toBe(RESPONSE_MESSAGES.VENDOR.DOCUMENTS_UPLOADED);
         });
 
-        it('[Failure] should return error if vendor not found', async () => {
-            BusinessService.getBusinessByUserId = jest.fn().mockResolvedValue(null);
+        it('[Failure] should return internal server error if upload fails', async () => {
+            DocumentService.uploadVerificationFiles = jest.fn().mockRejectedValue(new Error('Upload error'));
 
             const req = createMockReq({ user: { id: 'user123' } });
             req.payload = {};
 
             const response = await MockedBusinessDocumentController.uploadDocuments(req);
-            const body = await response.json();
 
-            expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
-            expect(body.message).toBe(RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
+            expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
         });
     });
 

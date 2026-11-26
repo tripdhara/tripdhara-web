@@ -37,8 +37,13 @@ export const uploadToCloudinary = async (file, folder = 'general') => {
         const brandFolder = process.env.CLOUDINARY_FOLDER || 'tripdhara';
         const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
 
+        const cleanFolder = String(folder || 'general')
+            .split('/')
+            .map(seg => seg.trim().replace(/[^a-zA-Z0-9_-]/g, ''))
+            .filter(seg => seg && seg !== '.' && seg !== '..')
+            .join('/') || 'general';
         const uploadOptions = { 
-            folder: `${brandFolder}/${folder}`, 
+            folder: `${brandFolder}/${cleanFolder}`, 
             resource_type: 'auto' 
         };
 

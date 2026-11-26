@@ -5,6 +5,7 @@ import Category from '@/core/Models/Category.js';
 import { CATEGORY_MAP } from '@/core/Constants/categories.js';
 import { STATUS } from '@/core/Constants/index.js';
 import MasterService from '@/core/Services/MasterService.js';
+import { escapeRegex } from '@/core/Helpers/security.js';
 import { getPackageItemById, getCategoriesBy } from '@/core/Helpers/queryHelpers.js';
 import {
     getItemDetailsPayload,
@@ -54,7 +55,7 @@ class PackageService {
     }
 
     async getAvailablePackages(query = '') {
-        const regex = new RegExp(query, 'i');
+        const regex = new RegExp(escapeRegex(String(query || '').trim()), 'i');
         const results = await Package.aggregate([
             ...getFlattenPackageItemsStages({ extraProjectFields: { vendor: 1 } }),
             ...(query ? [{
@@ -174,7 +175,7 @@ class PackageService {
 
             const finalMatch = { "items.isActive": true };
             if (targetSchemaKey) {
-                finalMatch["items.category"] = { $regex: new RegExp(`^${targetSchemaKey}$`, 'i') };
+                finalMatch["items.category"] = { $regex: new RegExp(`^${escapeRegex(targetSchemaKey)}$`, 'i') };
             }
             pipeline.push({ $match: finalMatch });
 
@@ -189,15 +190,7 @@ class PackageService {
             return pipeline;
         };
 
-        // Execute primary $geoNear pipeline
-        let results = await Vendor.aggregate(buildPipeline(true));
-
-        // Fallback: If $geoNear on Vendor address returned 0 items (e.g. vendor address is [0,0]), fallback to active vendor pipeline
-        if (results.length === 0 && hasCoords) {
-            results = await Vendor.aggregate(buildPipeline(false));
-        }
-
-        return results;
+        return await Vendor.aggregate(buildPipeline(hasCoords));
     }
 }
 

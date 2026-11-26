@@ -213,14 +213,16 @@ class BookingService {
     /**
      * Log a timeline event for a booking (Industry Standard)
      */
-    async logTimelineEvent(bookingId, title, remarks, actor) {
+    async logTimelineEvent(bookingId, title, remarks, actor, vendorId) {
         const session = await mongoose.startSession();
         let updatedTimeline = null;
 
         try {
             await session.withTransaction(async () => {
                 const booking = await getBookingById(bookingId, '', null, { session, lean: false });
-                if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+                if (!booking || !vendorId || booking.vendor?.toString() !== String(vendorId)) {
+                    throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+                }
 
                 booking.timeline.push({
                     status: title,
@@ -239,7 +241,7 @@ class BookingService {
             await session.endSession();
         }
 
-        await this._invalidateBookingCaches(bookingId);
+        await this._invalidateBookingCaches(bookingId, vendorId);
         return updatedTimeline;
     }
 

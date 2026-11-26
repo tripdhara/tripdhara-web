@@ -1,15 +1,39 @@
 import { jest } from '@jest/globals';
-import PackageController from '@/core/Http/Controllers/Vendor/PackageController.js';
-import PackageService from '@/core/Services/Vendor/PackageService.js';
-import Vendor from '@/core/Models/Vendor.js';
-import { HTTP_STATUS, RESPONSE_MESSAGES } from '@/core/Constants/index.js';
-import { createMockReq } from '../../../Helpers/testUtils.js';
+import { createMockQueryHelpers, createMockModels } from '../../../utils/mockHelpers.js';
 
-const createQueryMock = (val) => ({
-    select: jest.fn().mockReturnThis(),
-    populate: jest.fn().mockReturnThis(),
-    lean: jest.fn().mockResolvedValue(val)
-});
+const mockQHelpers = createMockQueryHelpers();
+const mockModels = createMockModels();
+const mockGetVendorPackages = jest.fn();
+const mockGetVendorPackageItemById = jest.fn();
+const mockUserAuthResponse = jest.fn().mockResolvedValue({ id: 'user123', email: 'v@test.com' });
+
+jest.unstable_mockModule('@/core/Helpers/queryHelpers.js', () => mockQHelpers);
+jest.unstable_mockModule('@/core/Models/index', () => mockModels);
+jest.unstable_mockModule('@/core/Models/User', () => ({ default: mockModels.User }));
+jest.unstable_mockModule('@/core/Helpers/Package/vendorPackage.js', () => ({
+    getVendorPackages: mockGetVendorPackages,
+    getVendorPackageItemById: mockGetVendorPackageItemById
+}));
+jest.unstable_mockModule('@/core/Helpers/userProfileHelper', () => ({
+    userAuthResponse: mockUserAuthResponse
+}));
+jest.unstable_mockModule('@/events/PackageEvents', () => ({
+    default: {
+        emitAsync: jest.fn().mockResolvedValue([])
+    }
+}));
+jest.unstable_mockModule('@/core/Services/Vendor/PackageService.js', () => ({
+    default: {
+        addItem: jest.fn(),
+        updateItem: jest.fn(),
+        _invalidateCaches: jest.fn().mockResolvedValue(true)
+    }
+}));
+
+const { default: PackageController } = await import('@/core/Http/Controllers/Vendor/PackageController.js');
+const { default: PackageService } = await import('@/core/Services/Vendor/PackageService.js');
+const { HTTP_STATUS, RESPONSE_MESSAGES } = await import('@/core/Constants/index.js');
+const { createMockReq } = await import('../../../Helpers/testUtils.js');
 
 describe('Vendor PackageController', () => {
     let mockReq;
@@ -24,76 +48,66 @@ describe('Vendor PackageController', () => {
     });
 
     describe('getPackages', () => {
-        beforeEach(() => {
-            jest.spyOn(PackageController, 'getPackages').mockImplementation(async (req) => {
-                const vendorId = await PackageController._getVendorId(req.user.id);
-                if (!vendorId) return PackageController.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
-                const data = await PackageService.getPackages(req);
-                return PackageController.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.SUCCESS.FETCHED, data);
-            });
-        });
-
         test('should return packages for authenticated vendor', async () => {
-            const mockPackages = { docs: [], total: 0 };
-            mockReq = createMockReq({ 
+            const mockResult = {
+                items: [{ id: 'pkg1', title: 'Kedarkantha' }],
+                pagination: { total: 1, page: 1, limit: 5, totalPages: 1 }
+            };
+            mockReq = createMockReq({
                 user: { id: 'user123', role: 'vendor' },
                 url: 'http://localhost/vendor/packages?page=1&limit=5'
             });
-
-            jest.spyOn(PackageController, '_getVendorId').mockResolvedValue('vendor123');
-            jest.spyOn(PackageService, 'getPackages').mockResolvedValue(mockPackages);
+            mockGetVendorPackages.mockResolvedValue(mockResult);
 
             const response = await PackageController.getPackages(mockReq);
             const body = await response.json();
 
             expect(response.status).toBe(HTTP_STATUS.OK);
-            expect(body.data).toEqual(mockPackages);
-        });
-
-        test('should return 404 if vendor not found', async () => {
-            mockReq = createMockReq({ user: { id: 'user123', role: 'vendor' } });
-            jest.spyOn(PackageController, '_getVendorId').mockResolvedValue(null);
-
-            const response = await PackageController.getPackages(mockReq);
-            expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+            expect(body.data).toEqual(mockResult.items);
+            expect(mockGetVendorPackages).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user123' }));
         });
     });
 
-    describe('createPackage', () => {
-        test('should create package successfully', async () => {
-            const mockPkg = { _id: 'pkg123', name: 'Test Pkg' };
-            mockReq = createMockReq({ 
-                user: { id: 'user123', role: 'vendor' },
-                jsonBody: { name: 'Test Pkg' }
-            });
-            mockReq.payload = { name: 'Test Pkg' };
+    describe('addPackageItem', () => {
+        test('should add package item successfully', async () => {
+            const mockItem = { _id: 'item123', title: 'Test Trek' };
+            mockReq = createMockReq({ user: { id: 'user123', role: 'vendor' } });
+            mockReq.payload = { category: 'trekking', title: 'Test Trek' };
+            PackageService.addItem.mockResolvedValue(mockItem);
 
-            jest.spyOn(PackageController, '_getVendorId').mockResolvedValue('vendor123');
-            jest.spyOn(PackageService, 'initializeVendorPackage').mockResolvedValue(mockPkg);
-
-            const response = await PackageController.createPackage(mockReq);
+            const response = await PackageController.addPackageItem(mockReq);
             const body = await response.json();
 
             expect(response.status).toBe(HTTP_STATUS.CREATED);
-            expect(body.data).toEqual(mockPkg);
+            expect(body.message).toBe(RESPONSE_MESSAGES.PACKAGE.CREATED);
+            expect(PackageService.addItem).toHaveBeenCalledWith('user123', 'trekking', mockReq.payload);
+        });
+
+        test('should return 400 when category is missing', async () => {
+            mockReq = createMockReq({ user: { id: 'user123', role: 'vendor' } });
+            mockReq.payload = { title: 'Test Trek' };
+
+            const response = await PackageController.addPackageItem(mockReq);
+            expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         });
     });
 
-    describe('togglePackageStatus', () => {
-        test('should toggle package status', async () => {
-            mockReq = createMockReq({ 
+    describe('updatePackageStatus', () => {
+        test('should toggle package item status successfully', async () => {
+            const validItemId = '507f1f77bcf86cd799439011';
+            mockReq = createMockReq({
                 user: { id: 'user123', role: 'vendor' },
-                jsonBody: { isActive: true },
-                params: { id: 'pkg123' }
+                params: { itemId: validItemId }
             });
-            mockReq.payload = { isActive: true };
+            mockReq.payload = { category: 'trekking', isActive: true };
+            mockModels.Package.updateOne.mockResolvedValue({ matchedCount: 1, modifiedCount: 1 });
+            mockQHelpers.getBusinessByUserId.mockResolvedValue({ _id: 'vendor123' });
+            mockGetVendorPackageItemById.mockResolvedValue({ id: validItemId, isActive: true });
 
-            jest.spyOn(PackageController, '_getVendorId').mockResolvedValue('vendor123');
-            const spy = jest.spyOn(PackageService, 'updatePackageStatus').mockResolvedValue({ _id: 'pkg123', isActive: true });
-
-            const response = await PackageController.togglePackageStatus(mockReq, { params: { id: 'pkg123' } });
+            const response = await PackageController.updatePackageStatus(mockReq, { params: { itemId: validItemId } });
             expect(response.status).toBe(HTTP_STATUS.OK);
-            expect(spy).toHaveBeenCalledWith('pkg123', 'user123', 'vendor123', true);
+            expect(mockModels.Package.updateOne).toHaveBeenCalled();
+            expect(PackageService._invalidateCaches).toHaveBeenCalledWith('vendor123', validItemId);
         });
     });
 });

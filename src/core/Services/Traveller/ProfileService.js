@@ -1,7 +1,7 @@
 import User from '@/core/Models/User.js';
 import { uploadToCloudinary } from '@/core/Helpers/cloudinary.js';
 import { toObjectId } from '@/core/Helpers/objectId.js';
-import { findByIdLean } from '@/core/Helpers/queryHelpers.js';
+import { getUserById } from '@/core/Helpers/queryHelpers.js';
 
 class ProfileService {
     /**
@@ -12,7 +12,7 @@ class ProfileService {
     async getProfile(userId) {
         const id = toObjectId(userId);
         if (!id) return null;
-        return await findByIdLean(User, id, '-password');
+        return await getUserById(id, '-password');
     }
 
     /**

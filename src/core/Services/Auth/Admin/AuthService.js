@@ -81,6 +81,7 @@ class AuthService {
         if (!user) throw AppError.notFound(RESPONSE_MESSAGES.ERROR.NOT_FOUND);
         user.password = newPassword;
         await user.save();
+        await CacheService.deletePattern(`auth:refresh:${user._id}:*`);
         return DEFAULTS.TRUE;
     }
 

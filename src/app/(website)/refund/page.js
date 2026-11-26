@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Refund Policy & Settlement SLA | Tripdhara',
         description: 'RBI-compliant source refunds, banking SLAs, and consumer protection rights for Himalayan travelers.',
-        url: 'https://tripdhara.com/refund',
+        url: 'https://tripdhara.in/refund',
         siteName: 'Tripdhara',
         type: 'website',
     },
@@ -75,7 +75,7 @@ export default async function RefundPolicyPage() {
                         publisher: {
                             '@type': 'Organization',
                             name: 'Tripdhara Travel & Rentals India',
-                            url: 'https://tripdhara.com'
+                            url: 'https://tripdhara.in'
                         }
                     })
                 }}

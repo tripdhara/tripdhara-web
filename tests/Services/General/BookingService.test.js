@@ -52,4 +52,22 @@ describe('General BookingService', () => {
         });
         await expect(BookingService.updatePaymentStatus('order123', 'pay123', 'sig123')).rejects.toThrow();
     });
+
+    test('updatePaymentStatus should reject webhook when amount or currency mismatches booking total', async () => {
+        const mockBooking = {
+            _id: 'b1',
+            pricing: { total: 5000 },
+            paymentStatus: 'pending',
+            timeline: [],
+            save: jest.fn().mockResolvedValue(true)
+        };
+        Booking.findOne.mockReturnValue({
+            session: jest.fn().mockResolvedValue(mockBooking)
+        });
+
+        await expect(
+            BookingService.updatePaymentStatus('order123', 'pay123', 'WEBHOOK_VERIFIED', { amount: 100, currency: 'INR' })
+        ).rejects.toThrow('Payment amount or currency mismatch.');
+        expect(mockBooking.save).not.toHaveBeenCalled();
+    });
 });

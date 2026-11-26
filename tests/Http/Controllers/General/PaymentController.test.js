@@ -86,14 +86,14 @@ describe('PaymentController (General/Public Role)', () => {
             event: 'order.paid',
             payload: {
                 order: { entity: { id: 'order_123' } },
-                payment: { entity: { id: 'pay_123' } }
+                payment: { entity: { id: 'pay_123', amount: 500000, currency: 'INR' } }
             }
         }, 'valid', 'evt_new'));
         const result = await parseResponse(response);
 
         expect(result.status).toBe(200);
         expect(WebhookEvent.create).toHaveBeenCalledWith({ eventId: 'evt_new', gateway: 'razorpay' });
-        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_123', 'pay_123', 'WEBHOOK_VERIFIED');
+        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_123', 'pay_123', 'WEBHOOK_VERIFIED', { amount: 500000, currency: 'INR' });
     });
 
     it('gracefully handles concurrent race condition duplicate key error (E11000) as replay protection', async () => {
@@ -140,27 +140,27 @@ describe('PaymentController (General/Public Role)', () => {
             event: 'order.paid',
             payload: {
                 order: { entity: { id: 'order_123' } },
-                payment: { entity: { id: 'pay_123' } }
+                payment: { entity: { id: 'pay_123', amount: 500000, currency: 'INR' } }
             }
         }));
         const result = await parseResponse(response);
 
         expect(result.status).toBe(200);
         expect(result.body.data).toEqual({ received: true });
-        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_123', 'pay_123', 'WEBHOOK_VERIFIED');
+        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_123', 'pay_123', 'WEBHOOK_VERIFIED', { amount: 500000, currency: 'INR' });
     });
 
     it('supports payment.captured payloads that only include payment.order_id', async () => {
         const response = await PaymentController.webhook(buildWebhookRequest({
             event: 'payment.captured',
             payload: {
-                payment: { entity: { id: 'pay_456', order_id: 'order_456' } }
+                payment: { entity: { id: 'pay_456', order_id: 'order_456', amount: 250000, currency: 'INR' } }
             }
         }));
         const result = await parseResponse(response);
 
         expect(result.status).toBe(200);
-        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_456', 'pay_456', 'WEBHOOK_VERIFIED');
+        expect(mockUpdatePaymentStatus).toHaveBeenCalledWith('order_456', 'pay_456', 'WEBHOOK_VERIFIED', { amount: 250000, currency: 'INR' });
     });
 
     it('handles unexpected internal server errors gracefully', async () => {

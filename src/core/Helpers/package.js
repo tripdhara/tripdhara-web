@@ -252,7 +252,8 @@ export function formatPackageItem(item, wishlistMap = new Map(), reviews = []) {
 
     if (!base) return null;
 
-    const { itemObj, id, title, pricing, address, location, image, rating, reviews: reviewList } = base;
+    const itemObj = item.toObject ? item.toObject() : item;
+    const { id, title, pricing, address, location, image, rating } = base;
     const isWishlisted = id ? wishlistMap.has(id) : false;
     const categoryId = (itemObj.categoryId || itemObj.category_id || itemObj.catalogId)?.toString() || '';
     return {
@@ -263,7 +264,7 @@ export function formatPackageItem(item, wishlistMap = new Map(), reviews = []) {
         pricing,
         address,
         location,
-        image: itemObj.photos?.[0]?.url || itemObj.photos?.url || '',
+        image: image || itemObj.photos?.[0]?.url || itemObj.photos?.url || '',
         rating,
         // reviews: reviewList,
         wishlist: isWishlisted
@@ -308,7 +309,8 @@ export function vendorPackageItem(item, reviews = []) {
     const base = normalizePackageItem(item, reviews);
     if (!base) return null;
 
-    const { itemObj, address, location, rating, reviews: reviewList } = base;
+    const itemObj = item.toObject ? item.toObject() : item;
+    const { address, location, rating, reviews: reviewList } = base;
 
     return {
         ...itemObj,

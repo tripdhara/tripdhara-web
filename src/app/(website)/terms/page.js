@@ -34,7 +34,7 @@ export const metadata = {
     openGraph: {
         title: 'Terms & Conditions | Tripdhara',
         description: 'Statutory travel agreements, vehicle rental obligations, and mountain safety regulations.',
-        url: 'https://tripdhara.com/terms',
+        url: 'https://tripdhara.in/terms',
         siteName: 'Tripdhara',
         type: 'website',
     },
@@ -83,7 +83,7 @@ export default async function TermsAndConditionsPage() {
                         publisher: {
                             '@type': 'Organization',
                             name: 'Tripdhara Travel & Rentals India',
-                            url: 'https://tripdhara.com'
+                            url: 'https://tripdhara.in'
                         }
                     })
                 }}

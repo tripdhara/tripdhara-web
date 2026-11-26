@@ -125,7 +125,15 @@ class VendorService {
                     as: 'VendorPackage'
                 }
             },
-            { $unwind: { path: '$VendorPackage', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$VendorPackage', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    password: 0,
+                    otp: 0,
+                    otpExpires: 0,
+                    __v: 0
+                }
+            }
         ]);
 
         const vendor = results[0] || null;

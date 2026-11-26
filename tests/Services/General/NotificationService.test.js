@@ -27,7 +27,7 @@ jest.unstable_mockModule('@/core/Lib/appConfig.js', () => ({
     })
 }));
 
-const { default: NotificationService } = await import('@/core/Services/General/NotificationService.js');
+const { default: AuthNotificationService } = await import('@/core/Services/Notifications/domains/AuthNotificationService.js');
 const { renderTemplate } = await import('@/core/Helpers/TemplateHelper.js');
 
 describe('NotificationService', () => {
@@ -37,7 +37,7 @@ describe('NotificationService', () => {
 
     describe('Email Functions', () => {
         it('should send OTP email successfully', async () => {
-            const result = await NotificationService.sendSecureCodeEmail('test@test.com', '123456');
+            const result = await AuthNotificationService.sendSecureCodeEmail('test@test.com', '123456');
             expect(result).toBe(true);
             expect(renderTemplate).toHaveBeenCalledWith('Emails/otp.html', { OTP: '123456' });
             expect(mockSendMail).toHaveBeenCalled();

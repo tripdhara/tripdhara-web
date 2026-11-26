@@ -228,44 +228,45 @@ class DashboardService {
         const revenue = confirmedBookings[0]?.total || 0;
         const activeItemsCount = packageStats[0]?.count || 0;
 
-        // Top Territories (Aggregation by vendor's city)
-        const territories = await Vendor.aggregate([
-            { $match: { isApproved: true } },
-            { $group: { _id: "$address.city" } },
-            {
-                $lookup: {
-                    from: 'bookings',
-                    let: { city: "$_id" },
-                    pipeline: [
-                        {
-                            $lookup: {
-                                from: 'vendors',
-                                localField: 'vendor',
-                                foreignField: '_id',
-                                as: 'v'
+        // Top Territories (Aggregation by vendor's city) & total bookings count in parallel
+        const [territories, totalBookingsCount] = await Promise.all([
+            Vendor.aggregate([
+                { $match: { isApproved: true } },
+                { $group: { _id: "$address.city" } },
+                {
+                    $lookup: {
+                        from: 'bookings',
+                        let: { city: "$_id" },
+                        pipeline: [
+                            {
+                                $lookup: {
+                                    from: 'vendors',
+                                    localField: 'vendor',
+                                    foreignField: '_id',
+                                    as: 'v'
+                                }
+                            },
+                            { $unwind: '$v' },
+                            {
+                                $match: {
+                                    $expr: { $eq: ["$v.address.city", "$$city"] },
+                                    paymentStatus: { $in: ['paid', 'PAID', 'Paid'] }
+                                }
                             }
-                        },
-                        { $unwind: '$v' },
-                        {
-                            $match: {
-                                $expr: { $eq: ["$v.address.city", "$$city"] },
-                                paymentStatus: { $in: ['paid', 'PAID', 'Paid'] }
-                            }
-                        }
-                    ],
-                    as: 'cityBookings'
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    count: { $size: "$cityBookings" }
-                }
-            },
-            { $sort: { count: -1 } }
+                        ],
+                        as: 'cityBookings'
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        count: { $size: "$cityBookings" }
+                    }
+                },
+                { $sort: { count: -1 } }
+            ]),
+            Booking.countDocuments()
         ]);
-
-        const totalBookingsCount = await Booking.countDocuments();
         const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-pink-500'];
         const topTerritories = territories.map((t, i) => ({
             name: t._id || 'Remote',

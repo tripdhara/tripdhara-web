@@ -40,7 +40,7 @@ export const metadata = {
     openGraph: {
         title: 'Platform Security & Trust Center | Tripdhara',
         description: 'Bank-grade 256-bit encryption, ephemeral presigned KYC storage, tokenized payments, and zero-trust infrastructure.',
-        url: 'https://tripdhara.com/security',
+        url: 'https://tripdhara.in/security',
         siteName: 'Tripdhara',
         type: 'website',
     },
@@ -95,7 +95,7 @@ export default async function SecurityPage() {
                         publisher: {
                             '@type': 'Organization',
                             name: 'Tripdhara Travel & Rentals India',
-                            url: 'https://tripdhara.com'
+                            url: 'https://tripdhara.in'
                         }
                     })
                 }}

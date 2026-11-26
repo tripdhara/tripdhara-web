@@ -30,6 +30,7 @@ import { STATUS, VERIFICATION_STATUS, VENDOR_PROFILE_TYPES } from '@/core/Consta
 import { getLocationPoint } from '@/core/Helpers/addressHelper.js';
 import { normalizeCoordinates, calculateDistanceKm } from '@/core/Services/Shared/PackageCore.js';
 import { formatPackageItem } from '@/core/Helpers/search.js';
+import { escapeRegex } from '@/core/Helpers/security.js';
 import { packageItemResponse } from './packageResponse.js';
 import { paginateItems, buildEmptyResult, schemaKey } from './shared.js';
 
@@ -216,7 +217,7 @@ export async function getBrowsePackages(options = {}) {
 
     // 1.5 Address / Location Pre-Filter: Dual match on vendor business address and package location
     if (address && typeof address === 'string' && address.trim()) {
-        const addrRegex = new RegExp(address.trim(), 'i');
+        const addrRegex = new RegExp(escapeRegex(address.trim()), 'i');
 
         // Priority 1: Match directly on vendor registered business address
         const vendorAddressQuery = {
@@ -298,7 +299,7 @@ export async function getBrowsePackages(options = {}) {
 
     // 2.2 Text / Keyword Search (across item title, description, address, city)
     if (query && typeof query === 'string' && query.trim()) {
-        const qRegex = new RegExp(query.trim(), 'i');
+        const qRegex = new RegExp(escapeRegex(query.trim()), 'i');
         pipeline.push({
             $match: {
                 $or: [

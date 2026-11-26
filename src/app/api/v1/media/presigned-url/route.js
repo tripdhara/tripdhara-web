@@ -13,6 +13,7 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 const MAX_BATCH_FILES = 25;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /**
  * Builds standard hierarchical R2 directory per User ID:
@@ -91,7 +92,7 @@ export async function POST(request) {
             );
         }
 
-        const { files, fileName, fileType, folder, type, category } = body || {};
+        const { files, fileName, fileType, fileSize, folder, type, category } = body || {};
 
         // 1. MULTIPLE FILES BATCH CASE
         if (Array.isArray(files)) {
@@ -133,11 +134,21 @@ export async function POST(request) {
                         { status: HTTP_STATUS.BAD_REQUEST }
                     );
                 }
+                if (item.fileSize !== undefined && (!Number.isFinite(Number(item.fileSize)) || Number(item.fileSize) <= 0 || Number(item.fileSize) > MAX_FILE_SIZE_BYTES)) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            message: `Invalid fileSize for "${item.fileName}". Maximum allowed size is 10MB.`,
+                        },
+                        { status: HTTP_STATUS.BAD_REQUEST }
+                    );
+                }
             }
 
             const sanitizedFiles = files.map((item) => ({
                 fileName: item.fileName,
                 fileType: item.fileType.toLowerCase(),
+                fileSize: item.fileSize,
                 folder: buildUserPath(userId, {
                     folder: item.folder || folder,
                     type: item.type || type,
@@ -178,11 +189,22 @@ export async function POST(request) {
             );
         }
 
+        if (fileSize !== undefined && (!Number.isFinite(Number(fileSize)) || Number(fileSize) <= 0 || Number(fileSize) > MAX_FILE_SIZE_BYTES)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Invalid fileSize. Maximum allowed size is 10MB.',
+                },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            );
+        }
+
         const targetFolder = buildUserPath(userId, { folder, type, category });
         const presignedData = await getPresignedUploadUrl({
             fileName,
             fileType: fileType.toLowerCase(),
             folder: targetFolder,
+            fileSize,
         });
 
         return NextResponse.json(
@@ -198,7 +220,7 @@ export async function POST(request) {
         return NextResponse.json(
             {
                 success: false,
-                message: error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR,
+                message: process.env.NODE_ENV === 'production' ? RESPONSE_MESSAGES.ERROR.SERVER_ERROR : (error.message || RESPONSE_MESSAGES.ERROR.SERVER_ERROR),
             },
             { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );

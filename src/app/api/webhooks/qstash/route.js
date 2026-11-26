@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import QStashWebhookController from '@/core/Http/Controllers/General/QStashWebhookController.js';
 import { getLogger } from '@/core/Lib/logger.js';
@@ -17,10 +18,8 @@ export const POST = hasKeys
         currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
         nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY
     })
-    : async function (req) {
-        if (process.env.NODE_ENV === 'production') {
-            getLogger().warn('[QStash Webhook] QSTASH_CURRENT_SIGNING_KEY and QSTASH_NEXT_SIGNING_KEY are missing.');
-        }
-        return handler(req);
+    : async function () {
+        getLogger().error('[QStash Webhook] QSTASH_CURRENT_SIGNING_KEY and QSTASH_NEXT_SIGNING_KEY are missing. Rejecting request.');
+        return NextResponse.json({ success: false, message: 'QStash signing keys are not configured' }, { status: 500 });
     };
 

@@ -1,19 +1,36 @@
 import { jest } from '@jest/globals';
 
-// Use unstable_mockModule for ESM Helpers
-jest.unstable_mockModule('@/core/Helpers/cloudinary.js', () => ({
-    uploadToCloudinary: jest.fn()
+const mockUserAuthResponse = jest.fn((user) => ({ id: user?._id?.toString(), email: user?.email }));
+
+jest.unstable_mockModule('@/core/Helpers/userProfileHelper.js', () => ({
+    userPayload: jest.fn(),
+    userPayloadMini: jest.fn(),
+    userDetailsPayload: jest.fn(),
+    userProfileById: jest.fn(),
+    userBusinessProfileById: jest.fn(),
+    userBusinessPayload: jest.fn(),
+    userAuthResponse: mockUserAuthResponse,
+    default: { userAuthResponse: mockUserAuthResponse }
 }));
 
 const { default: DocumentService } = await import('@/core/Services/Vendor/DocumentService.js');
 const { default: Vendor } = await import('@/core/Models/Vendor.js');
-const { uploadToCloudinary } = await import('@/core/Helpers/cloudinary.js');
+const { default: User } = await import('@/core/Models/User.js');
+
+const createVendorQueryMock = (val) => ({
+    select: jest.fn().mockReturnThis(),
+    populate: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockResolvedValue(val),
+    exec: jest.fn().mockResolvedValue(val),
+    then: (resolve, reject) => Promise.resolve(val).then(resolve, reject)
+});
 
 describe('Vendor DocumentService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(Vendor, 'findOne');
         jest.spyOn(Vendor, 'findOneAndUpdate');
+        jest.spyOn(User, 'findById').mockResolvedValue({ _id: 'user123', email: 'vendor@test.com', role: 'vendor' });
     });
 
     afterEach(() => {
@@ -24,46 +41,64 @@ describe('Vendor DocumentService', () => {
         test('should upload multiple documents successfully', async () => {
             const userId = 'user123';
             const files = {
-                panCard: { size: 100 },
-                gstRegistration: { size: 200 }
+                panCard: 'http://cloud.com/pan.pdf',
+                gstRegistration: 'http://cloud.com/gst.pdf'
             };
             const mockVendor = { _id: 'v1', documents: {} };
 
-            Vendor.findOne.mockResolvedValue(mockVendor);
-            uploadToCloudinary.mockResolvedValue({ url: 'http://cloud.com/file', publicId: 'p1' });
-            Vendor.findOneAndUpdate.mockResolvedValue({ documents: { panCard: { url: 'http://cloud.com/file' } } });
+            Vendor.findOne.mockReturnValue(createVendorQueryMock(mockVendor));
+            Vendor.findOneAndUpdate.mockResolvedValue({ _id: 'v1', documents: { panCard: { url: 'http://cloud.com/pan.pdf' } } });
 
             const result = await DocumentService.uploadVerificationFiles(userId, files);
 
-            expect(uploadToCloudinary).toHaveBeenCalledTimes(2);
-            expect(Vendor.findOneAndUpdate).toHaveBeenCalled();
+            expect(Vendor.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'v1' },
+                {
+                    $set: {
+                        'documents.panCard': { url: 'http://cloud.com/pan.pdf', status: 'pending' },
+                        'documents.gstRegistration': { url: 'http://cloud.com/gst.pdf', status: 'pending' }
+                    }
+                },
+                expect.objectContaining({ returnDocument: 'after' })
+            );
+            expect(result).toBeDefined();
         });
 
         test('should handle aadharCard array', async () => {
             const userId = 'user123';
             const files = {
-                aadharCard: [{ size: 100 }, { size: 100 }]
+                aadharCard: ['http://cloud.com/front.jpg', 'http://cloud.com/back.jpg']
             };
             const mockVendor = { _id: 'v1', documents: {} };
 
-            Vendor.findOne.mockResolvedValue(mockVendor);
-            uploadToCloudinary.mockResolvedValue({ url: 'http://cloud.com/file', publicId: 'p1' });
-            Vendor.findOneAndUpdate.mockResolvedValue({ documents: { aadharCard: [] } });
+            Vendor.findOne.mockReturnValue(createVendorQueryMock(mockVendor));
+            Vendor.findOneAndUpdate.mockResolvedValue({ _id: 'v1', documents: { aadharCard: [] } });
 
             await DocumentService.uploadVerificationFiles(userId, files);
 
-            expect(uploadToCloudinary).toHaveBeenCalledTimes(2);
+            expect(Vendor.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'v1' },
+                {
+                    $set: {
+                        'documents.aadharCard': [
+                            { url: 'http://cloud.com/front.jpg', status: 'pending' },
+                            { url: 'http://cloud.com/back.jpg', status: 'pending' }
+                        ]
+                    }
+                },
+                expect.objectContaining({ returnDocument: 'after' })
+            );
         });
 
         test('should throw error if vendor not found', async () => {
-            Vendor.findOne.mockResolvedValue(null);
+            Vendor.findOne.mockReturnValue(createVendorQueryMock(null));
             await expect(DocumentService.uploadVerificationFiles('u1', {})).rejects.toThrow();
         });
     });
 
     describe('deleteDocument', () => {
         test('should remove document from profile', async () => {
-            Vendor.findOneAndUpdate.mockResolvedValue({ documents: {} });
+            Vendor.findOneAndUpdate.mockResolvedValue({ _id: 'v1', documents: {} });
 
             await DocumentService.deleteDocument('u1', 'doc123');
 

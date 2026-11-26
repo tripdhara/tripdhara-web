@@ -3,14 +3,14 @@ import { jest } from '@jest/globals';
 const mockUpstashGet = jest.fn();
 const mockUpstashSet = jest.fn();
 const mockUpstashDel = jest.fn();
-const mockUpstashKeys = jest.fn();
+const mockUpstashScan = jest.fn();
 
 jest.unstable_mockModule('@upstash/redis', () => ({
     Redis: jest.fn().mockImplementation(() => ({
         get: mockUpstashGet,
         set: mockUpstashSet,
         del: mockUpstashDel,
-        keys: mockUpstashKeys
+        scan: mockUpstashScan
     }))
 }));
 
@@ -21,7 +21,7 @@ jest.unstable_mockModule('redis', () => ({
         get: jest.fn(),
         set: jest.fn(),
         del: jest.fn(),
-        keys: jest.fn()
+        scan: jest.fn()
     })
 }));
 
@@ -76,11 +76,12 @@ describe('CacheService Unit Tests', () => {
         });
 
         it('should delete matching pattern keys', async () => {
-            mockUpstashKeys.mockResolvedValue(['user:1', 'user:2']);
+            mockUpstashScan.mockResolvedValue(['0', ['user:1', 'user:2']]);
             mockUpstashDel.mockResolvedValue(2);
 
             const res = await cacheService.deletePattern('user:*');
             expect(res).toBe(true);
+            expect(mockUpstashScan).toHaveBeenCalledWith(0, { match: 'user:*', count: 100 });
             expect(mockUpstashDel).toHaveBeenCalledWith('user:1', 'user:2');
         });
     });

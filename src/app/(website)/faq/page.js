@@ -407,18 +407,30 @@ export default function FAQPage() {
         setSelectedCategory('all');
     };
 
+    const extractAnswerText = (node) => {
+        if (typeof node === 'string' || typeof node === 'number') return String(node);
+        if (Array.isArray(node)) return node.map(extractAnswerText).join(' ');
+        if (node && typeof node === 'object' && node.props?.children !== undefined) {
+            return extractAnswerText(node.props.children);
+        }
+        return '';
+    };
+
     // JSON-LD Schema
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
-        mainEntity: FAQ_DATA.map((f) => ({
-            '@type': 'Question',
-            name: f.question,
-            acceptedAnswer: {
-                '@type': 'Answer',
-                text: typeof f.answer === 'string' ? f.answer : f.question
-            }
-        }))
+        mainEntity: FAQ_DATA.map((f) => {
+            const plainText = extractAnswerText(f.answer).replace(/\s+/g, ' ').trim();
+            return {
+                '@type': 'Question',
+                name: f.question,
+                acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: plainText || f.question
+                }
+            };
+        })
     };
 
     return (

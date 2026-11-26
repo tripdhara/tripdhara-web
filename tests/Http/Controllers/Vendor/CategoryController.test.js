@@ -13,6 +13,22 @@ jest.unstable_mockModule('@/core/Services/Vendor/CategoryService.js', () => ({
     }
 }));
 
+jest.unstable_mockModule('@/core/Models/User', () => ({
+    default: {
+        findById: jest.fn().mockResolvedValue({ _id: 'u1', email: 'u1@test.com' })
+    }
+}));
+
+jest.unstable_mockModule('@/core/Helpers/userProfileHelper', () => ({
+    userAuthResponse: jest.fn().mockResolvedValue({ id: 'u1', email: 'u1@test.com' })
+}));
+
+jest.unstable_mockModule('@/events/CategoryEvents', () => ({
+    default: {
+        emitAsync: jest.fn().mockResolvedValue([])
+    }
+}));
+
 const { default: CategoryController } = await import('@/core/Http/Controllers/Vendor/CategoryController.js');
 const { default: CategoryService } = await import('@/core/Services/Vendor/CategoryService.js');
 const { HTTP_STATUS } = await import('@/core/Constants/index.js');

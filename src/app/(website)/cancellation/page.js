@@ -31,7 +31,7 @@ export const metadata = {
     openGraph: {
         title: 'Cancellation & Weather Policy | Tripdhara',
         description: 'Statutory cancellation terms, weather disruption refunds, and mountain travel guarantees.',
-        url: 'https://tripdhara.com/cancellation',
+        url: 'https://tripdhara.in/cancellation',
         siteName: 'Tripdhara',
         type: 'website',
     },
@@ -76,7 +76,7 @@ export default async function CancellationPolicyPage() {
                         publisher: {
                             '@type': 'Organization',
                             name: 'Tripdhara Travel & Rentals India',
-                            url: 'https://tripdhara.com'
+                            url: 'https://tripdhara.in'
                         }
                     })
                 }}

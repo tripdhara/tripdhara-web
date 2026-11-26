@@ -27,8 +27,10 @@ class TravellerService {
     const user = await getUserBy({ _id: id, role: 'traveller' }, '-password');
     if (!user) throw new AppError(RESPONSE_MESSAGES.ERROR.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
     
-    const bookings = await getBookingsBy({ user: id }, '', null, { createdAt: -1 });
-    const wishlists = await getManyBy(Wishlist, { user: id }, '', null, { createdAt: -1 });
+    const [bookings, wishlists] = await Promise.all([
+      getBookingsBy({ user: id }, '', null, { createdAt: -1 }),
+      getManyBy(Wishlist, { user: id }, '', null, { createdAt: -1 })
+    ]);
 
     return { ...user, bookings, wishlists };
   }

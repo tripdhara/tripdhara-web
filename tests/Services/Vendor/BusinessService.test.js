@@ -15,7 +15,12 @@ jest.unstable_mockModule('@/core/Models/Category.js', () => ({
 
 jest.unstable_mockModule('@/core/Models/User.js', () => ({
     default: {
-        findById: jest.fn().mockResolvedValue({ _id: 'u1' }),
+        findById: jest.fn(() => ({
+            select: jest.fn().mockReturnValue({
+                lean: jest.fn().mockResolvedValue({ _id: 'u1' })
+            }),
+            lean: jest.fn().mockResolvedValue({ _id: 'u1' })
+        })),
         findByIdAndUpdate: jest.fn().mockResolvedValue({ _id: 'u1' }),
     }
 }));

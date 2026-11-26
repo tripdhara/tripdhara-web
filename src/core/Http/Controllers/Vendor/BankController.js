@@ -18,6 +18,7 @@ class BankController extends Controller {
         try {
             const userId = req.user.id;
             const vendor = await getBusinessByUserId(userId);
+            if (!vendor) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.BANK_FETCHED, vendor.bankDetails);
         } catch (error) {
             getLogger().error({ err: error });

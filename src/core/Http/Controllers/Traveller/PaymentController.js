@@ -17,6 +17,11 @@ class PaymentController extends Controller {
             const booking = await BookingService.getBookingById(bookingId);
             if (!booking) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
 
+            const bookingUserId = booking.user?._id?.toString() || booking.user?.toString();
+            if (!bookingUserId || bookingUserId !== String(req.user.id)) {
+                return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.ERROR.FORBIDDEN);
+            }
+
             const notes = {
                 bookingId: booking._id.toString(),
                 customerName: booking.user?.name || '',
@@ -41,7 +46,7 @@ class PaymentController extends Controller {
             const body = req.validData || req.jsonBody || await req.json();
             const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
-            const isValid = RazorpayService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+            const isValid = await RazorpayService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
             if (!isValid) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.PAYMENT.FAILED);
 
             await BookingService.updatePaymentStatus(razorpay_order_id, razorpay_payment_id, razorpay_signature);

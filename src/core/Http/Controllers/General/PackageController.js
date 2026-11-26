@@ -164,6 +164,22 @@ class PackageController extends Controller {
     // =========================================================================
 
     /**
+     * Parses URL and pagination query parameters with safe bounds.
+     *
+     * @private
+     * @param {string} reqUrl
+     * @returns {{ url: URL, page: number, limit: number }}
+     */
+    _parsePagination(reqUrl) {
+        const url = new URL(reqUrl, 'http://localhost');
+        const parsedPage = parseInt(url.searchParams.get('page'), 10);
+        const parsedLimit = parseInt(url.searchParams.get('limit'), 10);
+        const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+        const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 10;
+        return { url, page, limit };
+    }
+
+    /**
      * Loads a lookup Map of all item IDs saved in the traveller's wishlist.
      *
      * @private

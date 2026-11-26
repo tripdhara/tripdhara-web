@@ -1,4 +1,4 @@
-import { sanitizeNoSQL, sanitizeHTML, redactSensitiveData } from '@/helpers/security.js';
+import { sanitizeNoSQL, sanitizeHTML, redactSensitiveData, escapeRegex, sanitizeUrl } from '@/helpers/security.js';
 
 describe('Industry Standard: Security Helper Logic', () => {
     describe('[sanitizeNoSQL]', () => {
@@ -32,6 +32,21 @@ describe('Industry Standard: Security Helper Logic', () => {
             const html = '<script>alert(1)</script><p>Hello <b>World</b></p>';
             const result = sanitizeHTML(html);
             expect(result).toBe('<p>Hello <b>World</b></p>');
+        });
+    });
+
+    describe('[escapeRegex]', () => {
+        it('[Security] should escape regex metacharacters to prevent ReDoS', () => {
+            expect(escapeRegex('a+b*(c)?[d].^$')).toBe('a\\+b\\*\\(c\\)\\?\\[d\\]\\.\\^\\$');
+        });
+    });
+
+    describe('[sanitizeUrl]', () => {
+        it('[Security] should block javascript: and allow safe http/https/relative URLs', () => {
+            expect(sanitizeUrl('javascript:alert(1)')).toBe('#');
+            expect(sanitizeUrl('data:text/html,<script>alert(1)</script>')).toBe('#');
+            expect(sanitizeUrl('https://tripdhara.in/packages')).toBe('https://tripdhara.in/packages');
+            expect(sanitizeUrl('/packages/spiti')).toBe('/packages/spiti');
         });
     });
 });

@@ -13,12 +13,12 @@ const generateAuthTokens = async (payload, rememberMe = false) => {
 
     // Access Token (24 hours - mobile session continuity)
     const accessJti = randomUUID();
-    const accessToken = jwt.sign({ ...payload, jti: accessJti, type: 'access' }, SECRET, { expiresIn: '24h' });
+    const accessToken = jwt.sign({ ...payload, jti: accessJti, type: 'access' }, SECRET, { algorithm: 'HS256', expiresIn: '24h' });
 
     // Long-lived Refresh Token (7 days, or 30 days if rememberMe)
     const refreshJti = randomUUID();
     const refreshExpiresIn = rememberMe ? '30d' : '7d';
-    const refreshToken = jwt.sign({ ...payload, jti: refreshJti, type: 'refresh' }, SECRET, { expiresIn: refreshExpiresIn });
+    const refreshToken = jwt.sign({ ...payload, jti: refreshJti, type: 'refresh' }, SECRET, { algorithm: 'HS256', expiresIn: refreshExpiresIn });
 
     return {
         accessToken,
@@ -35,7 +35,7 @@ const generateToken = async (payload, expiresIn = '30d') => {
     const config = await getAppConfig();
     const SECRET = config.jwt_secret;
     if (!SECRET) throw new Error('JWT_SECRET is missing in appConfig');
-    return jwt.sign(payload, SECRET, { expiresIn });
+    return jwt.sign(payload, SECRET, { algorithm: 'HS256', expiresIn });
 };
 
 /**
@@ -46,7 +46,7 @@ const verifyToken = async (token) => {
     const SECRET = config.jwt_secret;
     if (!SECRET) return DEFAULTS.NULL;
     try {
-        return jwt.verify(token, SECRET);
+        return jwt.verify(token, SECRET, { algorithms: ['HS256'] });
     } catch (err) {
         return DEFAULTS.NULL;
     }

@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Adventure Sports & Safety Policy | Tripdhara',
         description: 'Certified gear standards, medical fitness requirements, altitude sickness management, and weather suspension refunds.',
-        url: 'https://tripdhara.com/safety-policy',
+        url: 'https://tripdhara.in/safety-policy',
         siteName: 'Tripdhara',
         type: 'website',
     },

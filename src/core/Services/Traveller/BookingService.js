@@ -228,14 +228,15 @@ class BookingService {
                 const finalCheck = await InventoryService.checkAvailabilityRange(businessId, itemId, category, checkInDate, checkOutDate, requiredUnits, session, newBooking._id);
                 if (!finalCheck.available) throw AppError.conflict(`Inventory Conflict: Slots became unavailable.`);
 
-                NotificationService.notifyBookingStatus(newBooking._id, 'created');
-
                 // Format response with populated user & vendor details
                 const bookingObj = newBooking.toObject ? newBooking.toObject() : newBooking;
                 bookingObj.user = travellerProfile;
                 bookingObj.vendor = business;
                 finalResponse = bookingPayload(bookingObj);
             });
+            if (finalResponse?.bookingId || finalResponse?._id) {
+                NotificationService.notifyBookingStatus(finalResponse.bookingId || finalResponse._id, 'created');
+            }
             return finalResponse;
         } catch (error) {
             throw (error instanceof AppError ? error : AppError.badRequest(error.message || 'Booking failed'));
@@ -291,7 +292,7 @@ class BookingService {
         if (booking.payment.paymentId && booking.payment.paymentId !== razorpay_payment_id) throw AppError.badRequest('A different payment attempt is already recorded for this booking.');
 
         const config = await getAppConfig();
-        const isValid = RazorpayService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature, config.razorpay);
+        const isValid = await RazorpayService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature, config.razorpay);
         if (!isValid) throw AppError.badRequest(RESPONSE_MESSAGES.ERROR.INVALID_SIGNATURE);
 
         booking.verification.startOTP = generateNumericOTP();
@@ -299,15 +300,6 @@ class BookingService {
 
         booking.status = BOOKING_STATUS.CONFIRMED;
         booking.paymentStatus = PAYMENT_STATUS.PAID;
-
-        // Increment Coupon Usage Count
-        if (booking.pricing.coupon) {
-            await Coupon.findOneAndUpdate(
-                { code: booking.pricing.coupon.toUpperCase() },
-                { $inc: { usedCount: 1 } },
-                { returnDocument: 'after' }
-            );
-        }
 
         booking.payment.paymentId = razorpay_payment_id;
         booking.payment.signature = razorpay_signature;
@@ -319,9 +311,37 @@ class BookingService {
             actor: userId
         });
 
-        await booking.save();
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                if (booking.pricing.coupon) {
+                    await Coupon.findOneAndUpdate(
+                        { code: booking.pricing.coupon.toUpperCase() },
+                        { $inc: { usedCount: 1 } },
+                        { returnDocument: 'after', session }
+                    );
+                }
 
-        // Invalidate booking caches
+                await booking.save({ session });
+
+                if (booking.vendor && booking.item?.itemId && booking.startDate && booking.endDate) {
+                    const vendorId = booking.vendor._id ? booking.vendor._id.toString() : String(booking.vendor);
+                    await InventoryService.reserveSlotsRange(
+                        vendorId,
+                        booking.item.itemId,
+                        booking.item.itemType,
+                        booking.startDate,
+                        booking.endDate,
+                        booking.occupancy?.units || 1,
+                        session
+                    );
+                }
+            });
+        } finally {
+            await session.endSession();
+        }
+
+        // Invalidate booking caches after transaction commit
         try {
             await CacheService.del('admin:bookings:all');
             await CacheService.deletePattern('admin:bookings:*');
@@ -332,24 +352,7 @@ class BookingService {
             // Non-blocking cache flush
         }
 
-        // Reserve inventory slots upon booking confirmation
-        if (booking.vendor && booking.item?.itemId && booking.startDate && booking.endDate) {
-            try {
-                const vendorId = booking.vendor._id ? booking.vendor._id.toString() : String(booking.vendor);
-                await InventoryService.reserveSlotsRange(
-                    vendorId,
-                    booking.item.itemId,
-                    booking.item.itemType,
-                    booking.startDate,
-                    booking.endDate,
-                    booking.occupancy?.units || 1
-                );
-            } catch (invErr) {
-                // Ignore if inventory doc not yet initialized
-            }
-        }
-
-        // 3. Notify Traveller & Vendor
+        // Notify Traveller & Vendor after transaction commit
         NotificationService.notifyBookingStatus(booking._id, 'confirmed');
 
         return bookingPayload(booking);
@@ -455,10 +458,10 @@ class BookingService {
                     actor: req?.user?.id || 'USER'
                 });
                 await booking.save({ session });
-
-                NotificationService.notifyBookingStatus(bookingId, 'cancelled');
                 finalBooking = booking;
             });
+
+            NotificationService.notifyBookingStatus(bookingId, 'cancelled');
 
             try {
                 await CacheService.del('admin:bookings:all');

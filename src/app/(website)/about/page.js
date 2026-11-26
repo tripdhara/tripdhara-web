@@ -65,7 +65,6 @@ export default function AboutPage() {
                 telephone: '+91-7017288052',
                 email: 'contact@tripdhara.com',
                 sameAs: [
-                    'https://tripdhara.com',
                     'https://tripdhara.in'
                 ]
             }

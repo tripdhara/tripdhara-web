@@ -1,14 +1,14 @@
 import { jest } from '@jest/globals';
 import AuthEvents from '@/core/Events/AuthEvents.js';
-import NotificationService from '@/core/Services/General/NotificationService.js';
+import AuthNotificationService from '@/core/Services/Notifications/domains/AuthNotificationService.js';
 
 import { NOTIFICATION } from '@/core/Constants/notification';
 
 describe('AuthEvents', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(NotificationService, 'sendSecureCodeEmail').mockResolvedValue(true);
-        jest.spyOn(NotificationService, 'sendAlertEmail').mockResolvedValue(true);
+        jest.spyOn(AuthNotificationService, 'sendSecureCodeEmail').mockResolvedValue(true);
+        jest.spyOn(AuthNotificationService, 'sendAlertEmail').mockResolvedValue(true);
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -22,7 +22,7 @@ describe('AuthEvents', () => {
 
         await AuthEvents.emitAsync(NOTIFICATION.KEY.USER.OTP, { identifier, details: otp });
 
-        expect(NotificationService.sendSecureCodeEmail).toHaveBeenCalledWith(identifier, otp);
+        expect(AuthNotificationService.sendSecureCodeEmail).toHaveBeenCalledWith(identifier, otp);
     });
 
     test('auth.alert should send alert email', async () => {
@@ -32,6 +32,6 @@ describe('AuthEvents', () => {
 
         await AuthEvents.emitAsync(NOTIFICATION.KEY.USER.ALERT, { identifier, details, metadata });
 
-        expect(NotificationService.sendAlertEmail).toHaveBeenCalledWith(identifier, details, metadata);
+        expect(AuthNotificationService.sendAlertEmail).toHaveBeenCalledWith(identifier, details, metadata);
     });
 });

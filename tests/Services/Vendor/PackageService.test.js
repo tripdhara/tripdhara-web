@@ -1,5 +1,11 @@
 import { jest } from '@jest/globals';
 
+const createSubdocItem = (data) => ({
+    _id: 'item1',
+    ...data,
+    toObject: function() { return { ...this }; }
+});
+
 const mockPkg = {
     _id: 'pkg1',
     user: 'u1',
@@ -8,9 +14,10 @@ const mockPkg = {
     save: jest.fn().mockImplementation(function() { return Promise.resolve(this); })
 };
 mockPkg.trekking.id = jest.fn((id) => mockPkg.trekking.find(i => i._id === id));
+mockPkg.trekking.create = jest.fn(createSubdocItem);
 const originalPush = Array.prototype.push;
 mockPkg.trekking.push = jest.fn(function(data) {
-    const newItem = { _id: 'item1', ...data, toObject: () => ({ _id: 'item1', ...data }) };
+    const newItem = data && typeof data.toObject === 'function' ? data : createSubdocItem(data);
     originalPush.call(this, newItem);
     return this.length;
 });
@@ -26,7 +33,8 @@ jest.unstable_mockModule('@/core/Models/Package.js', () => ({
 
 jest.unstable_mockModule('@/core/Models/Vendor.js', () => ({
     default: {
-        findById: jest.fn()
+        findById: jest.fn(),
+        findOne: jest.fn()
     }
 }));
 
@@ -40,11 +48,18 @@ const { default: PackageService } = await import('@/core/Services/Vendor/Package
 const { default: Package } = await import('@/core/Models/Package.js');
 const { default: Vendor } = await import('@/core/Models/Vendor.js');
 
-const mockVendorFindById = (data) => {
-    Vendor.findById.mockReturnValue({
+const mockVendorFindOne = (data) => {
+    Vendor.findOne.mockReturnValue({
         select: jest.fn().mockReturnValue({
+            populate: jest.fn().mockReturnValue({
+                lean: jest.fn().mockResolvedValue(data)
+            }),
             lean: jest.fn().mockResolvedValue(data)
-        })
+        }),
+        populate: jest.fn().mockReturnValue({
+            lean: jest.fn().mockResolvedValue(data)
+        }),
+        lean: jest.fn().mockResolvedValue(data)
     });
 };
 
@@ -60,8 +75,9 @@ describe('Industry Standard: Vendor PackageService Logic', () => {
         jest.clearAllMocks();
         mockPkg.trekking = [];
         mockPkg.trekking.id = jest.fn((id) => mockPkg.trekking.find(i => i._id === id));
+        mockPkg.trekking.create = jest.fn(createSubdocItem);
         mockPkg.trekking.push = jest.fn(function(data) {
-            const newItem = { _id: 'item1', ...data, toObject: () => ({ _id: 'item1', ...data }) };
+            const newItem = data && typeof data.toObject === 'function' ? data : createSubdocItem(data);
             originalPush.call(this, newItem);
             return this.length;
         });
@@ -85,17 +101,17 @@ describe('Industry Standard: Vendor PackageService Logic', () => {
 
     describe('[addItem]', () => {
         it('[Success] should add item to catalog and initialize inventory', async () => {
-            mockVendorFindById({ _id: 'v1', category: [{ slug: 'trekking', name: 'Trekking' }] });
+            mockVendorFindOne({ _id: 'v1', category: [{ _id: 'cat1', slug: 'trekking', name: 'Trekking' }] });
             Package.findOne.mockResolvedValue(mockPkg);
             
             const itemData = { title: 'New Trek' };
-            await PackageService.addItem('u1', 'v1', 'trekking', itemData);
+            await PackageService.addItem('u1', 'trekking', itemData);
 
             expect(mockPkg.save).toHaveBeenCalled();
         });
 
         it('[Pricing] should calculate sellingPrice if not provided', async () => {
-            mockVendorFindById({ _id: 'v1', category: [{ slug: 'trekking', name: 'Trekking' }] });
+            mockVendorFindOne({ _id: 'v1', category: [{ _id: 'cat1', slug: 'trekking', name: 'Trekking' }] });
             Package.findOne.mockResolvedValue(mockPkg);
             
             const itemData = { 
@@ -108,7 +124,7 @@ describe('Industry Standard: Vendor PackageService Logic', () => {
                     sellingPrice: 1180
                 }
             };
-            const result = await PackageService.addItem('u1', 'v1', 'trekking', itemData);
+            const result = await PackageService.addItem('u1', 'trekking', itemData);
 
             expect(result.pricing.sellingPrice).toBe(1180);
         });
@@ -116,21 +132,21 @@ describe('Industry Standard: Vendor PackageService Logic', () => {
 
     describe('[updateItem]', () => {
         it('[Success] should update existing item', async () => {
-            mockVendorFindById({ _id: 'v1', category: [{ slug: 'trekking' }] });
+            mockVendorFindOne({ _id: 'v1', category: [{ _id: 'cat1', slug: 'trekking', name: 'Trekking' }] });
             Package.findOne.mockResolvedValue(mockPkg);
             
             const updates = { title: 'Updated Title' };
             const item = { _id: 'item1', set: jest.fn() };
             mockPkg.trekking.id = jest.fn().mockReturnValue(item);
 
-            await PackageService.updateItem('u1', 'v1', 'trekking', 'item1', updates);
+            await PackageService.updateItem('u1', 'trekking', updates, 'item1');
 
             expect(item.set).toHaveBeenCalledWith('title', 'Updated Title');
             expect(mockPkg.save).toHaveBeenCalled();
         });
 
         it('[Pricing] should recalculate sellingPrice on update', async () => {
-            mockVendorFindById({ _id: 'v1', category: [{ slug: 'trekking' }] });
+            mockVendorFindOne({ _id: 'v1', category: [{ _id: 'cat1', slug: 'trekking', name: 'Trekking' }] });
             Package.findOne.mockResolvedValue(mockPkg);
             
             const updates = { 
@@ -159,7 +175,7 @@ describe('Industry Standard: Vendor PackageService Logic', () => {
             };
             mockPkg.trekking.id = jest.fn().mockReturnValue(item);
 
-            const result = await PackageService.updateItem('u1', 'v1', 'trekking', 'item1', updates);
+            const result = await PackageService.updateItem('u1', 'trekking', updates, 'item1');
 
             expect(result.pricing.sellingPrice).toBe(2100);
         });

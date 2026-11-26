@@ -10,6 +10,7 @@ import AppError from '@/core/Helpers/AppError.js';
 import { getAppConfig } from '@/core/Lib/appConfig.js';
 import { PAYMENT_STATUS, BOOKING_STATUS, REFUND_STATUS, HTTP_STATUS } from '@/core/Constants/index.js';
 import { getBookingById, getBookingsBy, countBookingsBy, getDisputesBy, countDisputesBy, updateById } from '@/core/Helpers/queryHelpers.js';
+import { escapeRegex } from '@/core/Helpers/security.js';
 import mongoose from 'mongoose';
 
 /**
@@ -19,11 +20,16 @@ import mongoose from 'mongoose';
 class BookingService {
 
     async invalidateBookingCaches(bookingId = null) {
-        await CacheService.del('admin:bookings:all');
-        await CacheService.del('admin:disputes:all');
+        const tasks = [
+            CacheService.del('admin:bookings:all'),
+            CacheService.del('admin:disputes:all'),
+            CacheService.deletePattern('admin:bookings:*'),
+            CacheService.deletePattern('admin:disputes:*')
+        ];
         if (bookingId) {
-            await CacheService.del(`admin:bookings:${bookingId}`);
+            tasks.push(CacheService.del(`admin:bookings:${bookingId}`));
         }
+        await Promise.all(tasks);
     }
 
     async getAllBookings(filter = {}, page = 1, limit = 10) {
@@ -50,18 +56,20 @@ class BookingService {
         const cached = await CacheService.get(cacheKey);
         if (cached) return cached;
 
-        const total = await countBookingsBy(query);
-        const bookings = await getBookingsBy(
-            query,
-            '',
-            [
-                { path: 'user', select: 'name email' },
-                { path: 'vendor', select: 'businessName ownerName businessEmail' },
-                { path: 'package', select: 'title price' }
-            ],
-            { createdAt: -1 },
-            { skip: (page - 1) * limit, limit }
-        );
+        const [total, bookings] = await Promise.all([
+            countBookingsBy(query),
+            getBookingsBy(
+                query,
+                '',
+                [
+                    { path: 'user', select: 'name email' },
+                    { path: 'vendor', select: 'businessName ownerName businessEmail' },
+                    { path: 'package', select: 'title price' }
+                ],
+                { createdAt: -1 },
+                { skip: (page - 1) * limit, limit }
+            )
+        ]);
 
         const result = { bookings, total, totalPages: Math.ceil(total / limit) };
         await CacheService.set(cacheKey, result, 1800); // 30 mins
@@ -179,21 +187,23 @@ class BookingService {
         }
 
         if (filter.search) {
-            // Optional search by bookingCode
-            query.bookingCode = { $regex: filter.search, $options: 'i' };
+            // Optional search by bookingCode (escaped against ReDoS)
+            query.bookingCode = { $regex: escapeRegex(String(filter.search).trim()), $options: 'i' };
         }
 
-        const total = await countBookingsBy(query);
-        const payments = await getBookingsBy(
-            query,
-            'bookingCode user vendor item pricing payment status occupancy payout createdAt',
-            [
-                { path: 'user', select: 'name email phone' },
-                { path: 'vendor', select: 'businessName ownerName businessEmail bankDetails' }
-            ],
-            { createdAt: -1 },
-            { skip: (page - 1) * limit, limit }
-        );
+        const [total, payments] = await Promise.all([
+            countBookingsBy(query),
+            getBookingsBy(
+                query,
+                'bookingCode user vendor item pricing payment status occupancy payout createdAt',
+                [
+                    { path: 'user', select: 'name email phone' },
+                    { path: 'vendor', select: 'businessName ownerName businessEmail bankDetails' }
+                ],
+                { createdAt: -1 },
+                { skip: (page - 1) * limit, limit }
+            )
+        ]);
 
         return { payments, total, totalPages: Math.ceil(total / limit) };
     }
@@ -206,6 +216,12 @@ class BookingService {
         await session.withTransaction(async () => {
             const booking = await getBookingById(bookingId, '', 'vendor', { session, lean: true });
             if (!booking) throw new AppError("Booking Node Not Found", HTTP_STATUS.NOT_FOUND);
+            if (booking.paymentStatus !== PAYMENT_STATUS.PAID && booking.paymentStatus !== 'paid') {
+                throw new AppError("Cannot process payout for an unpaid booking.", HTTP_STATUS.BAD_REQUEST);
+            }
+            if (booking.payout?.status === 'paid') {
+                throw new AppError("Payout has already been settled for this booking.", HTTP_STATUS.CONFLICT);
+            }
 
             const settlementAmount = amount || booking.pricing?.basePrice || 0;
 
@@ -302,28 +318,30 @@ class BookingService {
         const cached = await CacheService.get(cacheKey);
         if (cached) return cached;
 
-        const total = await countDisputesBy(query);
-        const disputes = await getDisputesBy(
-            query,
-            '',
-            [
-                {
-                    path: 'bookingId',
-                    populate: [
-                        { path: 'user', select: 'name email phone image' },
-                        { path: 'vendor', populate: { path: 'user', select: 'name email phone' } }
-                    ]
-                },
-                { path: 'user', select: 'name email phone image' },
-                { path: 'traveller', select: 'name email phone image' },
-                {
-                    path: 'vendor',
-                    populate: { path: 'user', select: 'name email phone' }
-                }
-            ],
-            { createdAt: -1 },
-            { skip: (page - 1) * limit, limit }
-        );
+        const [total, disputes] = await Promise.all([
+            countDisputesBy(query),
+            getDisputesBy(
+                query,
+                '',
+                [
+                    {
+                        path: 'bookingId',
+                        populate: [
+                            { path: 'user', select: 'name email phone image' },
+                            { path: 'vendor', populate: { path: 'user', select: 'name email phone' } }
+                        ]
+                    },
+                    { path: 'user', select: 'name email phone image' },
+                    { path: 'traveller', select: 'name email phone image' },
+                    {
+                        path: 'vendor',
+                        populate: { path: 'user', select: 'name email phone' }
+                    }
+                ],
+                { createdAt: -1 },
+                { skip: (page - 1) * limit, limit }
+            )
+        ]);
 
         const result = { disputes, total, totalPages: Math.ceil(total / limit) };
         await CacheService.set(cacheKey, result, 1800);

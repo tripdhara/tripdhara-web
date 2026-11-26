@@ -168,18 +168,30 @@ export default function BlogForm({ initialData = null, blogId = null }) {
             );
         }
 
+        const sanitizePreviewUrl = (rawUrl) => {
+            const trimmed = String(rawUrl || '').trim();
+            if (trimmed.startsWith('/') || trimmed.startsWith('#')) return trimmed;
+            try {
+                const parsed = new URL(trimmed);
+                return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? trimmed : '#';
+            } catch {
+                return '#';
+            }
+        };
+
         const html = text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
             .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-slate-100 mt-5 mb-2">$1</h3>')
             .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-white mt-6 mb-3 border-b border-white/10 pb-1.5">$1</h2>')
             .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold text-white mt-8 mb-4 border-b border-white/10 pb-2">$1</h1>')
             .replace(/\*\*(.*?)\*\*/gim, '<strong class="font-bold text-white">$1</strong>')
             .replace(/\*(.*?)\*/gim, '<em class="italic text-slate-200">$1</em>')
             .replace(/`([^`]+)`/gim, '<code class="px-1.5 py-0.5 bg-black/60 border border-white/10 rounded text-amber-300 font-mono text-xs">$1</code>')
-            .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" class="rounded-xl my-4 max-h-96 object-cover w-full border border-white/10 shadow-lg" />')
-            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline hover:text-indigo-300 font-medium">$1</a>')
+            .replace(/!\[(.*?)\]\((.*?)\)/gim, (_, alt, url) => `<img src="${sanitizePreviewUrl(url)}" alt="${alt}" class="rounded-xl my-4 max-h-96 object-cover w-full border border-white/10 shadow-lg" />`)
+            .replace(/\[(.*?)\]\((.*?)\)/gim, (_, label, url) => `<a href="${sanitizePreviewUrl(url)}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline hover:text-indigo-300 font-medium">${label}</a>`)
             .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-indigo-500 pl-4 py-1.5 text-slate-300 italic my-3 bg-white/[0.03] rounded-r-lg">$1</blockquote>')
             .replace(/^- (.*$)/gim, '<li class="ml-4 list-disc text-slate-300 my-1">$1</li>')
             .replace(/\n\n+/g, '</p><p class="my-3 leading-relaxed text-slate-300 text-sm">')

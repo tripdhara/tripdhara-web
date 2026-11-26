@@ -1,19 +1,36 @@
 import { jest } from '@jest/globals';
 
-// Use unstable_mockModule for ESM Helpers
-jest.unstable_mockModule('@/core/Helpers/cloudinary.js', () => ({
-    uploadToCloudinary: jest.fn()
+const mockUserAuthResponse = jest.fn((user) => ({ id: user?._id?.toString(), email: user?.email, businessProfile: { bankDetails: {} } }));
+
+jest.unstable_mockModule('@/core/Helpers/userProfileHelper.js', () => ({
+    userPayload: jest.fn(),
+    userPayloadMini: jest.fn(),
+    userDetailsPayload: jest.fn(),
+    userProfileById: jest.fn(),
+    userBusinessProfileById: jest.fn(),
+    userBusinessPayload: jest.fn(),
+    userAuthResponse: mockUserAuthResponse,
+    default: { userAuthResponse: mockUserAuthResponse }
 }));
 
 const { default: BankService } = await import('@/core/Services/Vendor/BankService.js');
 const { default: Vendor } = await import('@/core/Models/Vendor.js');
-const { uploadToCloudinary } = await import('@/core/Helpers/cloudinary.js');
+const { default: User } = await import('@/core/Models/User.js');
+
+const createVendorQueryMock = (val) => ({
+    select: jest.fn().mockReturnThis(),
+    populate: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockResolvedValue(val),
+    exec: jest.fn().mockResolvedValue(val),
+    then: (resolve, reject) => Promise.resolve(val).then(resolve, reject)
+});
 
 describe('Vendor BankService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(Vendor, 'findOne');
         jest.spyOn(Vendor, 'findOneAndUpdate');
+        jest.spyOn(User, 'findById').mockResolvedValue({ _id: 'user123', email: 'vendor@test.com', role: 'vendor' });
     });
 
     afterEach(() => {
@@ -25,38 +42,39 @@ describe('Vendor BankService', () => {
             const userId = 'user123';
             const bankData = { accountHolderName: 'John Doe', accountNumber: '12345' };
             const mockVendor = { _id: 'v1', bankDetails: {} };
-            
-            Vendor.findOne.mockReturnValue({
-                populate: jest.fn().mockReturnValue({
-                    lean: jest.fn().mockResolvedValue(mockVendor)
-                })
-            });
-            Vendor.findOneAndUpdate.mockResolvedValue({ bankDetails: bankData });
+
+            Vendor.findOne.mockReturnValue(createVendorQueryMock(mockVendor));
+            Vendor.findOneAndUpdate.mockResolvedValue({ _id: 'v1', bankDetails: bankData });
 
             const result = await BankService.updateBankDetails(userId, bankData);
 
-            expect(result.accountHolderName).toBe('John Doe');
+            expect(Vendor.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'v1' },
+                { $set: { bankDetails: expect.objectContaining(bankData) } },
+                expect.objectContaining({ returnDocument: 'after' })
+            );
+            expect(result).toBeDefined();
         });
 
-        test('should update bank details with file upload', async () => {
+        test('should update bank details with cancelledCheque URL', async () => {
             const userId = 'user123';
-            const bankData = { cancelledChequeFile: { name: 'cheque.jpg' } };
+            const bankData = { cancelledCheque: 'http://cloud.com/img' };
             const mockVendor = { _id: 'v1', bankDetails: {} };
-            
-            Vendor.findOne.mockReturnValue({
-                populate: jest.fn().mockReturnValue({
-                    lean: jest.fn().mockResolvedValue(mockVendor)
-                })
-            });
-            uploadToCloudinary.mockResolvedValue({ url: 'http://cloud.com/img', publicId: 'p1' });
-            Vendor.findOneAndUpdate.mockResolvedValue({ 
-                bankDetails: { cancelledCheque: { url: 'http://cloud.com/img' } } 
+
+            Vendor.findOne.mockReturnValue(createVendorQueryMock(mockVendor));
+            Vendor.findOneAndUpdate.mockResolvedValue({
+                _id: 'v1',
+                bankDetails: { cancelledCheque: { url: 'http://cloud.com/img' } }
             });
 
             const result = await BankService.updateBankDetails(userId, bankData);
 
-            expect(result.cancelledCheque.url).toBe('http://cloud.com/img');
-            expect(uploadToCloudinary).toHaveBeenCalled();
+            expect(Vendor.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'v1' },
+                { $set: { bankDetails: expect.objectContaining({ cancelledCheque: { url: 'http://cloud.com/img' } }) } },
+                expect.any(Object)
+            );
+            expect(result).toBeDefined();
         });
     });
 
@@ -74,6 +92,7 @@ describe('Vendor BankService', () => {
                 { $unset: { bankDetails: "" } },
                 expect.anything()
             );
+            expect(User.findById).toHaveBeenCalledWith('u1');
         });
     });
 });

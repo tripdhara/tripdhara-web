@@ -34,9 +34,11 @@ class CategoryService {
         if (!vendor || !vendor.category || vendor.category.length === 0) return [];
 
         const assignedSlugs = vendor.category.map(c => c.slug);
-        const dbCategories = await getCategoriesBy({ slug: { $in: assignedSlugs } }, '_id name slug');
-        const docs = await getVendorDocumentsBy({ user: userId, vendor: vendor._id }, 'category_slug document_slug url status rejection_reason issue_date expiry_date createdAt');
-        const categoryReqs = await getCategoryDocumentsBy({ isActive: true }, 'name slug category_slug');
+        const [dbCategories, docs, categoryReqs] = await Promise.all([
+            getCategoriesBy({ slug: { $in: assignedSlugs } }, '_id name slug'),
+            getVendorDocumentsBy({ user: userId, vendor: vendor._id }, 'category_slug document_slug url status rejection_reason issue_date expiry_date createdAt'),
+            getCategoryDocumentsBy({ isActive: true }, 'name slug category_slug')
+        ]);
 
         return vendor.category.map(cat => {
             const dbCat = dbCategories.find(c => c.slug === cat.slug);

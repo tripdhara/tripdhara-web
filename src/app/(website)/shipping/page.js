@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Shipping & Delivery Policy | Tripdhara',
         description: 'Instant digital voucher delivery SLAs, vehicle handover protocols, and physical check-in verification.',
-        url: 'https://tripdhara.com/shipping',
+        url: 'https://tripdhara.in/shipping',
         siteName: 'Tripdhara',
         type: 'website',
     },

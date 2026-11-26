@@ -53,6 +53,14 @@ describe('Industry Standard: CronController', () => {
         expect(res.status).toBe(HTTP_STATUS.UNAUTHORIZED);
     });
 
+    it('[Security] should reject request with 401 when server cron_secret is unset (null)', async () => {
+        mockAppConfig.secrets.cron_secret = null;
+        mockReq.headers.get.mockReturnValue('Bearer null');
+        const res = await CronController.handleCron(mockReq);
+        expect(res.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+        mockAppConfig.secrets.cron_secret = 'valid_cron_secret_123';
+    });
+
     it('[Validation] should return 400 when job param is unknown or missing', async () => {
         mockReq.query = { job: 'unknown_job' };
         mockReq.url = 'https://tripdhara.in/api/cron?job=unknown_job';

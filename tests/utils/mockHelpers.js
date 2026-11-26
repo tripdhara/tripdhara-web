@@ -154,5 +154,6 @@ export const createMockCacheService = (overrides = {}) => ({
     get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue(true),
     del: jest.fn().mockResolvedValue(true),
+    deletePattern: jest.fn().mockResolvedValue(true),
     ...overrides
 });

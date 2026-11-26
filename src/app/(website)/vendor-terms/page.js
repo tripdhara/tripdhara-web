@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Vendor Partner Terms & Agreement | Tripdhara',
         description: 'Commercial terms, commission structure, T+2 payout SLAs, quality standards, and tax compliance for verified vendors.',
-        url: 'https://tripdhara.com/vendor-terms',
+        url: 'https://tripdhara.in/vendor-terms',
         siteName: 'Tripdhara',
         type: 'website',
     },

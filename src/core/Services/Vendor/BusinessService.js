@@ -109,10 +109,9 @@ class BusinessService {
             { deletedAt: new Date(), deletedBy: userId },
             { returnDocument: 'after' }
         );
-        if (vendor) {
-            await this.invalidateVendorCaches(userId, vendor._id);
-        }
-        const user = await User.findById(userId);
+        if (!vendor) return null;
+        await this.invalidateVendorCaches(userId, vendor._id);
+        const user = await User.findById(userId).select('-password').lean();
         return userAuthResponse(user);
     }
 
@@ -176,10 +175,9 @@ class BusinessService {
             { status: status },
             { returnDocument: 'after' }
         );
-        if (vendor) {
-            await this.invalidateVendorCaches(userId, vendor._id);
-        }
-        const user = await User.findById(userId);
+        if (!vendor) return null;
+        await this.invalidateVendorCaches(userId, vendor._id);
+        const user = await User.findById(userId).select('-password').lean();
         return userAuthResponse(user);
     }
 
@@ -190,23 +188,23 @@ class BusinessService {
             { isApproved: status },
             { returnDocument: 'after' }
         );
-        if (vendor) {
-            await this.invalidateVendorCaches(userId, vendor._id);
-        }
-        const user = await User.findById(userId);
+        if (!vendor) return null;
+        await this.invalidateVendorCaches(userId, vendor._id);
+        const user = await User.findById(userId).select('-password').lean();
         return userAuthResponse(user);
     }
 
     // Toggle Operational/Availability status
     async toggleOperatingStatus(userId, isOperating, businessId = null) {
+        const query = { user: userId, deletedAt: null };
+        if (businessId) query._id = businessId;
         const vendor = await Vendor.findOneAndUpdate(
-            { user: userId, _id: businessId, deletedAt: null },
+            query,
             { isOperating: isOperating },
             { returnDocument: 'after' });
-        if (vendor) {
-            await this.invalidateVendorCaches(userId, vendor._id);
-        }
-        const user = await User.findById(userId);
+        if (!vendor) return null;
+        await this.invalidateVendorCaches(userId, vendor._id);
+        const user = await User.findById(userId).select('-password').lean();
         return userAuthResponse(user);
     }
 

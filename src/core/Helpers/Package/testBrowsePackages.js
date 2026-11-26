@@ -36,6 +36,7 @@ import { normalizeCoordinates, calculateDistanceKm } from '@/core/Services/Share
 import { packageItemResponse } from './packageResponse.js';
 import { paginateItems, buildEmptyResult, sortItems, schemaKey, itemsReviews, itemsWishlist, itemsProject } from './shared.js';
 import { getAppConfig } from '@/core/Lib/appConfig.js';
+import { escapeRegex } from '@/core/Helpers/security.js';
 
 // =============================================================================
 // CACHING ARCHITECTURE
@@ -192,7 +193,7 @@ export async function getTestBrowsePackages(options = {}) {
     // =========================================================================
 
     if (address && typeof address === 'string' && address.trim()) {
-        const addrRegex = new RegExp(address.trim(), 'i');
+        const addrRegex = new RegExp(escapeRegex(address.trim()), 'i');
 
         // Priority 1: Match directly on vendor registered business address
         const vendorAddressQuery = { _id: { $in: eligibleVendorObjectIds }, $or: [{ 'address.city': addrRegex }, { 'address.addressLine1': addrRegex }, { 'address.addressLine2': addrRegex }, { 'address.state': addrRegex }] };
@@ -284,7 +285,7 @@ export async function getTestBrowsePackages(options = {}) {
 
     // Text / Keyword Search across item title, description & city
     if (query && typeof query === 'string' && query.trim()) {
-        const qRegex = new RegExp(query.trim(), 'i');
+        const qRegex = new RegExp(escapeRegex(query.trim()), 'i');
         pipeline.push({
             $match: {
                 $or: [

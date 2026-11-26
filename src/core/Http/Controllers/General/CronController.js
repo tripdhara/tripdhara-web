@@ -1,8 +1,16 @@
+import crypto from 'node:crypto';
 import Controller from '@/core/Http/Controllers/Controller.js';
 import CronService from '@/core/Services/CronService.js';
 import { getAppConfig } from '@/core/Lib/appConfig.js';
 import { HTTP_STATUS } from '@/core/Constants/index.js';
 import { getLogger } from '@/core/Lib/logger.js';
+
+const safeTokenMatch = (received, expected) => {
+  if (!received || !expected) return false;
+  const receivedBuf = Buffer.from(String(received));
+  const expectedBuf = Buffer.from(String(expected));
+  return receivedBuf.length === expectedBuf.length && crypto.timingSafeEqual(receivedBuf, expectedBuf);
+};
 
 /**
  * CronController - Handles automated system maintenance and cron trigger requests.
@@ -17,8 +25,9 @@ class CronController extends Controller {
     try {
       const authHeader = req.headers.get('authorization');
       const config = await getAppConfig();
+      const cronSecret = config.secrets?.cron_secret;
 
-      if (authHeader !== `Bearer ${config.secrets?.cron_secret}`) {
+      if (!cronSecret || !safeTokenMatch(authHeader, `Bearer ${cronSecret}`)) {
         return this.error(HTTP_STATUS.UNAUTHORIZED, 'Unauthorized cron trigger');
       }
 

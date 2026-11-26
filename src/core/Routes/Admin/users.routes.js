@@ -10,7 +10,7 @@ export default [
         { method: 'GET', path: '/:id', handler: wrap(() => TravellerController, 'getTraveller') },
         { method: 'POST', path: '/create', schema: schemas.adminUserMutation, handler: wrap(() => TravellerController, 'createTraveller') },
         { method: 'PATCH', path: '/:id/update', schema: schemas.adminUserMutation, handler: wrap(() => TravellerController, 'updateTraveller') },
-        { method: 'DELETE', path: '/:id/delete', handler: wrap(() => TravellerController, 'deleteTraveller') },
+        { method: 'DELETE', path: '/:id/delete', schema: schemas.deleteAction, handler: wrap(() => TravellerController, 'deleteTraveller') },
     ]),
     ...Router.group({ prefix: '/vendors' }, [
         { method: 'GET', path: '/', handler: wrap(() => VendorController, 'getVendors') },
@@ -18,7 +18,7 @@ export default [
         { method: 'GET', path: '/:id/packages', handler: wrap(() => VendorController, 'getVendorPackages') },
         { method: 'POST', path: '/create', schema: schemas.adminUserMutation, handler: wrap(() => VendorController, 'createVendor') },
         { method: 'PATCH', path: '/:id/update', schema: schemas.adminUserMutation, handler: wrap(() => VendorController, 'updateVendor') },
-        { method: 'DELETE', path: '/:id/delete', handler: wrap(() => VendorController, 'deleteVendor') },
+        { method: 'DELETE', path: '/:id/delete', schema: schemas.deleteAction, handler: wrap(() => VendorController, 'deleteVendor') },
     ]),
     { method: 'POST', path: '/approve-vendor', schema: schemas.adminVendorApproval, handler: wrap(() => VendorController, 'approveVendor') },
     { method: 'POST', path: '/verify-document', schema: schemas.documentVerification, handler: wrap(() => VendorController, 'verifyDocument') },

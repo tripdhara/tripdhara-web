@@ -33,7 +33,7 @@ export const metadata = {
     openGraph: {
         title: 'Privacy Policy | Tripdhara',
         description: 'DPDP Act 2023 statutory compliance, data minimization, and privacy protections for Himalayan travelers.',
-        url: 'https://tripdhara.com/privacy',
+        url: 'https://tripdhara.in/privacy',
         siteName: 'Tripdhara',
         type: 'website',
     },
@@ -81,7 +81,7 @@ export default async function PrivacyPolicyPage() {
                         publisher: {
                             '@type': 'Organization',
                             name: 'Tripdhara Travel & Rentals India',
-                            url: 'https://tripdhara.com'
+                            url: 'https://tripdhara.in'
                         }
                     })
                 }}

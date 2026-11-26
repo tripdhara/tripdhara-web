@@ -239,18 +239,37 @@ class CacheService {
         return this.delete(key);
     }
 
+    async _scanAndDelete(scanFn, delFn) {
+        let cursor = 0;
+        do {
+            const res = await scanFn(cursor);
+            let nextCursor;
+            let keys;
+            if (Array.isArray(res)) {
+                [nextCursor, keys] = res;
+            } else {
+                nextCursor = res?.cursor ?? 0;
+                keys = res?.keys ?? [];
+            }
+            if (keys && keys.length > 0) {
+                for (let i = 0; i < keys.length; i += 100) {
+                    const batch = keys.slice(i, i + 100);
+                    await delFn(batch);
+                }
+            }
+            cursor = nextCursor;
+        } while (String(cursor) !== '0');
+    }
+
     async deletePattern(pattern) {
         await this.init();
         let success = false;
         if (this.upstashClient) {
             try {
-                const keys = await this.upstashClient.keys(pattern);
-                if (keys && keys.length > 0) {
-                    for (let i = 0; i < keys.length; i += 100) {
-                        const batch = keys.slice(i, i + 100);
-                        await this.upstashClient.del(...batch);
-                    }
-                }
+                await this._scanAndDelete(
+                    (cursor) => this.upstashClient.scan(cursor, { match: pattern, count: 100 }),
+                    (batch) => this.upstashClient.del(...batch)
+                );
                 success = true;
             } catch (err) {
                 if (err?.digest === 'DYNAMIC_SERVER_USAGE') throw err;
@@ -263,13 +282,10 @@ class CacheService {
         }
         if (this.isStandardConnected) {
             try {
-                const keys = await this.standardClient.keys(pattern);
-                if (keys && keys.length > 0) {
-                    for (let i = 0; i < keys.length; i += 100) {
-                        const batch = keys.slice(i, i + 100);
-                        await this.standardClient.del(...batch);
-                    }
-                }
+                await this._scanAndDelete(
+                    (cursor) => this.standardClient.scan(String(cursor), { MATCH: pattern, COUNT: 100 }),
+                    (batch) => this.standardClient.del(batch)
+                );
                 success = true;
             } catch (err) {
                 if (err?.digest === 'DYNAMIC_SERVER_USAGE') throw err;

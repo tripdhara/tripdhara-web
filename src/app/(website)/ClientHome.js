@@ -185,7 +185,7 @@ export default function ClientHome({ categories = [] }) {
     const handleSearch = (e) => {
         e.preventDefault();
         const params = new URLSearchParams();
-        if (searchQuery) params.set('query', searchQuery);
+        if (searchQuery) params.set('q', searchQuery);
         if (selectedDate) params.set('date', selectedDate);
         if (guests) params.set('guests', guests);
         router.push(`/packages?${params.toString()}`);

@@ -64,11 +64,15 @@ const nextConfig = {
                     },
                     {
                         key: 'Referrer-Policy',
-                        value: 'origin-when-cross-origin'
+                        value: 'strict-origin-when-cross-origin'
                     },
                     {
                         key: 'Permissions-Policy',
                         value: 'camera=(), microphone=(), geolocation=()'
+                    },
+                    {
+                        key: 'Content-Security-Policy',
+                        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://media.tripdhara.com https://images.unsplash.com https://upload.wikimedia.org; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.r2.cloudflarestorage.com; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
                     }
                 ]
             }

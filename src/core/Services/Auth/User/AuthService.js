@@ -159,12 +159,16 @@ class AuthService {
             user = await User.create({ email: email || null, name: name || null, [providerKey]: providerId, role: userRole, isVerified: DEFAULTS.TRUE, authProvider });
             isNewUser = DEFAULTS.TRUE;
         } else {
+            const adminRoles = [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.DEVELOPER];
+            if (adminRoles.includes(user.role)) throw AppError.forbidden(RESPONSE_MESSAGES.AUTH.DIFFERENT_METHOD);
+            if (targetRole && [USER_ROLES.TRAVELLER, USER_ROLES.VENDOR].includes(targetRole) && user.role !== targetRole) {
+                throw AppError.forbidden(RESPONSE_MESSAGES.AUTH.ROLE_MISMATCH);
+            }
             if (!user[providerKey]) {
                 user[providerKey] = providerId;
                 user.authProvider = authProvider;
             }
             if (email && !user.email) user.email = email;
-            if (targetRole && [USER_ROLES.TRAVELLER, USER_ROLES.VENDOR].includes(targetRole)) user.role = targetRole;
             if (user.isModified()) await user.save();
         }
         return { user, isNewUser };

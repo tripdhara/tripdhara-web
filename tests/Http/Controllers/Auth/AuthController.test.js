@@ -37,7 +37,8 @@ describe('Industry Standard: AuthController API Controller', () => {
             const data = await response.json();
 
             expect(response.status).toBe(200);
-            expect(data.data.otp).toBe('123456');
+            expect(data.data.otp).toBeUndefined();
+            expect(data.data.email).toBe('test@test.com');
             expect(UserAuthService.initiateOTP).toHaveBeenCalled();
         });
 

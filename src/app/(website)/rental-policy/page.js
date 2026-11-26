@@ -31,7 +31,7 @@ export const metadata = {
     openGraph: {
         title: 'Vehicle Rental & Deposit Policy | Tripdhara',
         description: 'Comprehensive guidelines on documentation, 24-hour UPI deposit refunds, level-to-level fuel, speed limits, and traffic challans.',
-        url: 'https://tripdhara.com/rental-policy',
+        url: 'https://tripdhara.in/rental-policy',
         siteName: 'Tripdhara',
         type: 'website',
     },

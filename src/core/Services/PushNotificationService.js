@@ -29,7 +29,7 @@ export class PushNotificationService {
             if (!messaging) return { success: false, error: 'Firebase not initialized' };
 
             const sanitizedData = sanitizeDataPayload(data);
-            // sanitizedData.click_action = sanitizedData.click_action || 'FLUTTER_NOTIFICATION_CLICK';
+            sanitizedData.click_action = sanitizedData.click_action || 'FLUTTER_NOTIFICATION_CLICK';
 
             const payload = {
                 token,

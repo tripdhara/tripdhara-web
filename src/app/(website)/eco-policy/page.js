@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Himalayan Eco-Tourism & Conservation Policy | Tripdhara',
         description: 'Sustainable mountain travel practices, zero single-use plastic mandate, alpine meadow preservation, and campfire restrictions.',
-        url: 'https://tripdhara.com/eco-policy',
+        url: 'https://tripdhara.in/eco-policy',
         siteName: 'Tripdhara',
         type: 'website',
     },

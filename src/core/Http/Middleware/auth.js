@@ -29,7 +29,8 @@ const authMiddleware = async (req) => {
 
         const decoded = await verifyToken(token);
         if (!decoded) return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
-        if (decoded.type && decoded.type !== 'access') return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID }
+        if (decoded.type && decoded.type !== 'access') return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
+        if (decoded.type === 'access' && !decoded.jti) return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
 
         // Check Redis for blacklisted JTI (logout / token revocation)
         if (decoded.jti) {
@@ -38,6 +39,7 @@ const authMiddleware = async (req) => {
                 if (isBlacklisted) return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.TOKEN_INVALID };
             } catch (cacheErr) {
                 getLogger().error({ err: cacheErr, jti: decoded.jti }, '[AuthMiddleware] Redis token blacklist lookup failed');
+                return { authorized: DEFAULTS.FALSE, message: RESPONSE_MESSAGES.AUTH.AUTH_SERVICE_ERROR };
             }
         }
 

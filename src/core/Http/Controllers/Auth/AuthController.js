@@ -35,8 +35,8 @@ class AuthController extends Controller {
 
             const { email: validEmail, phone: validPhone, role: validRole } = validationResult.data;
             const identifier = validEmail ? validEmail.toLowerCase().trim() : validPhone.trim();
-            const otp = await UserAuthService.initiateOTP({ identifier, role: validRole, termsAccepted: true });
-            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.AUTH.OTP_SENT, { otp, email: validEmail, phone: validPhone });
+            await UserAuthService.initiateOTP({ identifier, role: validRole, termsAccepted: true });
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.AUTH.OTP_SENT, { email: validEmail, phone: validPhone });
         } catch (error) {
             return this.error(HTTP_STATUS.FORBIDDEN, RESPONSE_MESSAGES.AUTH.OTP_FAILED);
         }
@@ -237,7 +237,7 @@ class AuthController extends Controller {
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
             // Verification logic...
-            const otpRecord = await OTPService.verifyOTP(user.email || user.phone, body.otp);
+            const otpRecord = await OTPService.verifyOTP(user.email || user.phone, body.otp, user.role);
             if (!otpRecord) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.AUTH.INVALID_OTP);
 
             await AdminAuthService.resetPassword(user._id, body.password);
@@ -251,12 +251,13 @@ class AuthController extends Controller {
         try {
             if (!req.user?.id) return this.error(HTTP_STATUS.UNAUTHORIZED, RESPONSE_MESSAGES.AUTH.UNAUTHORIZED);
             const body = req.payload;
-            if (!body.oldPassword || !body.newPassword) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
+            const currentPassword = body.currentPassword;
+            if (!currentPassword || !body.newPassword) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
 
             const user = await User.findById(req.user.id).select('+password');
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
-            const isMatch = await user.comparePassword(body.oldPassword);
+            const isMatch = await user.comparePassword(currentPassword);
             if (!isMatch) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.AUTH.INVALID_CREDENTIALS);
 
             await AdminAuthService.updatePassword(user._id, body.newPassword);
@@ -295,7 +296,7 @@ class AuthController extends Controller {
             if (!user) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.ERROR.NOT_FOUND);
 
             const identifier = user.email || user.phone;
-            const otpRecord = await OTPService.verifyOTP(identifier, otp);
+            const otpRecord = await OTPService.verifyOTP(identifier, otp, user.role);
 
             if (!otpRecord) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.AUTH.INVALID_OTP);
 
@@ -308,8 +309,12 @@ class AuthController extends Controller {
 
     async updateFCMToken(req) {
         try {
+            if (!req.user?.id) return this.error(HTTP_STATUS.UNAUTHORIZED, RESPONSE_MESSAGES.AUTH.UNAUTHORIZED);
             const body = req.payload;
-            const responseData = await BaseAuthService.updateUserProfile(req.user.id, body);
+            if (!body?.fcmToken || typeof body.fcmToken !== 'string') {
+                return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
+            }
+            const responseData = await BaseAuthService.updateUserProfile(req.user.id, { fcmToken: body.fcmToken.trim() });
             return this.success(HTTP_STATUS.OK, "FCM token updated successfully.", { fcmToken: responseData?.fcmToken });
         } catch (error) {
             return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);

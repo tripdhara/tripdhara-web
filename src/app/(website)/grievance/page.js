@@ -30,7 +30,7 @@ export const metadata = {
     openGraph: {
         title: 'Grievance Redressal Policy | Tripdhara',
         description: 'Statutory grievance officer details, escalation matrix, and resolution timelines for Himalayan travelers.',
-        url: 'https://tripdhara.com/grievance',
+        url: 'https://tripdhara.in/grievance',
         siteName: 'Tripdhara',
         type: 'website',
     },

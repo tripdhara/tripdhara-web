@@ -14,7 +14,7 @@ class BookingService {
     return await fetchBookingById(id, '', ['package', 'user']);
   }
 
-  async updatePaymentStatus(orderId, paymentId, signatureOrStatus) {
+  async updatePaymentStatus(orderId, paymentId, signatureOrStatus, paymentDetails = null) {
     if (!orderId || !paymentId) throw AppError.badRequest('Order id and payment id are required.');
 
     const session = await mongoose.startSession();
@@ -24,6 +24,16 @@ class BookingService {
       await session.withTransaction(async () => {
         const booking = await getBookingBy({ 'payment.orderId': orderId }, '', null, { session, lean: false });
         if (!booking) throw AppError.notFound(RESPONSE_MESSAGES.BOOKING.NOT_FOUND);
+
+        if (signatureOrStatus === 'WEBHOOK_VERIFIED' || paymentDetails?.amount !== undefined || paymentDetails?.currency !== undefined) {
+          const bookingTotal = Number(booking.pricing?.total);
+          const expectedPaise = Math.round(bookingTotal * 100);
+          const receivedPaise = Number(paymentDetails?.amount);
+          const receivedCurrency = String(paymentDetails?.currency || '').toUpperCase();
+          if (!Number.isFinite(bookingTotal) || bookingTotal <= 0 || !Number.isFinite(receivedPaise) || receivedPaise <= 0 || receivedPaise !== expectedPaise || receivedCurrency !== 'INR') {
+            throw AppError.badRequest('Payment amount or currency mismatch.');
+          }
+        }
 
         if (!booking.payment) booking.payment = {};
 

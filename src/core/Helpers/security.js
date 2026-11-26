@@ -128,4 +128,35 @@ export const redactSensitiveData = (details) => {
     }
 };
 
-export default { sanitizeNoSQL, sanitizeHTML, redactSensitiveData };
+/**
+ * Escapes regular expression metacharacters from untrusted user input to prevent ReDoS.
+ * @param {string} value
+ * @returns {string}
+ */
+export const escapeRegex = (value) => {
+    if (typeof value !== 'string') return '';
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+/**
+ * Validates and sanitizes URLs for rendering in href/src attributes (blocks javascript:/data:/vbscript:).
+ * @param {string} rawUrl
+ * @returns {string}
+ */
+export const sanitizeUrl = (rawUrl) => {
+    if (typeof rawUrl !== 'string') return '#';
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return '#';
+    if (trimmed.startsWith('/') || trimmed.startsWith('#')) return trimmed;
+    try {
+        const parsed = new URL(trimmed);
+        if (['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)) {
+            return trimmed;
+        }
+    } catch {
+        return '#';
+    }
+    return '#';
+};
+
+export default { sanitizeNoSQL, sanitizeHTML, redactSensitiveData, escapeRegex, sanitizeUrl };

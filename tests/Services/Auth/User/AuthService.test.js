@@ -105,4 +105,24 @@ describe('Industry Standard: User AuthService Logic', () => {
             expect(result).toBeDefined();
         });
     });
+
+    describe('[_findOrCreateSocialUser]', () => {
+        it('[Security] should block admin accounts from social login', async () => {
+            User.findOne.mockReturnValue(createQueryMock({ _id: 'a1', role: 'admin', email: 'admin@tripdhara.in' }));
+
+            await expect(
+                AuthService._findOrCreateSocialUser({ email: 'admin@tripdhara.in', name: 'Admin', providerKey: 'googleId', providerId: 'g1', authProvider: 'google', targetRole: 'traveller' })
+            ).rejects.toThrow();
+        });
+
+        it('[Security] should reject role mismatch on existing social user instead of overwriting role', async () => {
+            const existingUser = { _id: 'u2', role: 'traveller', email: 'u@test.com', googleId: 'g2', isModified: jest.fn(() => false), save: jest.fn() };
+            User.findOne.mockReturnValue(createQueryMock(existingUser));
+
+            await expect(
+                AuthService._findOrCreateSocialUser({ email: 'u@test.com', name: 'User', providerKey: 'googleId', providerId: 'g2', authProvider: 'google', targetRole: 'vendor' })
+            ).rejects.toThrow();
+            expect(existingUser.role).toBe('traveller');
+        });
+    });
 });

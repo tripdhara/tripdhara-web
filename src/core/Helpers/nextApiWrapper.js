@@ -18,7 +18,9 @@ const REQUEST_ID_HEADER = 'x-request-id';
 
 const withRequestId = (response, requestId) => {
     response.headers.set(REQUEST_ID_HEADER, requestId);
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    if (!response.headers.has('Cache-Control')) {
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    }
     return response;
 };
 
@@ -61,9 +63,9 @@ export function createNextRouter(routes) {
             await dbConnect();
             const method = req.method;
 
-            // Extract the absolute path from the Request URL and strip the /api prefix
+            // Extract the absolute path from the Request URL and strip /api or /api/v1 prefix
             const urlObj = new URL(req.url);
-            let path = urlObj.pathname.replace(/^\/api/, '').replace(/\/$/, '') || '/';
+            let path = urlObj.pathname.replace(/^\/api(\/v1)?/, '').replace(/\/$/, '') || '/';
 
             const match = router.find(method.toUpperCase(), path);
 

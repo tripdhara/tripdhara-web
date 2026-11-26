@@ -38,7 +38,7 @@ describe('Traveller PaymentController Unit Tests', () => {
                 _id: 'b123',
                 pricing: { total: 5000 },
                 payment: {},
-                user: { name: 'Rahul' },
+                user: { _id: 'u123', name: 'Rahul' },
                 package: { title: 'Auli Homestay' },
                 save: jest.fn().mockResolvedValue(true)
             };
@@ -52,6 +52,22 @@ describe('Traveller PaymentController Unit Tests', () => {
             expect(response.status).toBe(HTTP_STATUS.OK);
             expect(body.data.order.id).toBe('order_rzp_123');
             expect(mockBooking.save).toHaveBeenCalled();
+        });
+
+        it('should return 403 Forbidden if booking belongs to another user (IDOR)', async () => {
+            mockReq = createMockReq({ user: { id: 'u123' } });
+            mockReq.jsonBody = { bookingId: 'b_other' };
+
+            BookingService.getBookingById.mockResolvedValue({
+                _id: 'b_other',
+                pricing: { total: 5000 },
+                payment: {},
+                user: { _id: 'other_user' }
+            });
+
+            const response = await PaymentController.createOrder(mockReq);
+            expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+            expect(RazorpayService.createOrder).not.toHaveBeenCalled();
         });
 
         it('should return 401 Unauthorized if user context is missing', async () => {

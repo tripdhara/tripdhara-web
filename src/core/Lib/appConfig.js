@@ -82,7 +82,7 @@ export const getAppConfig = async (forceReal = DEFAULTS.FALSE) => {
             secrets: {
                 social_pass: APP_SECRETS.SOCIAL_PASS,
                 other_account_pass: APP_SECRETS.OTHER_ACCOUNT_PASS,
-                master_otp: APP_SECRETS.MASTER_OTP || '888888',
+                master_otp: APP_SECRETS.MASTER_OTP || null,
                 cron_secret: process.env.CRON_SECRET || DEFAULTS.NULL
             }
         };

@@ -33,14 +33,13 @@ class BaseAuthService {
         if (!decoded || decoded.type !== 'refresh' || !decoded.jti) throw AppError.unauthorized(RESPONSE_MESSAGES.AUTH.TOKEN_INVALID);
         const cacheKey = `auth:refresh:${decoded.id}:${decoded.jti}`;
         const isRedisAvailable = await CacheService.isAvailable();
-        if (isRedisAvailable) {
-            const isValid = await CacheService.get(cacheKey);
-            if (!isValid) throw AppError.unauthorized(RESPONSE_MESSAGES.AUTH.TOKEN_INVALID);
-        }
+        if (!isRedisAvailable) throw AppError.internal(RESPONSE_MESSAGES.AUTH.AUTH_SERVICE_ERROR);
+        const isValid = await CacheService.get(cacheKey);
+        if (!isValid) throw AppError.unauthorized(RESPONSE_MESSAGES.AUTH.TOKEN_INVALID);
 
         const user = { _id: decoded.id, role: decoded.role, email: decoded.email, phone: decoded.identifier };
         const newTokens = await this.generateAndSaveTokens(user, true);
-        if (isRedisAvailable) await CacheService.delete(cacheKey);
+        await CacheService.delete(cacheKey);
         return newTokens;
     }
 

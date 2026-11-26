@@ -1,24 +1,54 @@
 import { NextResponse } from 'next/server';
 
+const DEFAULT_ALLOWED_ORIGINS = [
+    'https://tripdhara.in',
+    'https://www.tripdhara.in',
+    'https://admin.tripdhara.in',
+];
+
+const isAllowedOrigin = (origin) => {
+    if (!origin) return false;
+    const configured = (process.env.CORS_ALLOWED_ORIGINS || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+    if (process.env.NEXT_PUBLIC_APP_URL) configured.push(process.env.NEXT_PUBLIC_APP_URL.trim());
+    const allowlist = new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured]);
+    if (allowlist.has(origin)) return true;
+
+    try {
+        const parsed = new URL(origin);
+        return parsed.protocol === 'https:' && parsed.hostname.endsWith('.tripdhara.in');
+    } catch {
+        return false;
+    }
+};
+
+const applyCorsHeaders = (headers, origin) => {
+    if (!isAllowedOrigin(origin)) return;
+    headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-request-id, x-client-device');
+    headers.set('Access-Control-Allow-Credentials', 'true');
+    headers.set('Vary', 'Origin');
+};
+
 /**
  * Next.js Edge Proxy
  * Intercepts requests at the edge for security headers, request tracing, and CORS.
  */
 export function proxy(request) {
     const url = new URL(request.url);
+    const origin = request.headers.get('origin');
 
     // Preflight CORS OPTIONS request handling for API routes
     if (url.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
-        const origin = request.headers.get('origin') || '*';
-        return new NextResponse(null, {
-            status: 204,
-            headers: {
-                'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-request-id, x-client-device',
-                'Access-Control-Allow-Credentials': 'true',
-            },
-        });
+        if (origin && !isAllowedOrigin(origin)) {
+            return new NextResponse(null, { status: 403 });
+        }
+        const headers = new Headers();
+        applyCorsHeaders(headers, origin);
+        return new NextResponse(null, { status: 204, headers });
     }
 
     // Protected UI routes check - redirect unauthenticated users to /login immediately
@@ -53,7 +83,7 @@ export function proxy(request) {
 
     const requestHeaders = new Headers(request.headers);
     const existingRequestId = request.headers.get('x-request-id');
-    const requestId = existingRequestId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+    const requestId = existingRequestId || crypto.randomUUID();
     requestHeaders.set('x-request-id', requestId);
 
     const response = NextResponse.next({
@@ -70,14 +100,14 @@ export function proxy(request) {
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    response.headers.set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://media.tripdhara.com https://images.unsplash.com https://upload.wikimedia.org; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.r2.cloudflarestorage.com; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    );
 
-    // CORS Headers for API routes
+    // CORS Headers for API routes (explicit allowlist only — never reflect arbitrary origins)
     if (url.pathname.startsWith('/api/')) {
-        const origin = request.headers.get('origin') || '*';
-        response.headers.set('Access-Control-Allow-Origin', origin);
-        response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-request-id, x-client-device');
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
+        applyCorsHeaders(response.headers, origin);
     }
 
     return response;

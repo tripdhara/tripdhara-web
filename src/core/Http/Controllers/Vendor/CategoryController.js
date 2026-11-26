@@ -5,6 +5,7 @@ import CategoryEvents from '@/events/CategoryEvents';
 import { NOTIFICATION } from '@/core/Constants/notification';
 import User from '@/core/Models/User';
 import { userAuthResponse } from '@/core/Helpers/userProfileHelper';
+import { getLogger } from '@/core/Lib/logger.js';
 
 /**
  * CategoryController (Vendor Role) - Specialized management of
@@ -57,13 +58,13 @@ class CategoryController extends Controller {
     // GET /vendor/category/documents (Retrieve document requirements)
     async getCategoryDocuments(req, { params } = {}) {
         try {
-            const { slug } = params;
+            const { slug } = params || {};
             if (!slug) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
 
             const docs = await CategoryService.getDocuments(req.user.id, slug);
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.CATEGORY_DOCS_FETCHED, docs);
         } catch (error) {
-            console.log('error', error);
+            getLogger().error({ err: error }, '[CategoryController] getCategoryDocuments error');
             return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }
@@ -84,7 +85,7 @@ class CategoryController extends Controller {
     // POST /vendor/category/documents/upload
     async uploadDocuments(req, { params } = {}) {
         try {
-            const slug = params.slug || (req.payload && (req.payload.slug || req.payload.category_slug));
+            const slug = params?.slug || (req.payload && (req.payload.slug || req.payload.category_slug));
             if (!slug) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VALIDATION.REQUIRED_FIELDS);
             const result = await CategoryService.uploadDocuments(req.user.id, slug, req);
             // 2. Full Business/User Profile fetch karein taaki account object ban sake
@@ -103,7 +104,7 @@ class CategoryController extends Controller {
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.CATEGORY_DOCS_UPLOADED);
         } catch (error) {
-            console.log('error', error)
+            getLogger().error({ err: error }, '[CategoryController] uploadCategoryDocuments error');
             return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
         }
     }

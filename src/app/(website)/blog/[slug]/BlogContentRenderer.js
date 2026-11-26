@@ -32,14 +32,40 @@ export function extractHeadings(markdown) {
     return headings;
 }
 
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function sanitizeMarkdownUrl(rawUrl) {
+    if (typeof rawUrl !== 'string') return '#';
+    const trimmed = rawUrl.trim();
+    if (trimmed.startsWith('/') || trimmed.startsWith('#')) return trimmed;
+    try {
+        const parsed = new URL(trimmed);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            return trimmed;
+        }
+    } catch {
+        return '#';
+    }
+    return '#';
+}
+
 /**
  * Helper to parse inline markdown (bold, italic, code, links)
  */
 function parseInlineMarkdown(text) {
     if (!text) return '';
 
+    let formatted = escapeHtml(text);
+
     // Replace bold **text**
-    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
     
     // Replace italic *text*
     formatted = formatted.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em class="italic text-gray-800">$1</em>');
@@ -47,8 +73,11 @@ function parseInlineMarkdown(text) {
     // Replace inline code `code`
     formatted = formatted.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-gray-100 text-primary-700 font-mono text-xs font-semibold border border-gray-200/60">$1</code>');
     
-    // Replace links [text](url)
-    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 font-bold hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-600 transition-colors" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Replace links [text](url) with safe protocol filtering
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+        const safeHref = escapeHtml(sanitizeMarkdownUrl(url));
+        return `<a href="${safeHref}" class="text-primary-600 font-bold hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-600 transition-colors" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
 
     return formatted;
 }

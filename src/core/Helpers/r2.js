@@ -41,26 +41,48 @@ const getPublicBaseUrl = () => (process.env.R2_PUBLIC_URL || 'https://media.trip
  * @param {number} [options.expiresIn=900] - URL validity in seconds (default: 15 mins)
  * @returns {Promise<{ uploadUrl: string, fileKey: string, publicUrl: string }>}
  */
-export const getPresignedUploadUrl = async ({ fileName, fileType, folder = 'general', expiresIn = 900 }) => {
+const MAX_R2_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+const sanitizeR2Folder = (folder = 'general') => {
+    return String(folder || 'general')
+        .split('/')
+        .map(seg => seg.trim().replace(/[^a-zA-Z0-9_-]/g, ''))
+        .filter(seg => seg && seg !== '.' && seg !== '..')
+        .join('/') || 'general';
+};
+
+export const getPresignedUploadUrl = async ({ fileName, fileType, folder = 'general', expiresIn = 900, fileSize = null }) => {
     try {
         const client = getR2Client();
         const bucket = getBucketName();
         const publicBaseUrl = getPublicBaseUrl();
 
+        if (fileSize !== null && fileSize !== undefined) {
+            const sizeBytes = Number(fileSize);
+            if (!Number.isFinite(sizeBytes) || sizeBytes <= 0 || sizeBytes > MAX_R2_FILE_SIZE_BYTES) {
+                throw new Error(`Invalid fileSize. Must be between 1 byte and ${MAX_R2_FILE_SIZE_BYTES} bytes.`);
+            }
+        }
+
         // Sanitize file extension
         const rawExt = fileName && fileName.includes('.') ? fileName.split('.').pop() : '';
         const ext = rawExt ? `.${rawExt.toLowerCase().replace(/[^a-z0-9]/g, '')}` : '';
 
-        // Generate safe unique key
-        const cleanFolder = folder.replace(/^\/+|\/+$/g, '');
+        // Generate safe unique key (blocks path traversal)
+        const cleanFolder = sanitizeR2Folder(folder);
         const randomHex = crypto.randomBytes(6).toString('hex');
         const fileKey = `${cleanFolder}/${Date.now()}-${randomHex}${ext}`;
 
-        const command = new PutObjectCommand({
+        const commandInput = {
             Bucket: bucket,
             Key: fileKey,
             ContentType: fileType,
-        });
+        };
+        if (fileSize !== null && fileSize !== undefined) {
+            commandInput.ContentLength = Number(fileSize);
+        }
+
+        const command = new PutObjectCommand(commandInput);
 
         const uploadUrl = await getSignedUrl(client, command, { expiresIn });
 
@@ -94,6 +116,7 @@ export const getMultiplePresignedUploadUrls = async (files = [], defaultFolder =
                 fileType: file.fileType,
                 folder: targetFolder,
                 expiresIn,
+                fileSize: file.fileSize,
             });
 
             return {
@@ -115,6 +138,7 @@ export const deleteFromR2 = async (urlOrKey) => {
         const fileKey = urlOrKey.startsWith(publicBaseUrl)
             ? urlOrKey.replace(`${publicBaseUrl}/`, '')
             : urlOrKey;
+        if (!fileKey || fileKey.includes('..') || fileKey.startsWith('/')) return false;
 
         const client = getR2Client();
         const command = new DeleteObjectCommand({

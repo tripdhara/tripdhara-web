@@ -15,7 +15,7 @@ class OTPService {
      * Check if an identifier belongs to allowed reviewer/test accounts
      */
     async _isTestAccount(identifier) {
-        if (!identifier) return false;
+        if (!identifier || process.env.NODE_ENV === 'production') return false;
         const config = await getAppConfig();
         const testIdentifiersConfig = config.secrets?.test_identifiers;
         const allowedTestAccounts = new Set([

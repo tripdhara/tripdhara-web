@@ -28,7 +28,7 @@ export const metadata = {
     openGraph: {
         title: 'Inner Line Permit (ILP) & Border Policy | Tripdhara',
         description: 'Permit application timelines, restricted border zone protocols, and foreigner immigration compliance in the Himalayas.',
-        url: 'https://tripdhara.com/permit-policy',
+        url: 'https://tripdhara.in/permit-policy',
         siteName: 'Tripdhara',
         type: 'website',
     },

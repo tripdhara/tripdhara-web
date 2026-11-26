@@ -73,6 +73,19 @@ describe('Industry Standard: Edge Proxy (src/proxy.js)', () => {
         expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://admin.tripdhara.in');
     });
 
+    it('should not reflect untrusted origins with credentials on /api/ routes', () => {
+        const req = new Request('https://tripdhara.in/api/v1/auth/login', {
+            method: 'GET',
+            headers: new Headers({
+                origin: 'https://evil.example.com',
+            }),
+        });
+
+        const res = proxy(req);
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
+        expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull();
+    });
+
     it('should redirect unauthenticated requests on protected routes to /login', () => {
         const req = new Request('https://tripdhara.in/admin', {
             method: 'GET',

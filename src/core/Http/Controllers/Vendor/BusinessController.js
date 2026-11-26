@@ -41,10 +41,10 @@ class BusinessController extends Controller {
     // POST /vendor/business/profile/create
     async createProfile(req) {
         try {
-            const body = req.payload;
+            const body = await this._prepareProfileBody(req);
             const userId = req.user.id;
             const existingProfile = await getBusinessByUserId(userId);
-            // if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
+            if (existingProfile) return this.error(HTTP_STATUS.ALREADY_EXIST, RESPONSE_MESSAGES.VENDOR.PROFILE_ALREADY_EXISTS);
             const result = await BusinessService.syncBusinessProfile(userId, body);
             if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_CREATED, { identifier: result.email, details: result });
             return this.success(HTTP_STATUS.CREATED, RESPONSE_MESSAGES.VENDOR.PROFILE_INITIATED, result);
@@ -57,7 +57,7 @@ class BusinessController extends Controller {
     // PATCH /vendor/business/profile/update/:id
     async updateProfile(req) {
         try {
-            const body = req.payload;
+            const body = await this._prepareProfileBody(req);
             const result = await BusinessService.syncBusinessProfile(req.user.id, body);
             if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             if (result.email) await BusinessEvents.emitAsync(NOTIFICATION.KEY.BUSINESS.PROFILE_UPDATED, { identifier: result.email, details: result });
@@ -74,9 +74,10 @@ class BusinessController extends Controller {
         try {
             const { status } = req.payload;
             if (![STATUS.ACTIVE, STATUS.INACTIVE].includes(status)) return this.error(HTTP_STATUS.BAD_REQUEST, RESPONSE_MESSAGES.VENDOR.INVALID_STATUS);
-            const result = await BusinessService.updateBusinessStatus(req.user.id, params.id, status);
+            const result = await BusinessService.updateBusinessStatus(req.user.id, params?.id, status);
+            if (!result) return this.error(HTTP_STATUS.NOT_FOUND, RESPONSE_MESSAGES.VENDOR.NOT_FOUND);
             const statusType = result?.businessProfile?.status === STATUS.ACTIVE ? NOTIFICATION.KEY.BUSINESS.PROFILE_ACTIVATED : NOTIFICATION.KEY.BUSINESS.PROFILE_DEACTIVATED;
-            if (statusType) {
+            if (statusType && result.email) {
                 await BusinessEvents.emitAsync(statusType, { identifier: result.email, details: result });
             }
             return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.VENDOR.STATUS_UPDATED);

@@ -132,6 +132,7 @@ export const schemas = {
     }).passthrough(),
 
     accountDeleteInitiate: z.object({}).passthrough(),
+    deleteAction: z.object({}).passthrough(),
 
     passwordReset: z.object({
         email: z.string().email(RESPONSE_MESSAGES.VALIDATION.INVALID_EMAIL).optional(),

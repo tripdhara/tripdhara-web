@@ -15,6 +15,7 @@ import { packageItemResponse } from './packageResponse.js';
 import { normalizeCoordinates, calculateDistanceKm } from '@/core/Services/Shared/PackageCore.js';
 import { schemaKey } from './shared.js';
 import { toObjectId } from '@/core/Helpers/objectId.js';
+import { escapeRegex } from '@/core/Helpers/security.js';
 
 let cachedCategories = null;
 let lastCategoryFetch = 0;
@@ -175,7 +176,7 @@ export async function getWishlistPackages(options = {}) {
 
     // 1.7 Keyword / Text Filter stage
     if (query) {
-        const qRegex = new RegExp(query.trim(), 'i');
+        const qRegex = new RegExp(escapeRegex(query.trim()), 'i');
         pipeline.push({
             $match: {
                 $or: [
@@ -196,7 +197,7 @@ export async function getWishlistPackages(options = {}) {
             $match: {
                 $or: [
                     { category_slug: cleanCat },
-                    { category_name: { $regex: new RegExp(`^${cleanCat}$`, 'i') } }
+                    { category_name: { $regex: new RegExp(`^${escapeRegex(cleanCat)}$`, 'i') } }
                 ]
             }
         });
@@ -212,7 +213,7 @@ export async function getWishlistPackages(options = {}) {
 
     // 1.10 Location / City Text Filter stage
     if (address) {
-        const aRegex = new RegExp(address.trim(), 'i');
+        const aRegex = new RegExp(escapeRegex(address.trim()), 'i');
         pipeline.push({
             $match: {
                 $or: [

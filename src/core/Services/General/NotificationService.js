@@ -459,9 +459,6 @@ class NotificationService {
             }
             if (!booking) return false;
 
-            console.log('booking', booking);
-
-
             const travellerId = booking.user;
 
             // Parallel lookup of traveller User and vendor doc
@@ -469,8 +466,6 @@ class NotificationService {
                 travellerId ? getUserById(travellerId, 'fcmToken') : Promise.resolve(null),
                 booking.vendor ? getBusinessById(booking.vendor, 'user') : Promise.resolve(null)
             ]);
-
-            console.log('vendorDoc', vendorDoc);
 
             const vendorUserId = vendorDoc ? vendorDoc.user : null;
             const vendorUser = vendorUserId

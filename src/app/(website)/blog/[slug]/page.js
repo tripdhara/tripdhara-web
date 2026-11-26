@@ -258,7 +258,8 @@ export default async function BlogPostPage({ params }) {
                     <article className="lg:col-span-8">
                         <div className="bg-white rounded-3xl p-6 sm:p-12 border border-gray-200/80 shadow-sm">
                             
-                            {/* Quick Factsheet Metric Grid for Mountain Treks */}
+                            {/* Quick Factsheet Metric Grid (only for Chopta / Tungnath trek guides) */}
+                            {/chopta|tungnath/i.test(`${blog.slug || ''} ${blog.title || ''}`) && (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl border border-gray-200/70 mb-10">
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block font-mono">
@@ -293,6 +294,7 @@ export default async function BlogPostPage({ params }) {
                                     </span>
                                 </div>
                             </div>
+                            )}
 
                             {/* Rendered Semantic Markdown Content */}
                             <BlogContentRenderer content={blog.content} />
@@ -359,15 +361,15 @@ export default async function BlogPostPage({ params }) {
                                 Local Travel Assistance
                             </span>
                             <h3 className="text-lg font-black font-display text-white mb-2">
-                                Planning This Trek?
+                                Planning Your Trip?
                             </h3>
                             <p className="text-xs text-emerald-100/90 leading-relaxed mb-5">
-                                Speak with our local Uttarakhand expedition leader for current trail snow depth, shared cab fares from Rishikesh, and verified Chopta homestay bookings.
+                                Speak with our local Uttarakhand expedition leader for current trail conditions, shared cab fares, and verified homestay bookings.
                             </p>
 
                             <div className="space-y-2.5">
                                 <a
-                                    href="https://api.whatsapp.com/send?phone=919412096459&text=Hi%20Tripdhara%20Team!%20I%20am%20planning%20the%20Chopta%20Tungnath%20trek%20and%20need%20assistance."
+                                    href={`https://api.whatsapp.com/send?phone=919412096459&text=${encodeURIComponent(`Hi Tripdhara Team! I read "${blog.title}" and would like trip planning assistance.`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02]"
@@ -594,7 +596,7 @@ export default async function BlogPostPage({ params }) {
                             <Sparkles className="w-4 h-4" /> Authentic Himalayan Adventures
                         </span>
                         <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight leading-tight">
-                            Experience the Magic of Chopta & The Himalayas
+                            Experience the Magic of Uttarakhand & The Himalayas
                         </h2>
                         <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                             Let local certified Pahadi guides craft your custom Uttarakhand itinerary. Verified wooden homestays, private 4x4 mountain cabs, and zero commercial hassle.

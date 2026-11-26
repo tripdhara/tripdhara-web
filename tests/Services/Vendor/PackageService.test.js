@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { createMockCacheService } from '../../utils/mockHelpers.js';
 
 const createSubdocItem = (data) => ({
     _id: 'item1',
@@ -22,13 +23,19 @@ mockPkg.trekking.push = jest.fn(function(data) {
     return this.length;
 });
 
+const mockPackageModel = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    findById: jest.fn(),
+    findByIdAndDelete: jest.fn()
+};
+
 jest.unstable_mockModule('@/core/Models/Package.js', () => ({
-    default: {
-        findOne: jest.fn(),
-        create: jest.fn(),
-        findById: jest.fn(),
-        findByIdAndDelete: jest.fn()
-    }
+    default: mockPackageModel
+}));
+
+jest.unstable_mockModule('@/models/Package.js', () => ({
+    default: mockPackageModel
 }));
 
 jest.unstable_mockModule('@/core/Models/Vendor.js', () => ({
@@ -42,6 +49,14 @@ jest.unstable_mockModule('@/core/Services/Vendor/InventoryService.js', () => ({
     default: {
         initializeFromItem: jest.fn()
     }
+}));
+
+jest.unstable_mockModule('@/core/Services/CacheService.js', () => ({
+    default: createMockCacheService()
+}));
+
+jest.unstable_mockModule('@/core/Helpers/indexNow.js', () => ({
+    notifyIndexNow: jest.fn().mockResolvedValue(true)
 }));
 
 const { default: PackageService } = await import('@/core/Services/Vendor/PackageService.js');

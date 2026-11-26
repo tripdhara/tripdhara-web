@@ -7,5 +7,8 @@ export default [
         { method: 'GET', path: '/', handler: wrap(() => PackageController, 'browsePackages') },
         { method: 'GET', path: '/search', handler: wrap(() => PackageController, 'searchNearby') },
         { method: 'GET', path: '/:id', handler: wrap(() => PackageController, 'getPackageDetails') },
+        // ...Router.group({ prefix: '/vendor' }, [
+        //     { method: 'GET', path: '/:businessId', handler: wrap(() => PackageController, 'browseBusinessPackages') },
+        // ]),
     ]),
 ];

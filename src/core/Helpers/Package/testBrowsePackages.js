@@ -72,7 +72,7 @@ function getBrowseCacheKey(q) {
 // =============================================================================
 
 export async function getTestBrowsePackages(options = {}) {
-    const { userId, page = 1, limit = 10, minPrice = 0, maxPrice = null, format, sort = '', query = '', category = '', lat = null, lng = null, radius = null, address = '' } = options;
+    const { userId = null, businessId = null, page = 1, limit = 10, minPrice = 0, maxPrice = null, format, sort = '', query = '', category = '', lat = null, lng = null, radius = null, address = '' } = options;
 
     const isFlat = format === 'flat';
     const cacheKey = getBrowseCacheKey(options);
@@ -100,13 +100,28 @@ export async function getTestBrowsePackages(options = {}) {
     // STEP 1: Fast Parallel Pre-Fetch (Closures & Category Documents)
     // =========================================================================
 
+    const closureQuery = { isActive: true, startDate: { $lte: now }, endDate: { $gte: now } };
     const docQuery = {};
+    if (businessId) {
+        const vendorObjId = new mongoose.Types.ObjectId(businessId);
+        closureQuery.vendor = vendorObjId;
+        docQuery.vendor = vendorObjId;
+    }
     if (category && categoryObj?.slug) docQuery.category_slug = categoryObj.slug;
 
     const [activeClosures, allCategoryDocs] = await Promise.all([
-        getManyBy(VendorClosure, { isActive: true, startDate: { $lte: now }, endDate: { $gte: now } }, 'vendor'),
+        getManyBy(VendorClosure, closureQuery, 'vendor'),
         getManyBy(VendorDocument, docQuery, 'vendor category_slug status url expiry_date')
     ]);
+
+
+    // const docQuery = {};
+    // if (category && categoryObj?.slug) docQuery.category_slug = categoryObj.slug;
+
+    // const [activeClosures, allCategoryDocs] = await Promise.all([
+    //     getManyBy(VendorClosure, { isActive: true, startDate: { $lte: now }, endDate: { $gte: now } }, 'vendor'),
+    //     getManyBy(VendorDocument, docQuery, 'vendor category_slug status url expiry_date')
+    // ]);
 
     if (!allCategoryDocs || allCategoryDocs.length === 0) return buildEmptyResult(isFlat, { sort, page, limit });
 

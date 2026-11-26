@@ -67,6 +67,23 @@ class PackageController extends Controller {
         }
     }
 
+    async browseBusinessPackages(req, { params }) {
+        try {
+            const userId = req.user?.id;
+            const businessId = params?.businessId;
+            const options = parseQuery(req.url);
+            const result = await getTestBrowsePackages({ userId, businessId, ...options });
+            if (options.query) {
+                const totalCount = options.isFlat ? (result?.pagination?.total || 0) : Object.values(result || {}).reduce((acc, cat) => acc + (cat?.pagination?.total || 0), 0);
+                await this._logSearch(options.query, req.user, totalCount);
+            }
+
+            if (result && result.pagination) return this.paginatedSuccess(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.FETCHED, result.items || result.data, result.pagination);
+            return this.success(HTTP_STATUS.OK, RESPONSE_MESSAGES.PACKAGE.FETCHED, result);
+        } catch (error) {
+            return this.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.ERROR.SERVER_ERROR);
+        }
+    }
     // =========================================================================
     // 3. Single Package Item Detail Endpoint
     // =========================================================================
